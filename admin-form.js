@@ -28,3 +28,8 @@ listingForm.addEventListener("submit", (e) => {
   e.target.reset();
   alert("Listing saved successfully!");
 });
+
+function toggleMenu() {
+  const mobileMenu = document.getElementById("mobile-menu");
+  mobileMenu.classList.toggle("active");
+}

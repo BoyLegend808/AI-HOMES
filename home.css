@@ -69,49 +69,35 @@ body {
     color: #0f172a;
 }
 
-.mobile-menu-toggle {
+.mobile-menu {
     display: none;
-    background: none;
-    border: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid #334155;
+}
+
+.mobile-menu ul {
+    list-style: none;
+    padding: 1rem;
+    margin: 0;
+}
+
+.mobile-menu a {
+    display: block;
     color: #cbd5e1;
-    font-size: 1.5rem;
-    cursor: pointer;
-}
-
-/* Hero */
-.hero {
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.7)), url('https://images.unsplash.com/photo-1494526585095-c41746248156?fit=crop&w=1200&q=80') center/cover no-repeat;
-    min-height: 60vh;
-    display: flex;
-    align-items: center;
-    text-align: center;
-    padding: 2rem 0;
-}
-
-.hero h1 {
-    font-size: 3rem;
-    font-weight: 700;
-    margin-bottom: 1rem;
-    color: #f8fafc;
-}
-
-.hero p {
-    font-size: 1.25rem;
-    color: var(--muted);
-    margin-bottom: 2rem;
-}
-
-.btn {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.75rem 1.5rem;
-    border: none;
-    border-radius: 0.5rem;
-    font-weight: 600;
     text-decoration: none;
-    cursor: pointer;
-    transition: all 0.2s;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #334155;
 }
+
+.mobile-menu a.active,
+.mobile-menu a:hover {
+    color: var(--accent);
+}
+
 
 .btn-primary {
     background: var(--accent);
@@ -327,28 +313,14 @@ body {
         display: block;
     }
 
-    .listings-grid {
-        grid-template-columns: 1fr;
+    .mobile-menu.active {
+        display: block;
     }
 
-    .steps {
-        grid-template-columns: 1fr;
-    }
-}
-
-.page {
-    max-width: 420px;
-    margin: 0 auto;
-    padding: 1rem;
-    display: grid;
-    gap: 1rem;
-    min-height: 100vh;
-}
-
-.hero {
     height: 280px;
     border-radius: 1rem 1rem 0 0;
-    background: linear-gradient(0deg, rgba(15, 23, 42, .85), rgba(15, 23, 42, .25)), url('https://images.unsplash.com/photo-1494526585095-c41746248156?fit=crop&w=840&q=80') center/cover no-repeat;
+    background: linear-gradient(0deg, rgba(15, 23, 42, .85), rgba(15, 23, 42, .25)),
+    url('https://images.unsplash.com/photo-1494526585095-c41746248156?fit=crop&w=840&q=80') center/cover no-repeat;
     display: flex;
     align-items: flex-end;
     padding: 1rem;

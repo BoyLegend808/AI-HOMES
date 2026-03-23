@@ -61,6 +61,11 @@ const filterListings = () => {
   loadListingsTable(filtered);
 };
 
+function toggleMenu() {
+  const mobileMenu = document.getElementById('mobile-menu');
+  mobileMenu.classList.toggle('active');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadListingsTable();
   searchInput.addEventListener('input', filterListings);

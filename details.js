@@ -37,3 +37,8 @@ const loadPropertyDetails = () => {
 };
 
 document.addEventListener("DOMContentLoaded", loadPropertyDetails);
+
+function toggleMenu() {
+  const mobileMenu = document.getElementById("mobile-menu");
+  mobileMenu.classList.toggle("active");
+}

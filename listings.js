@@ -72,6 +72,11 @@ const loadListings = () => {
   updatePriceValue();
 };
 
+function toggleMenu() {
+  const mobileMenu = document.getElementById('mobile-menu');
+  mobileMenu.classList.toggle('active');
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   loadListings();
   priceRange.addEventListener('input', updatePriceValue);

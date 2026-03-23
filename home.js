@@ -68,3 +68,8 @@ const refresh = () => {
     .join("");
 };
 refresh();
+
+function toggleMenu() {
+  const mobileMenu = document.getElementById("mobile-menu");
+  mobileMenu.classList.toggle("active");
+}
