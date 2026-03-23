@@ -1,0 +1,378 @@
+:root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --text: #e2e8f0;
+    --accent: #ea580c;
+    --muted: #94a3b8;
+    --shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, var(--bg), var(--bg) 45%, var(--card));
+    color: var(--text);
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* Navbar */
+.navbar {
+    background: rgba(15, 23, 42, 0.95);
+    border-bottom: 1px solid #334155;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.navbar .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+}
+
+.logo {
+    font-weight: 700;
+    font-size: 1.5rem;
+    color: #f8fafc;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    list-style: none;
+    gap: 1rem;
+}
+
+.nav-links a {
+    color: #cbd5e1;
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    transition: background 0.2s;
+}
+
+.nav-links a.active,
+.nav-links a:hover {
+    background: var(--accent);
+    color: #0f172a;
+}
+
+.mobile-menu-toggle {
+    display: none;
+    background: none;
+    border: none;
+    color: #cbd5e1;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+/* Listings Page */
+.listings-page .container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    padding: 2rem 0;
+}
+
+.filters {
+    background: var(--card);
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: var(--shadow);
+    height: fit-content;
+}
+
+.filters h2 {
+    margin-bottom: 1.5rem;
+    font-size: 1.5rem;
+}
+
+.filter-group {
+    margin-bottom: 1.5rem;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.filter-group input,
+.filter-group select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 1rem;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+.filter-group input[type="checkbox"] {
+    width: auto;
+    margin-right: 0.5rem;
+}
+
+.listings-content {
+    padding: 0;
+}
+
+.sort-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.sort-bar h1 {
+    font-size: 2rem;
+}
+
+.sort-bar select {
+    padding: 0.5rem 1rem;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.listings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.property-card {
+    background: var(--card);
+    border-radius: 1rem;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    transition: transform 0.2s;
+}
+
+.property-card:hover {
+    transform: translateY(-4px);
+}
+
+.property-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.property-card .content {
+    padding: 1.5rem;
+}
+
+.property-card h3 {
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.property-card .meta {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+.property-card .price {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: #0f172a;
+}
+
+.btn-primary:hover {
+    background: #dc2626;
+}
+
+.btn-secondary {
+    background: #334155;
+    color: var(--text);
+}
+
+.btn-secondary:hover {
+    background: #475569;
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid #334155;
+}
+
+.btn-ghost:hover {
+    background: #334155;
+}
+
+/* Footer */
+.footer {
+    background: var(--bg);
+    padding: 2rem 0;
+    border-top: 1px solid #334155;
+    margin-top: 3rem;
+}
+
+.footer p {
+    text-align: center;
+    color: var(--muted);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .listings-page .container {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .filters {
+        order: 2;
+    }
+
+    .listings-content {
+        order: 1;
+    }
+
+    .nav-links {
+        display: none;
+    }
+
+    .mobile-menu-toggle {
+        display: block;
+    }
+
+    .listings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.page {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 1rem;
+    max-width: 1100px;
+    margin: 1rem auto;
+    padding: 0 1rem;
+}
+
+.filter-aside {
+    background: var(--panel);
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.content-area {
+    background: var(--panel);
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: var(--shadow);
+}
+
+.list-grid {
+    display: grid;
+    gap: .75rem;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.list-card {
+    background: #061124;
+    border-radius: .9rem;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+}
+
+.list-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+}
+
+.list-card-content {
+    padding: .8rem;
+}
+
+.pill {
+    border: 1px solid #334155;
+    border-radius: 999px;
+    padding: .15rem .55rem;
+    font-size: .72rem;
+    color: #94a3b8;
+    display: inline-block;
+    margin-right: .4rem;
+}
+
+.status {
+    font-size: .75rem;
+    color: #b8c1cc;
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-top: .3rem;
+}
+
+.text-muted {
+    color: var(--muted);
+    font-size: .9rem;
+}
+
+.form-control {
+    margin: .65rem 0;
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+}
+
+.form-control label {
+    font-size: .87rem;
+    color: var(--muted);
+}
+
+.form-control input,
+.form-control select {
+    border: 1px solid #334155;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: .65rem .7rem;
+    border-radius: .45rem;
+}

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentHome - Add/Edit Listing</title>
+  <link rel="stylesheet" href="admin-form.css">
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" class="logo">StudentHome</a>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="listings.html">Listings</a></li>
+        <li><a href="details.html">Details</a></li>
+        <li><a href="admin.html">Admin</a></li>
+      </ul>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="add-listing">
+    <div class="container">
+      <h1>Add/Edit Listing</h1>
+
+      <form id="listing-form" class="form">
+        <div class="form-group">
+          <label for="title">Title</label>
+          <input type="text" id="title" required>
+        </div>
+
+        <div class="form-group">
+          <label for="location">Location</label>
+          <input type="text" id="location" required>
+        </div>
+
+        <div class="form-group">
+          <label for="price">Price ($/mo)</label>
+          <input type="number" id="price" min="100" required>
+        </div>
+
+        <div class="form-group">
+          <label for="rooms">Number of Rooms</label>
+          <input type="number" id="rooms" min="1" required>
+        </div>
+
+        <div class="form-group">
+          <label for="type">Type</label>
+          <select id="type">
+            <option>Shared</option>
+            <option>Private</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Amenities</label>
+          <div class="checkboxes">
+            <label><input type="checkbox" name="amenities" value="WiFi"> WiFi</label>
+            <label><input type="checkbox" name="amenities" value="Laundry"> Laundry</label>
+            <label><input type="checkbox" name="amenities" value="Parking"> Parking</label>
+            <label><input type="checkbox" name="amenities" value="Gym"> Gym</label>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="photo">Photo URL</label>
+          <input type="url" id="photo">
+        </div>
+
+        <div class="form-group">
+          <label for="description">Description</label>
+          <textarea id="description" rows="4"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="contact">Contact Info</label>
+          <input type="text" id="contact" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Save Listing</button>
+      </form>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 StudentHome. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="admin-form.js"></script>
+</body>
+
+</html>

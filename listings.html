@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentHome - Listings</title>
+  <link rel="stylesheet" href="listings.css">
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" class="logo">StudentHome</a>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="listings.html" class="active">Listings</a></li>
+        <li><a href="details.html">Details</a></li>
+        <li><a href="admin.html">Admin</a></li>
+      </ul>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="listings-page">
+    <div class="container">
+      <aside class="filters">
+        <h2>Filters</h2>
+        <div class="filter-group">
+          <label for="price-range">Max Price: <span id="price-value">$1200</span></label>
+          <input type="range" id="price-range" min="400" max="1500" value="1200">
+        </div>
+        <div class="filter-group">
+          <label for="location">Location</label>
+          <select id="location">
+            <option value="all">All</option>
+            <option value="Sycamore">Sycamore</option>
+            <option value="Oakridge">Oakridge</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label for="type">Type</label>
+          <select id="type">
+            <option value="all">All</option>
+            <option value="Shared">Shared</option>
+            <option value="Private">Private</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Amenities</label>
+          <label><input type="checkbox" value="WiFi"> WiFi</label>
+          <label><input type="checkbox" value="Laundry"> Laundry</label>
+        </div>
+        <button class="btn btn-secondary" id="apply-filters">Apply Filters</button>
+      </aside>
+
+      <section class="listings-content">
+        <div class="sort-bar">
+          <h1>Listings</h1>
+          <select id="sort">
+            <option>Sort by Price</option>
+            <option>Newest</option>
+          </select>
+        </div>
+        <div class="listings-grid" id="listings-grid">
+          <!-- Cards populated by JS -->
+        </div>
+        <div class="pagination">
+          <button class="btn btn-ghost">Prev</button>
+          <span>1 of 3</span>
+          <button class="btn btn-ghost">Next</button>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 StudentHome. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="listings.js"></script>
+</body>
+
+</html>

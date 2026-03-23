@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudentHome Portal</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand"><span>SH</span> StudentHome</div>
+    <nav class="main-nav" aria-label="Primary">
+      <button data-screen="home" class="nav-link active">Home</button>
+      <button data-screen="listings" class="nav-link">Listings</button>
+      <button data-screen="details" class="nav-link">Details</button>
+      <button data-screen="admin" class="nav-link">Admin</button>
+      <button data-screen="admin-form" class="nav-link">Add Listing</button>
+    </nav>
+  </header>
+
+  <main class="app-container">
+    <section id="home" class="page active" aria-label="Home landing screen">
+      <div class="hero-card">
+        <h1>Find Your Campus Home</h1>
+        <p>Explore top student-friendly listings with secure, affordable, and verified options.</p>
+      </div>
+      <article class="panel">
+        <header><h2>Featured Housing</h2></header>
+        <div class="toolbar">
+          <label><span>Search</span><input id="search" type="search" placeholder="Search by city, name or range" /></label>
+        </div>
+        <div id="featured" class="cards-grid"></div>
+      </article>
+      <article class="panel about">
+        <h2>About StudentHome</h2>
+        <p>StudentHome connects students with curated rentals near campus. Fast search, filters, and admin controls help keep data up-to-date.</p>
+      </article>
+    </section>
+
+    <section id="listings" class="page" aria-label="Listing overview">
+      <div class="panel layout-row">
+        <aside class="filter-aside">
+          <h2>Filters</h2>
+          <div class="form-control"><label>Price (max)<input id="priceRange" type="range" min="400" max="1500" value="1200" /></label><div id="priceValue">$1200</div></div>
+          <div class="form-control"><label>Location<select id="locationFilter"><option value="all">All</option><option value="Sycamore">Sycamore</option><option value="Oakridge">Oakridge</option><option value="Campus">Campus</option></select></label></div>
+          <div class="form-control"><label>Type<select id="typeFilter"><option value="all">All</option><option value="Shared">Shared</option><option value="Private">Private</option><option value="Studio">Studio</option></select></label></div>
+        </aside>
+        <div class="content-area">
+          <h2>Available Listings</h2>
+          <div id="listingCards" class="cards-grid"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="details" class="page" aria-label="House details">
+      <article class="panel detail-card">
+        <img id="detailsImage" src="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?fit=crop&w=840&q=80" alt="Property" />
+        <div class="detail-info">
+          <h2 id="detailsTitle">Sycamore Court</h2>
+          <p id="detailsLocation" class="muted">Sycamore City</p>
+          <p id="detailsPrice" class="price">$600/mo</p>
+          <ul id="detailsMeta" class="meta-list"><li>3 Beds</li><li>2 Baths</li><li>24/7 Security</li></ul>
+          <p id="detailsDesc">A comfortable student residence close to campus, with study rooms, high-speed internet, and laundry facilities.</p>
+          <button id="requestInfo" class="btn action-btn">Request Info</button>
+        </div>
+      </article>
+    </section>
+
+    <section id="admin" class="page" aria-label="Admin dashboard">
+      <article class="panel">
+        <header class="panel-header"><h2>Admin Dashboard</h2><p>Manage listing statuses</p></header>
+        <div class="form-control"><label><span>Search listings</span><input id="adminSearch" type="search" placeholder="Filter by title or status" /></label></div>
+        <div id="adminListings" class="list-table"></div>
+      </article>
+    </section>
+
+    <section id="admin-form" class="page" aria-label="Admin add edit form">
+      <article class="panel">
+        <h2>Add / Edit Listing</h2>
+        <form id="listingForm" class="form-stack">
+          <div class="form-control"><label>Title<input id="houseTitle" name="title" required /></label></div>
+          <div class="form-control"><label>Location<input id="houseLocation" name="location" required /></label></div>
+          <div class="form-control"><label>Price (USD/mo)<input id="housePrice" name="price" type="number" min="100" required /></label></div>
+          <div class="form-control"><label>Rooms<input id="houseRooms" name="rooms" type="number" min="1" required /></label></div>
+          <fieldset class="amenities"><legend>Amenities</legend>
+            <label><input type="checkbox" name="amenities" value="WiFi" /> WiFi</label>
+            <label><input type="checkbox" name="amenities" value="Laundry" /> Laundry</label>
+            <label><input type="checkbox" name="amenities" value="Parking" /> Parking</label>
+            <label><input type="checkbox" name="amenities" value="Study Room" /> Study Room</label>
+          </fieldset>
+          <div class="form-control"><label>Photo URL<input id="housePhotos" name="photo" placeholder="https://" /></label></div>
+          <div class="form-control"><label>Description<textarea id="houseDescription" name="description" rows="3"></textarea></label></div>
+          <div class="form-control"><label>Contact Number<input id="houseContact" name="contact" type="tel" required /></label></div>
+          <button class="btn action-btn" type="submit">Preview & Save</button>
+        </form>
+      </article>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+</body>
+</html>

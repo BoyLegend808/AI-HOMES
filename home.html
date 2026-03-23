@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentHome - Find Your Campus Home</title>
+  <link rel="stylesheet" href="home.css">
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" class="logo">StudentHome</a>
+      <ul class="nav-links">
+        <li><a href="home.html" class="active">Home</a></li>
+        <li><a href="listings.html">Listings</a></li>
+        <li><a href="details.html">Details</a></li>
+        <li><a href="admin.html">Admin</a></li>
+      </ul>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+    </div>
+  </nav>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1>Find Your Perfect Student Home</h1>
+        <p>Browse verified listings near campus with ease.</p>
+        <a href="#search" class="btn btn-primary">Get Started</a>
+      </div>
+    </section>
+
+    <section id="search" class="search-section">
+      <div class="container">
+        <form class="search-form">
+          <input type="text" placeholder="Location (e.g., Sycamore)" class="search-input">
+          <input type="number" placeholder="Max Price" class="search-input">
+          <select class="search-input">
+            <option>Type</option>
+            <option>Shared</option>
+            <option>Private</option>
+          </select>
+          <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+      </div>
+    </section>
+
+    <section class="featured">
+      <div class="container">
+        <h2>Featured Listings</h2>
+        <div class="listings-grid" id="featured-listings">
+          <!-- Cards will be populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <section class="how-it-works">
+      <div class="container">
+        <h2>How It Works</h2>
+        <div class="steps">
+          <div class="step">
+            <div class="step-icon">🔍</div>
+            <h3>Search</h3>
+            <p>Find homes that match your needs.</p>
+          </div>
+          <div class="step">
+            <div class="step-icon">📋</div>
+            <h3>Compare</h3>
+            <p>View details and compare options.</p>
+          </div>
+          <div class="step">
+            <div class="step-icon">📞</div>
+            <h3>Contact</h3>
+            <p>Reach out to landlords directly.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="testimonials">
+      <div class="container">
+        <h2>What Students Say</h2>
+        <div class="testimonial">
+          <p>"Found my perfect place in minutes!"</p>
+          <cite>- Alex, Student</cite>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 StudentHome. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="home.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentHome - Property Details</title>
+  <link rel="stylesheet" href="details.css">
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" class="logo">StudentHome</a>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="listings.html">Listings</a></li>
+        <li><a href="details.html" class="active">Details</a></li>
+        <li><a href="admin.html">Admin</a></li>
+      </ul>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="property-details">
+    <div class="container">
+      <div class="gallery">
+        <img id="main-image" src="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?fit=crop&w=840&q=80"
+          alt="Property">
+        <div class="thumbnails">
+          <img src="https://images.unsplash.com/photo-1493246507139-91e8fad9978e?fit=crop&w=200&q=80" alt="Thumb 1">
+          <img src="https://images.unsplash.com/photo-1568605114967-8130f3a36994?fit=crop&w=200&q=80" alt="Thumb 2">
+        </div>
+      </div>
+
+      <div class="info-section">
+        <h1 id="property-title">Sycamore Court</h1>
+        <div class="key-info">
+          <span class="price" id="property-price">$600/mo</span>
+          <span class="location" id="property-location">Sycamore City</span>
+          <span class="availability">Available Now</span>
+        </div>
+
+        <div class="amenities">
+          <h2>Amenities</h2>
+          <ul id="amenities-list">
+            <li>WiFi</li>
+            <li>Laundry</li>
+            <li>Parking</li>
+          </ul>
+        </div>
+
+        <div class="description">
+          <h2>Description</h2>
+          <p id="property-description">A comfortable student residence close to campus, with study rooms, high-speed
+            internet, and laundry facilities.</p>
+        </div>
+
+        <div class="contact-section">
+          <button class="btn btn-primary" id="contact-btn">Contact Landlord</button>
+          <button class="btn btn-secondary" id="save-btn">Save Property</button>
+        </div>
+      </div>
+
+      <div class="map-placeholder">
+        <h2>Location</h2>
+        <div class="map">Map integration here</div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 StudentHome. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="details.js"></script>
+</body>
+
+</html>

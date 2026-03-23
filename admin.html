@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentHome - Admin Dashboard</title>
+  <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+  <nav class="navbar">
+    <div class="container">
+      <a href="#" class="logo">StudentHome</a>
+      <ul class="nav-links">
+        <li><a href="home.html">Home</a></li>
+        <li><a href="listings.html">Listings</a></li>
+        <li><a href="details.html">Details</a></li>
+        <li><a href="admin.html" class="active">Admin</a></li>
+      </ul>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">☰</button>
+    </div>
+  </nav>
+
+  <main class="admin-dashboard">
+    <div class="container">
+      <h1>Admin Dashboard</h1>
+
+      <div class="dashboard-actions">
+        <a href="admin-form.html" class="btn btn-primary">Add New Listing</a>
+      </div>
+
+      <section class="listings-table">
+        <div class="table-header">
+          <input type="search" id="search-listings" placeholder="Search listings...">
+        </div>
+        <table id="listings-table">
+          <thead>
+            <tr>
+              <th>Title</th>
+              <th>Location</th>
+              <th>Price</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="listings-body">
+            <!-- Rows populated by JS -->
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="container">
+      <p>&copy; 2026 StudentHome. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script src="admin.js"></script>
+</body>
+
+</html>
