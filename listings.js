@@ -1,4 +1,6 @@
-const data = [
+const STORAGE_KEY = 'studenthome_listings';
+
+const defaultData = [
   {
     id: 1,
     title: 'The Elm Street Shared House',
@@ -31,6 +33,13 @@ const data = [
   }
 ];
 
+function getListings() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return stored ? JSON.parse(stored) : defaultData;
+}
+
+const data = getListings();
+
 const listingsGrid = document.getElementById('listings-grid');
 const priceRange = document.getElementById('price-range');
 const priceValue = document.getElementById('price-value');
@@ -57,14 +66,30 @@ const filterListings = () => {
   const maxPrice = parseInt(priceRange.value);
   const selectedLocation = locationSelect.value;
   const selectedType = typeSelect.value;
-
+  
+  // Check for search params from home page
+  const searchLocation = sessionStorage.getItem('searchLocation') || '';
+  const searchPrice = parseInt(sessionStorage.getItem('searchPrice')) || 2000;
+  const searchType = sessionStorage.getItem('searchType') || 'all';
+  
   const filtered = data.filter(item => {
-    return item.price <= maxPrice &&
-           (selectedLocation === 'all' || item.location === selectedLocation) &&
-           (selectedType === 'all' || item.type === selectedType);
+    const matchesPrice = item.price <= Math.min(maxPrice, searchPrice);
+    const matchesLocation = selectedLocation === 'all' || 
+      item.location.toLowerCase().includes(selectedLocation.toLowerCase()) ||
+      item.location.toLowerCase().includes(searchLocation);
+    const matchesType = selectedType === 'all' || 
+      item.type === selectedType || 
+      (searchType !== 'all' && item.type === searchType);
+    
+    return matchesPrice && matchesLocation && matchesType;
   });
-
+  
   listingsGrid.innerHTML = filtered.map(renderPropertyCard).join('');
+  
+  // Clear search params after use
+  sessionStorage.removeItem('searchLocation');
+  sessionStorage.removeItem('searchPrice');
+  sessionStorage.removeItem('searchType');
 };
 
 const loadListings = () => {
@@ -78,6 +103,21 @@ function toggleMenu() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const menuLinks = document.querySelectorAll('#mobile-menu a');
+  menuLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.remove('active');
+    });
+  });
+  
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('mobile-menu');
+    const toggle = document.querySelector('.mobile-menu-toggle');
+    if (!menu.contains(e.target) && !toggle.contains(e.target) && menu.classList.contains('active')) {
+      menu.classList.remove('active');
+    }
+  });
+  
   loadListings();
   priceRange.addEventListener('input', updatePriceValue);
   applyFiltersBtn.addEventListener('click', filterListings);

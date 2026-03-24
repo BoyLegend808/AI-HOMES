@@ -42,3 +42,24 @@ function toggleMenu() {
   const mobileMenu = document.getElementById("mobile-menu");
   mobileMenu.classList.toggle("active");
 }
+
+document.addEventListener("DOMContentLoaded", () => {
+  const menuLinks = document.querySelectorAll("#mobile-menu a");
+  menuLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      document.getElementById("mobile-menu").classList.remove("active");
+    });
+  });
+
+  document.addEventListener("click", (e) => {
+    const menu = document.getElementById("mobile-menu");
+    const toggle = document.querySelector(".mobile-menu-toggle");
+    if (
+      !menu.contains(e.target) &&
+      !toggle.contains(e.target) &&
+      menu.classList.contains("active")
+    ) {
+      menu.classList.remove("active");
+    }
+  });
+});

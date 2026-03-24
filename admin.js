@@ -1,4 +1,6 @@
-const data = [
+const STORAGE_KEY = 'studenthome_listings';
+
+const defaultData = [
   {
     id: 1,
     title: 'The Elm Street Shared House',
@@ -31,6 +33,39 @@ const data = [
   }
 ];
 
+function getListings() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  return stored ? JSON.parse(stored) : defaultData;
+}
+
+function saveListings(listings) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(listings));
+}
+
+function addListing(listing) {
+  const listings = getListings();
+  listing.id = Date.now();
+  listings.push(listing);
+  saveListings(listings);
+}
+
+function updateListing(id, updates) {
+  const listings = getListings();
+  const index = listings.findIndex(l => l.id === id);
+  if (index !== -1) {
+    listings[index] = { ...listings[index], ...updates };
+    saveListings(listings);
+  }
+}
+
+function deleteListing(id) {
+  const listings = getListings();
+  const filtered = listings.filter(l => l.id !== id);
+  saveListings(filtered);
+}
+
+const data = getListings();
+
 const listingsTableBody = document.getElementById('listings-body');
 const searchInput = document.getElementById('search-listings');
 
@@ -48,7 +83,37 @@ const renderTableRow = (item) => `
 `;
 
 const loadListingsTable = (listings = data) => {
-  listingsTableBody.innerHTML = listings.map(renderTableRow).join('');
+  listingsTableBody.innerHTML = listings.map(item => `
+    <tr>
+      <td>${item.title}</td>
+      <td>${item.location}</td>
+      <td>$${item.price}</td>
+      <td><span class="status ${item.status.toLowerCase()}">${item.status}</span></td>
+      <td class="actions">
+        <button class="btn btn-small btn-edit" data-id="${item.id}">Edit</button>
+        <button class="btn btn-small btn-delete" data-id="${item.id}">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+  
+  // Add event listeners
+  document.querySelectorAll('.btn-edit').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const id = parseInt(e.target.dataset.id);
+      // Redirect to edit form or open modal
+      window.location.href = `admin-form.html?edit=${id}`;
+    });
+  });
+  
+  document.querySelectorAll('.btn-delete').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      if (confirm('Delete this listing?')) {
+        const id = parseInt(e.target.dataset.id);
+        deleteListing(id);
+        loadListingsTable();
+      }
+    });
+  });
 };
 
 const filterListings = () => {
@@ -67,6 +132,21 @@ function toggleMenu() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const menuLinks = document.querySelectorAll('#mobile-menu a');
+  menuLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      document.getElementById('mobile-menu').classList.remove('active');
+    });
+  });
+  
+  document.addEventListener('click', (e) => {
+    const menu = document.getElementById('mobile-menu');
+    const toggle = document.querySelector('.mobile-menu-toggle');
+    if (!menu.contains(e.target) && !toggle.contains(e.target) && menu.classList.contains('active')) {
+      menu.classList.remove('active');
+    }
+  });
+  
   loadListingsTable();
   searchInput.addEventListener('input', filterListings);
 });

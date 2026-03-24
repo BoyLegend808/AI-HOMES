@@ -98,6 +98,19 @@ body {
     color: var(--accent);
 }
 
+/* Listings Page Layout */
+.listings-page .container {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 2rem;
+    align-items: start;
+}
+
+.filters {
+    position: sticky;
+    top: 5rem;
+}
+
 width: 100%;
 padding: 0.75rem;
 border: 1px solid #334155;
