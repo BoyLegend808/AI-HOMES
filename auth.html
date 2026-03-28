@@ -12,9 +12,12 @@
       display: flex;
       flex-direction: column;
       justify-content: center;
+      align-items: center;
       min-height: 80vh;
     }
     .auth-card {
+      width: 100%;
+      max-width: 450px;
       background: var(--bg-dark);
       padding: 2rem;
       border-radius: 24px;
@@ -143,7 +146,8 @@
     </div>
   </div>
 
-  <script src="data.js"></script>
+  <!-- Added direct strict versioning -->
+  <script src="data.js?v=999"></script>
   <script>
     const loginView = document.getElementById('login-view');
     const regView = document.getElementById('reg-view');
@@ -159,8 +163,8 @@
     };
 
     document.getElementById('btn-login').onclick = () => {
-      const email = document.getElementById('login-email').value;
-      const pass = document.getElementById('login-pass').value;
+      const email = document.getElementById('login-email').value.trim().toLowerCase();
+      const pass = document.getElementById('login-pass').value.trim();
       if(!email || !pass) return alert("Fill all fields");
 
       const res = loginUser(email, pass);
@@ -172,9 +176,9 @@
     };
 
     document.getElementById('btn-reg').onclick = () => {
-      const name = document.getElementById('reg-name').value;
-      const email = document.getElementById('reg-email').value;
-      const pass = document.getElementById('reg-pass').value;
+      const name = document.getElementById('reg-name').value.trim();
+      const email = document.getElementById('reg-email').value.trim().toLowerCase();
+      const pass = document.getElementById('reg-pass').value.trim();
       if(!name || !email || !pass) return alert("Fill all fields");
 
       // registerUser now handles forcing role="student" automatically within data.js

@@ -7,15 +7,39 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="home.css">
   <style>
+    /* Split layout logic for desktop */
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+    }
+    
+    @media (min-width: 900px) {
+      .details-grid {
+        grid-template-columns: 1.2fr 1fr;
+        align-items: start;
+      }
+      .checkout-wrapper {
+        position: sticky;
+        top: 100px;
+        background: var(--bg-panel);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+      }
+    }
+
     .hero-image {
-      height: 320px;
+      height: 350px;
       background-size: cover;
       background-position: center;
       position: relative;
-      border-bottom-left-radius: 24px;
-      border-bottom-right-radius: 24px;
+      border-radius: 24px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5);
     }
+    @media (min-width: 900px) { .hero-image { height: 450px; } }
+
     .back-btn {
       position: absolute;
       top: 1.5rem;
@@ -24,109 +48,117 @@
       backdrop-filter: blur(10px);
       color: #fff;
       border: none;
-      width: 40px;
-      height: 40px;
+      width: 45px;
+      height: 45px;
       border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      transition: background 0.2s;
     }
+    .back-btn:hover { background: rgba(17, 21, 28, 0.9); }
+
     .gallery-row {
       display: flex;
-      gap: 0.8rem;
-      padding: 1.5rem 1.5rem 0 1.5rem;
+      gap: 1rem;
+      padding-top: 1.5rem;
       overflow-x: auto;
     }
     .gallery-row::-webkit-scrollbar { display: none; }
     .gallery-img {
-      width: 90px;
-      height: 90px;
+      width: 100px;
+      height: 100px;
       border-radius: 16px;
       object-fit: cover;
       flex-shrink: 0;
       border: 2px solid transparent;
       cursor: pointer;
-      transition: border-color 0.2s;
+      transition: border-color 0.2s, transform 0.2s;
     }
     .gallery-img:hover {
       border-color: var(--accent);
-    }
-    .details-content {
-      padding: 1.5rem;
+      transform: translateY(-2px);
     }
     .details-title {
-      font-size: 1.6rem;
+      font-size: 2.2rem;
       font-weight: 700;
-      margin-bottom: 0.3rem;
+      margin-bottom: 0.5rem;
       line-height: 1.2;
     }
     .details-meta {
       color: var(--text-muted);
-      font-size: 0.95rem;
-      margin-bottom: 1rem;
+      font-size: 1.1rem;
+      margin-bottom: 1.5rem;
     }
     .price {
-      font-size: 1.8rem;
+      font-size: 2.5rem;
       color: var(--accent);
       font-weight: 700;
-      margin-bottom: 1.5rem;
       display: block;
+      margin-bottom: 0.5rem;
     }
+    .price-sub { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; display:block; }
+    
     .section-title {
-      font-size: 1.1rem;
+      font-size: 1.3rem;
       font-weight: 600;
-      margin-bottom: 0.8rem;
+      margin-bottom: 1rem;
+      margin-top: 1rem;
     }
     .desc {
       color: var(--text-muted);
-      line-height: 1.6;
-      font-size: 0.95rem;
-      margin-bottom: 1.5rem;
+      line-height: 1.8;
+      font-size: 1.05rem;
+      margin-bottom: 2.5rem;
     }
     .features {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.8rem;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
       margin-bottom: 2rem;
     }
     .feature-tag {
-      background: rgba(255,255,255,0.05);
-      padding: 0.8rem;
-      border-radius: 12px;
-      font-size: 0.9rem;
+      background: var(--bg-panel);
+      padding: 1rem;
+      border-radius: 14px;
+      border: 1px solid var(--card-border);
+      font-size: 1rem;
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.6rem;
     }
-    .checkout-wrapper {
-      position: sticky;
-      bottom: 0;
-      padding: 1.5rem;
-      background: linear-gradient(to top, var(--bg-panel) 80%, transparent);
+    
+    @media (max-width: 899px) {
+      .checkout-wrapper {
+        position: sticky;
+        bottom: 0;
+        padding: 1.5rem;
+        background: linear-gradient(to top, var(--bg-panel) 80%, transparent);
+        margin: 0 -2rem -2rem -2rem; /* Extend across padding */
+        z-index: 20;
+      }
     }
     .btn-checkout {
       width: 100%;
       background: var(--accent);
       color: #fff;
-      padding: 1.2rem;
+      padding: 1.4rem;
       border: none;
       border-radius: 16px;
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       font-weight: 700;
       cursor: pointer;
       transition: background 0.2s, transform 0.2s;
     }
-    .btn-checkout:hover {
-      background: #e87b51;
-      transform: translateY(-2px);
-    }
+    .btn-checkout:hover { background: #e87b51; transform: translateY(-3px); }
+
     .modal-overlay {
-      position: absolute;
+      position: fixed;
       top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.8);
-      backdrop-filter: blur(5px);
-      z-index: 100;
+      backdrop-filter: blur(8px);
+      z-index: 1000;
       display: none;
       align-items: center;
       justify-content: center;
@@ -135,53 +167,67 @@
     .modal-content {
       background: var(--bg-panel);
       width: 100%;
+      max-width: 450px;
       border-radius: 24px;
-      padding: 2rem;
+      padding: 2.5rem;
       border: 1px solid var(--card-border);
       text-align: center;
       position: relative;
     }
     .modal-close {
       position: absolute;
-      top: 1rem;
+      top: 1.5rem;
       right: 1.5rem;
       background: none;
       border: none;
       color: #fff;
-      font-size: 1.5rem;
+      font-size: 1.8rem;
       cursor: pointer;
+      transition: color 0.2s;
     }
-    .modal-content h3 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
-    }
+    .modal-close:hover { color: var(--accent); }
+    .modal-content h3 { font-size: 1.8rem; margin-bottom: 1rem; }
+    
     .contact-option {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 0.8rem;
+      gap: 1rem;
       background: rgba(255,255,255,0.05);
-      padding: 1rem;
-      border-radius: 12px;
-      margin-bottom: 0.8rem;
+      padding: 1.2rem;
+      border-radius: 14px;
+      margin-bottom: 1rem;
       font-weight: 600;
+      font-size: 1.1rem;
       color: var(--text-main);
       text-decoration: none;
+      transition: background 0.2s, transform 0.2s;
     }
+    .contact-option:hover { transform: translateY(-3px); background: rgba(255,255,255,0.1); }
     .contact-option.whatsapp { color: #25D366; }
     .contact-option.call { color: var(--accent); }
   </style>
 </head>
 <body>
-  <div class="app-container" id="app">
-    <!-- UI will be rendered by JS -->
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="logo">
+        <span class="logo-icon">SH</span> 
+        <span class="logo-text" style="display: none;">Student</span>
+      </div>
+      <nav class="nav-links"></nav>
+    </header>
+
+    <main id="app">
+      <!-- UI will be rendered by JS -->
+    </main>
   </div>
 
   <div class="modal-overlay" id="contact-modal">
     <div class="modal-content">
       <button class="modal-close" onclick="closeModal()">×</button>
       <h3>Owner Contacts</h3>
-      <p style="color:var(--text-muted);margin-bottom:1.5rem;">Reach out to the landlord directly.</p>
+      <p style="color:var(--text-muted);margin-bottom:2rem;font-size:1.05rem;">Reach out to the landlord directly.</p>
       
       <a href="#" class="contact-option call" id="contact-call">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
@@ -200,11 +246,14 @@
     let listing = null;
 
     document.addEventListener('DOMContentLoaded', () => {
+      // Show logo text on inner pages
+      const lt = document.querySelector('.logo-text');
+      if(lt && window.innerWidth > 480) lt.style.display = 'inline-block';
+
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
       
       if(!id) {
-         // Default to first listing if directly navigated
          const all = window.getListings();
          if(all.length > 0) listing = all[0];
       } else {
@@ -228,35 +277,39 @@
       `).join('');
 
       app.innerHTML = `
-        <div class="hero-image" id="main-hero" style="background-image: url('${mainPhoto}')">
-          <button class="back-btn" onclick="window.location.href='shop.html'">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          </button>
-        </div>
-        
-        <div class="gallery-row">
-          ${photosHtml}
-        </div>
-
-        <div class="details-content">
-          <h1 class="details-title">${listing.title}</h1>
-          <div class="details-meta">${listing.school || 'Unknown'} • ${listing.area || 'Unknown'}</div>
-          <span class="price">₦${listing.price.toLocaleString()}</span>
-          
-          <h3 class="section-title">Description</h3>
-          <p class="desc">${listing.description || 'Verified property listing connected to StudentHome.'}</p>
-          
-          <h3 class="section-title">Features</h3>
-          <div class="features">
-            <div class="feature-tag">🛏️ ${listing.rooms || 1} Bedroom</div>
-            <div class="feature-tag">🏠 ${listing.type || 'Standard'}</div>
-            <div class="feature-tag">✅ Verified</div>
-            <div class="feature-tag">📍 Near Campus</div>
+        <div class="details-grid">
+          <div class="left-col">
+            <div class="hero-image" id="main-hero" style="background-image: url('${mainPhoto}')">
+              <button class="back-btn" onclick="window.location.href='shop.html'">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+              </button>
+            </div>
+            
+            <div class="gallery-row">
+              ${photosHtml}
+            </div>
+            
+            <h3 class="section-title">Description</h3>
+            <p class="desc">${listing.description || 'Verified property listing connected to StudentHome.'}</p>
           </div>
-        </div>
 
-        <div class="checkout-wrapper">
-          <button class="btn-checkout" onclick="handleCheckout()">Check Out</button>
+          <div class="right-col">
+            <h1 class="details-title">${listing.title}</h1>
+            <div class="details-meta">${listing.school || 'Unknown'} • ${listing.area || 'Unknown'}</div>
+            
+            <div class="features">
+              <div class="feature-tag">🛏️ ${listing.rooms || 1} Bedroom</div>
+              <div class="feature-tag">🏠 ${listing.type || 'Standard'}</div>
+              <div class="feature-tag">✅ Verified</div>
+              <div class="feature-tag">📍 Near Campus</div>
+            </div>
+
+            <div class="checkout-wrapper">
+              <span class="price">₦${listing.price.toLocaleString()}</span>
+              <span class="price-sub">Exclusive of utilities</span>
+              <button class="btn-checkout" onclick="handleCheckout()">Check Out Contact</button>
+            </div>
+          </div>
         </div>
       `;
     }
@@ -267,21 +320,15 @@
 
     function handleCheckout() {
       const user = window.getCurrentUser();
-      
-      // E-commerce logic: Must be logged in
       if(!user) {
         alert("Please login or create an account to view owner contact details.");
         window.location.href = "auth.html";
         return;
       }
-
-      // Show the contact modal
       document.getElementById('call-text').textContent = 'Call ' + (listing.contact?.phone || "Unavailable");
       document.getElementById('contact-call').href = 'tel:' + (listing.contact?.phone || "");
-      
       document.getElementById('wa-text').textContent = 'WhatsApp ' + (listing.contact?.whatsapp || "Unavailable");
       document.getElementById('contact-wa').href = 'https://wa.me/' + (listing.contact?.whatsapp || "");
-
       document.getElementById('contact-modal').style.display = 'flex';
     }
 

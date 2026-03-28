@@ -46,12 +46,14 @@
 
     .listed-houses {
       padding: 0 1.5rem 1.5rem 1.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
     }
     .house-item {
       background: var(--bg-dark);
-      padding: 1rem;
+      padding: 1.5rem;
       border-radius: 12px;
-      margin-bottom: 1rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -115,11 +117,24 @@
               <h4>${l.title}</h4>
               <p>${l.school} • ${l.area}</p>
             </div>
-            <div style="font-weight:600; color:var(--accent);">₦${l.price.toLocaleString()}</div>
+            <div style="text-align: right;">
+              <div style="font-weight:600; color:var(--accent); font-size:1.1rem; margin-bottom: 0.5rem;">₦${l.price.toLocaleString()}</div>
+              <div>
+                <button onclick="window.location.href='admin-form.html?edit=${l.id}'" style="background:#334155; color:#fff; border:none; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer; margin-right:0.5rem; transition:0.2s;">Edit</button>
+                <button onclick="handleDelete(${l.id})" style="background:#f43f5e; color:#fff; border:none; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer; transition:0.2s;">Delete</button>
+              </div>
+            </div>
           </div>
         `).join('');
       }
     });
+
+    function handleDelete(id) {
+      if(confirm('Are you strictly sure you want to permanently delete this house?')) {
+        window.deleteListing(id);
+        window.location.reload();
+      }
+    }
   </script>
 </body>
 </html>

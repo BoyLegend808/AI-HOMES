@@ -22,6 +22,18 @@ const SYSTEM_ADMINS = [
   // Add more admins here like the above objects
 ];
 
+/* ==========================================
+   STUDENT DATABASE (HARDCODED TEST ACCOUNTS)
+========================================== */
+const SYSTEM_STUDENTS = [
+  {
+    name: "EBSU Fresher",
+    email: "ebsu@student.com",
+    password: "123",
+    role: "student"
+  }
+];
+
 const NIGERIA_UNIVERSITIES = {
   "EBSU": ["Presco", "Palmsite", "Town", "CAS"],
   "UNN": ["Hilltop", "Odenigwe", "Behind Flat", "Zik's Flat"],
@@ -94,7 +106,10 @@ if (!localStorage.getItem(USERS_KEY)) {
   localStorage.setItem(USERS_KEY, JSON.stringify([]));
 }
 
-function getListings() { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+function getListings() { 
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } 
+  catch(e) { return []; } 
+}
 function saveListings(l) { localStorage.setItem(STORAGE_KEY, JSON.stringify(l)); }
 function getListingById(id) { return getListings().find(l => l.id == id); }
 function addListing(house) {
@@ -102,8 +117,22 @@ function addListing(house) {
   l.push(house);
   saveListings(l);
 }
+function updateListing(house) {
+  const l = getListings();
+  const idx = l.findIndex(h => h.id == house.id);
+  if(idx > -1) l[idx] = house;
+  saveListings(l);
+}
+function deleteListing(id) {
+  let l = getListings();
+  l = l.filter(h => h.id != id);
+  saveListings(l);
+}
 
-function getUsers() { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; }
+function getUsers() { 
+  try { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; } 
+  catch(e) { return []; } 
+}
 function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
 
 function registerUser(data) {
@@ -112,10 +141,10 @@ function registerUser(data) {
   
   const users = getUsers();
   // Check if someone is trying to register with a system admin email
-  if (SYSTEM_ADMINS.find(admin => admin.email === data.email)) {
+  if (SYSTEM_ADMINS.find(admin => admin.email.toLowerCase() === data.email.toLowerCase())) {
     return { success: false, message: "Email is reserved by system." };
   }
-  if(users.find(u => u.email === data.email)) return { success: false, message: "Email already exists" };
+  if(users.find(u => u.email.toLowerCase() === data.email.toLowerCase())) return { success: false, message: "Email already exists" };
   
   users.push(data);
   saveUsers(users);
@@ -123,16 +152,25 @@ function registerUser(data) {
 }
 
 function loginUser(email, password) {
+  const checkEmail = email.toLowerCase().trim();
+  
   // 1. Check if it's a special System Admin 
-  const admin = SYSTEM_ADMINS.find(u => u.email === email && u.password === password);
+  const admin = SYSTEM_ADMINS.find(u => u.email.toLowerCase() === checkEmail && u.password === password);
   if(admin) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(admin));
     return { success: true, user: admin };
   }
   
+  // 1.5 Check if it's a hardcoded System Student
+  const sysStudent = SYSTEM_STUDENTS.find(u => u.email.toLowerCase() === checkEmail && u.password === password);
+  if(sysStudent) {
+    localStorage.setItem(AUTH_KEY, JSON.stringify(sysStudent));
+    return { success: true, user: sysStudent };
+  }
+  
   // 2. Otherwise check normal student users
   const users = getUsers();
-  const user = users.find(u => u.email === email && u.password === password);
+  const user = users.find(u => u.email.toLowerCase() === checkEmail && u.password === password);
   if(user) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(user));
     return { success: true, user };
@@ -162,8 +200,8 @@ function renderGlobalNav() {
   let html = `
     <a href="home.html" class="${isActive('home.html')}">Home</a>
     <a href="shop.html" class="${isActive('shop.html')}">Shop</a>
-    <a href="#" class="${isActive('contact.html')}">Contact</a>
-    <a href="#" class="${isActive('about.html')}">About</a>
+    <a href="contact.html" class="${isActive('contact.html')}">Contact</a>
+    <a href="about.html" class="${isActive('about.html')}">About</a>
   `;
 
   if(user) {
@@ -184,6 +222,8 @@ window.getListings = getListings;
 window.saveListings = saveListings;
 window.getListingById = getListingById;
 window.addListing = addListing;
+window.updateListing = updateListing;
+window.deleteListing = deleteListing;
 window.registerUser = registerUser;
 window.loginUser = loginUser;
 window.logoutUser = logoutUser;

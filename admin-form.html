@@ -8,7 +8,10 @@
   <link rel="stylesheet" href="home.css">
   <style>
     .admin-form-wrapper {
-      padding: 1.5rem;
+      padding: 2rem;
+      width: 100%;
+      max-width: 600px;
+      margin: 0 auto;
     }
     .admin-form-wrapper h2 {
       margin-bottom: 1.5rem;
@@ -60,7 +63,7 @@
     </header>
 
     <main class="admin-form-wrapper">
-      <h2>Add New Listing</h2>
+      <h2 id="form-title">Add New Listing</h2>
       
       <div class="form-group">
         <label>Property Title</label>
@@ -120,12 +123,14 @@
         <textarea id="add-desc" class="form-control" rows="4" placeholder="Important details..."></textarea>
       </div>
 
-      <button class="btn-submit" onclick="submitHouse()">Add House</button>
+      <button class="btn-submit" id="btn-submit" onclick="submitHouse()">Add House</button>
     </main>
   </div>
 
   <script src="data.js"></script>
   <script>
+    let editingId = null;
+
     document.addEventListener('DOMContentLoaded', () => {
       const user = window.getCurrentUser();
       if(!user || user.role !== 'admin') {
@@ -134,21 +139,49 @@
         return;
       }
 
+      // Populate Select Options First
       const schoolSelect = document.getElementById('add-school');
       Object.keys(window.NIGERIA_UNIVERSITIES).forEach(school => {
         const op = document.createElement('option');
-        op.value = school;
-        op.textContent = school;
+        op.value = school; op.textContent = school;
         schoolSelect.appendChild(op);
       });
 
       const typeSelect = document.getElementById('add-type');
       window.HOUSE_TYPES.forEach(t => {
         const op = document.createElement('option');
-        op.value = t;
-        op.textContent = t;
+        op.value = t; op.textContent = t;
         typeSelect.appendChild(op);
       });
+
+      // Check if Editing
+      const params = new URLSearchParams(window.location.search);
+      editingId = params.get('edit');
+      
+      if(editingId) {
+        const house = window.getListingById(editingId);
+        if(house) {
+          document.getElementById('form-title').textContent = "Edit Property";
+          document.getElementById('btn-submit').textContent = "Save Changes";
+          
+          document.getElementById('add-title').value = house.title;
+          document.getElementById('add-price').value = house.price;
+          document.getElementById('add-rooms').value = house.rooms;
+          document.getElementById('add-type').value = house.type;
+          document.getElementById('add-phone').value = house.contact?.phone || '';
+          document.getElementById('add-wa').value = house.contact?.whatsapp || '';
+          document.getElementById('add-desc').value = house.description || '';
+          
+          if(house.photos && house.photos.length > 0) document.getElementById('add-img1').value = house.photos[0];
+          if(house.photos && house.photos.length > 1) document.getElementById('add-img2').value = house.photos[1];
+          if(house.photos && house.photos.length > 2) document.getElementById('add-img3').value = house.photos[2];
+
+          // Trigger school change event manually to load areas
+          schoolSelect.value = house.school;
+          schoolSelect.dispatchEvent(new Event('change'));
+          document.getElementById('add-area').value = house.area;
+        }
+      }
     });
 
     document.getElementById('add-school').addEventListener('change', (e) => {
@@ -183,7 +216,7 @@
       }
 
       const house = {
-        id: Date.now(),
+        id: editingId ? parseInt(editingId) : Date.now(),
         title, school, area, type, price, rooms,
         status: "Active",
         photos: [img1, img2, img3].filter(i=>i),
@@ -191,8 +224,14 @@
         contact: { phone, whatsapp }
       };
 
-      window.addListing(house);
-      alert("House added successfully!");
+      if(editingId) {
+        window.updateListing(house);
+        alert("House updated successfully!");
+      } else {
+        window.addListing(house);
+        alert("House added successfully!");
+      }
+      
       window.location.href = "admin.html";
     }
   </script>

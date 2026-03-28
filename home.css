@@ -1,10 +1,10 @@
-/* StudentHome - Premium Home Page Styles */
+/* StudentHome - Premium Responsive Styles */
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
 :root {
-  --bg-dark: #12161b; /* Main surrounding bg */
-  --bg-panel: #1b212a; /* Main interface bg */
+  --bg-dark: #12161b;
+  --bg-panel: #1b212a;
   --accent: #d96c42;
   --accent-light: rgba(217, 108, 66, 0.15);
   --text-main: #f8fafc;
@@ -24,16 +24,18 @@ body {
   background-color: var(--bg-dark);
   color: var(--text-main);
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-/* We style .app-container to act as a mobile frame on desktop */
 .app-container {
-  max-width: 480px; 
+  width: 100%;
+  max-width: 1200px;
   margin: 0 auto;
   min-height: 100vh;
-  background-color: var(--bg-panel);
-  position: relative;
-  overflow-x: hidden;
+  background-color: var(--bg-dark);
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header */
@@ -41,30 +43,40 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 1.5rem 1rem 1.5rem;
+  padding: 1.5rem 2rem;
+  background: rgba(18, 22, 27, 0.8);
+  backdrop-filter: blur(12px);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--card-border);
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.8rem;
   font-weight: 700;
-  font-size: 1.2rem;
+  font-size: 1.4rem;
 }
 
 .logo-icon {
   color: #1b212a;
   background-color: var(--accent);
-  padding: 0.15rem 0.4rem;
-  border-radius: 6px;
+  padding: 0.2rem 0.6rem;
+  border-radius: 8px;
   font-weight: 800;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
+}
+
+.logo-text {
+  display: inline-block;
 }
 
 .nav-links {
   display: flex;
-  gap: 1.2rem;
-  font-size: 0.95rem;
+  gap: 2rem;
+  font-size: 1rem;
   font-weight: 500;
 }
 
@@ -74,17 +86,18 @@ body {
   transition: color 0.2s;
 }
 
-.nav-links a.active {
+.nav-links a.active, .nav-links a:hover {
   color: var(--accent);
 }
 
-.nav-links a:hover {
-  color: var(--text-main);
+/* Shared Main Content Area */
+main {
+  flex: 1;
+  padding: 2rem;
 }
 
 /* Featured Section */
 .featured-section {
-  padding: 0 1.5rem;
   margin-top: 1rem;
 }
 
@@ -92,11 +105,11 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.2rem;
+  margin-bottom: 1.5rem;
 }
 
 .section-header h2 {
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -107,40 +120,42 @@ body {
 }
 
 .nav-btn {
-  background: transparent;
-  border: none;
+  background: var(--bg-panel);
+  border: 1px solid var(--card-border);
   color: var(--text-muted);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
-  padding: 0.2rem;
+  transition: all 0.2s;
+  padding: 0.6rem;
+  border-radius: 8px;
 }
 
 .nav-btn:hover {
   color: var(--text-main);
+  border-color: var(--accent);
 }
 
 .carousel {
   display: flex;
-  gap: 1rem;
+  gap: 1.5rem;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  padding-bottom: 1rem;
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
+  padding-bottom: 1.5rem;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
-.carousel::-webkit-scrollbar {
-  display: none;
-}
+.carousel::-webkit-scrollbar { display: none; }
 
 .house-card {
-  min-width: 150px;
-  background-color: var(--bg-dark);
+  min-width: 280px;
+  max-width: 380px;
+  flex: 1;
+  background-color: var(--bg-panel);
   border: 1px solid var(--card-border);
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   scroll-snap-align: start;
   cursor: pointer;
@@ -148,48 +163,52 @@ body {
 }
 
 .house-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  transform: translateY(-5px);
+  box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+  border-color: rgba(217, 108, 66, 0.3);
 }
 
 .card-image {
-  height: 110px;
+  height: 220px;
   background-size: cover;
   background-position: center;
   border-bottom: 1px solid var(--card-border);
 }
 
 .card-content {
-  padding: 0.8rem;
+  padding: 1.4rem;
 }
 
 .card-content h3 {
-  font-size: 0.9rem;
-  font-weight: 500;
-  margin-bottom: 0.2rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-bottom: 0.4rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .card-content p {
-  font-size: 0.75rem;
+  font-size: 0.95rem;
   color: var(--text-muted);
 }
 
 /* Search Section */
 .search-section {
-  padding: 1.5rem;
+  margin-top: 3rem;
+  background-color: var(--bg-panel);
+  padding: 2.5rem;
+  border-radius: 24px;
+  border: 1px solid var(--card-border);
 }
 
 .search-bar {
   display: flex;
   background-color: var(--bg-dark);
-  border-radius: 14px;
-  padding: 0.4rem;
+  border-radius: 16px;
+  padding: 0.6rem;
   align-items: center;
-  border: 1px solid rgba(255,255,255,0.03);
-  box-shadow: inset 0 2px 5px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
 .search-bar input {
@@ -197,8 +216,8 @@ body {
   background: transparent;
   border: none;
   color: var(--text-main);
-  padding: 0.8rem;
-  font-size: 0.95rem;
+  padding: 1rem 1.5rem;
+  font-size: 1.15rem;
   font-family: inherit;
   outline: none;
 }
@@ -210,9 +229,9 @@ body {
 .search-btn {
   background-color: var(--accent);
   border: none;
-  width: 45px;
-  height: 45px;
-  border-radius: 12px;
+  width: 65px;
+  height: 65px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -227,51 +246,59 @@ body {
 
 /* About Section */
 .about-section {
-  padding: 0.5rem 1.5rem 2rem 1.5rem;
+  margin-top: 5rem;
+  margin-bottom: 5rem;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
+  align-items: center;
 }
 
 .about-section h2 {
-  font-size: 1.4rem;
-  font-weight: 600;
-  margin-bottom: 0.8rem;
+  font-size: 2.4rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
 }
 
 .about-section p {
   color: var(--text-muted);
-  font-size: 0.95rem;
-  line-height: 1.6;
+  font-size: 1.15rem;
+  line-height: 1.8;
   margin-bottom: 1.5rem;
 }
 
 .about-image {
-  height: 220px;
-  background: url('https://images.unsplash.com/photo-1541885084-517726a8fd3d?auto=format&fit=crop&q=80&w=1000') center/bottom no-repeat;
+  height: 380px;
+  background: url('https://images.unsplash.com/photo-1541885084-517726a8fd3d?auto=format&fit=crop&q=80&w=1000') center/cover no-repeat;
   border-radius: 24px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
 }
 
-/* Responsive constraints for desktop screens (creating a mock phone display) */
-@media (min-width: 481px) {
-  body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: #0d1115;
-  }
-  .app-container {
-    height: 85vh;
-    border-radius: 36px;
-    overflow-y: auto;
-    border: 8px solid #2a3441;
-    box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-  }
-  /* Optional sleek scrollbar for the "phone" */
-  .app-container::-webkit-scrollbar {
-    width: 6px;
-  }
-  .app-container::-webkit-scrollbar-thumb {
-    background: #334155;
-    border-radius: 10px;
+/* Responsive constraints */
+@media (max-width: 900px) {
+  .about-section {
+    grid-template-columns: 1fr;
+    gap: 3rem;
   }
 }
 
+@media (max-width: 768px) {
+  main {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .logo-text { display: none !important; }
+  .top-nav { padding: 1rem; flex-direction: row; }
+  .nav-links { gap: 1rem; font-size: 0.9rem; }
+  main { padding: 1rem; }
+  .carousel { gap: 1rem; }
+  .house-card { min-width: 220px; }
+  .card-image { height: 160px; }
+  .search-section { padding: 1.5rem; }
+  .search-bar input { padding: 0.8rem 1rem; font-size: 1rem; }
+  .search-btn { width: 50px; height: 50px; }
+  .about-image { height: 250px; }
+  .section-header h2 { font-size: 1.5rem; }
+}
