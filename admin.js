@@ -1,3 +1,4 @@
+// StudentHome - Admin Dashboard Script
 const STORAGE_KEY = 'studenthome_listings';
 
 const defaultData = [
@@ -76,48 +77,49 @@ const renderTableRow = (item) => `
     <td>$${item.price}</td>
     <td><span class="status ${item.status.toLowerCase()}">${item.status}</span></td>
     <td class="actions">
-      <button class="btn btn-small btn-edit">Edit</button>
-      <button class="btn btn-small btn-delete">Delete</button>
+      <button class="btn btn-small btn-edit" data-id="${item.id}">Edit</button>
+      <button class="btn btn-small btn-delete" data-id="${item.id}">Delete</button>
     </td>
   </tr>
 `;
 
 const loadListingsTable = (listings = data) => {
-  listingsTableBody.innerHTML = listings.map(item => `
-    <tr>
-      <td>${item.title}</td>
-      <td>${item.location}</td>
-      <td>$${item.price}</td>
-      <td><span class="status ${item.status.toLowerCase()}">${item.status}</span></td>
-      <td class="actions">
-        <button class="btn btn-small btn-edit" data-id="${item.id}">Edit</button>
-        <button class="btn btn-small btn-delete" data-id="${item.id}">Delete</button>
-      </td>
-    </tr>
-  `).join('');
-  
-  // Add event listeners
-  document.querySelectorAll('.btn-edit').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      const id = parseInt(e.target.dataset.id);
-      // Redirect to edit form or open modal
-      window.location.href = `admin-form.html?edit=${id}`;
-    });
-  });
-  
-  document.querySelectorAll('.btn-delete').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      if (confirm('Delete this listing?')) {
+  if (listingsTableBody) {
+    listingsTableBody.innerHTML = listings.map(item => `
+      <tr>
+        <td>${item.title}</td>
+        <td>${item.location}</td>
+        <td>$${item.price}</td>
+        <td><span class="status ${item.status.toLowerCase()}">${item.status}</span></td>
+        <td class="actions">
+          <button class="btn btn-small btn-edit" data-id="${item.id}">Edit</button>
+          <button class="btn btn-small btn-delete" data-id="${item.id}">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+    
+    // Add event listeners
+    document.querySelectorAll('.btn-edit').forEach(btn => {
+      btn.addEventListener('click', (e) => {
         const id = parseInt(e.target.dataset.id);
-        deleteListing(id);
-        loadListingsTable();
-      }
+        window.location.href = `admin-form.html?edit=${id}`;
+      });
     });
-  });
+    
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        if (confirm('Delete this listing?')) {
+          const id = parseInt(e.target.dataset.id);
+          deleteListing(id);
+          loadListingsTable();
+        }
+      });
+    });
+  }
 };
 
 const filterListings = () => {
-  const query = searchInput.value.toLowerCase();
+  const query = searchInput?.value?.toLowerCase() || '';
   const filtered = data.filter(item =>
     item.title.toLowerCase().includes(query) ||
     item.location.toLowerCase().includes(query) ||
@@ -128,35 +130,28 @@ const filterListings = () => {
 
 function toggleMenu() {
   const mobileMenu = document.getElementById('mobile-menu');
-  mobileMenu.classList.toggle('active');
+  if (mobileMenu) {
+    mobileMenu.classList.toggle('active');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const menuLinks = document.querySelectorAll('#mobile-menu a');
   menuLinks.forEach(link => {
     link.addEventListener('click', () => {
-      document.getElementById('mobile-menu').classList.remove('active');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (mobileMenu) mobileMenu.classList.remove('active');
     });
   });
   
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('mobile-menu');
     const toggle = document.querySelector('.mobile-menu-toggle');
-    if (!menu.contains(e.target) && !toggle.contains(e.target) && menu.classList.contains('active')) {
+    if (menu && toggle && !menu.contains(e.target) && !toggle.contains(e.target) && menu.classList.contains('active')) {
       menu.classList.remove('active');
     }
   });
   
   loadListingsTable();
-  searchInput.addEventListener('input', filterListings);
-});
-      (it) =>
-        it.title.toLowerCase().includes(query) ||
-        it.status.toLowerCase().includes(query),
-    )
-    .map(
-      (it) =>
-        `<article class="list-card"><h3>${it.title}</h3><p class="text-muted">${it.location} · $${it.price}/mo · ${it.status}</p></article>`,
-    )
-    .join("");
+  if (searchInput) searchInput.addEventListener('input', filterListings);
 });

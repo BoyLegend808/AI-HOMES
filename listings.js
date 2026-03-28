@@ -1,3 +1,4 @@
+// StudentHome - Listings Page Script
 const STORAGE_KEY = 'studenthome_listings';
 
 const defaultData = [
@@ -59,13 +60,15 @@ const renderPropertyCard = (item) => `
 `;
 
 const updatePriceValue = () => {
-  priceValue.textContent = `$${priceRange.value}`;
+  if (priceValue && priceRange) {
+    priceValue.textContent = `$${priceRange.value}`;
+  }
 };
 
 const filterListings = () => {
-  const maxPrice = parseInt(priceRange.value);
-  const selectedLocation = locationSelect.value;
-  const selectedType = typeSelect.value;
+  const maxPrice = parseInt(priceRange?.value || 1500);
+  const selectedLocation = locationSelect?.value || 'all';
+  const selectedType = typeSelect?.value || 'all';
   
   // Check for search params from home page
   const searchLocation = sessionStorage.getItem('searchLocation') || '';
@@ -84,7 +87,9 @@ const filterListings = () => {
     return matchesPrice && matchesLocation && matchesType;
   });
   
-  listingsGrid.innerHTML = filtered.map(renderPropertyCard).join('');
+  if (listingsGrid) {
+    listingsGrid.innerHTML = filtered.map(renderPropertyCard).join('');
+  }
   
   // Clear search params after use
   sessionStorage.removeItem('searchLocation');
@@ -93,39 +98,37 @@ const filterListings = () => {
 };
 
 const loadListings = () => {
-  listingsGrid.innerHTML = data.map(renderPropertyCard).join('');
+  if (listingsGrid) {
+    listingsGrid.innerHTML = data.map(renderPropertyCard).join('');
+  }
   updatePriceValue();
 };
 
 function toggleMenu() {
   const mobileMenu = document.getElementById('mobile-menu');
-  mobileMenu.classList.toggle('active');
+  if (mobileMenu) {
+    mobileMenu.classList.toggle('active');
+  }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
   const menuLinks = document.querySelectorAll('#mobile-menu a');
   menuLinks.forEach(link => {
     link.addEventListener('click', () => {
-      document.getElementById('mobile-menu').classList.remove('active');
+      const mobileMenu = document.getElementById('mobile-menu');
+      if (mobileMenu) mobileMenu.classList.remove('active');
     });
   });
   
   document.addEventListener('click', (e) => {
     const menu = document.getElementById('mobile-menu');
     const toggle = document.querySelector('.mobile-menu-toggle');
-    if (!menu.contains(e.target) && !toggle.contains(e.target) && menu.classList.contains('active')) {
+    if (menu && toggle && !menu.contains(e.target) && !toggle.contains(e.target) && menu.classList.contains('active')) {
       menu.classList.remove('active');
     }
   });
   
   loadListings();
-  priceRange.addEventListener('input', updatePriceValue);
-  applyFiltersBtn.addEventListener('click', filterListings);
+  if (priceRange) priceRange.addEventListener('input', updatePriceValue);
+  if (applyFiltersBtn) applyFiltersBtn.addEventListener('click', filterListings);
 });
-  );
-  listingCards.innerHTML = filtered.map(renderCard).join("");
-};
-priceRange.addEventListener("input", updateListings);
-locationFilter.addEventListener("change", updateListings);
-typeFilter.addEventListener("change", updateListings);
-updateListings();

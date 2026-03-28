@@ -1,105 +1,200 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StudentHome - Add/Edit Listing</title>
-  <link rel="stylesheet" href="admin-form.css">
+  <title>StudentHome - Add House</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="home.css">
+  <style>
+    .admin-form-wrapper {
+      padding: 1.5rem;
+    }
+    .admin-form-wrapper h2 {
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+    }
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    .form-group label {
+      display: block;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .form-control {
+      width: 100%;
+      background: var(--bg-dark);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.8rem;
+      border-radius: 12px;
+      font-family: inherit;
+    }
+    .form-control:focus { outline: none; border-color: var(--accent); }
+    .btn-submit {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      padding: 1rem;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+    }
+  </style>
 </head>
-
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="#" class="logo">StudentHome</a>
-      <ul class="nav-links">
-        <li><a href="home.html">Home</a></li>
-        <li><a href="listings.html">Listings</a></li>
-        <li><a href="details.html">Details</a></li>
-        <li><a href="admin.html">Landlord</a></li>
-      </ul>
-      <div class="mobile-menu" id="mobile-menu">
-        <ul>
-          <li><a href="home.html">Home</a></li>
-          <li><a href="listings.html">Listings</a></li>
-          <li><a href="details.html">Details</a></li>
-          <li><a href="admin.html">Landlord</a></li>
-        </ul>
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="logo">
+        <span class="logo-icon">SH</span> 
+        <span class="logo-text" style="display:none;">Student</span>
       </div>
-      <button class="mobile-menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu">☰</button>
-    </div>
-  </nav>
+      <nav class="nav-links">
+        <a href="admin.html">← Back</a>
+      </nav>
+    </header>
 
-  <main class="add-listing">
-    <div class="container">
-      <h1>Add/Edit Listing</h1>
+    <main class="admin-form-wrapper">
+      <h2>Add New Listing</h2>
+      
+      <div class="form-group">
+        <label>Property Title</label>
+        <input type="text" id="add-title" class="form-control" placeholder="e.g. Nice 2 Bedroom Flat">
+      </div>
 
-      <form id="listing-form" class="form">
-        <div class="form-group">
-          <label for="title">Title</label>
-          <input type="text" id="title" required>
-        </div>
+      <div class="form-group">
+        <label>University</label>
+        <select id="add-school" class="form-control">
+          <option value="">Select School</option>
+        </select>
+      </div>
 
-        <div class="form-group">
-          <label for="location">Location</label>
-          <input type="text" id="location" required>
-        </div>
+      <div class="form-group">
+        <label>Area</label>
+        <select id="add-area" class="form-control">
+          <option value="">Select Area</option>
+        </select>
+      </div>
 
-        <div class="form-group">
-          <label for="price">Price ($/mo)</label>
-          <input type="number" id="price" min="100" required>
-        </div>
+      <div class="form-group">
+        <label>Property Type</label>
+        <select id="add-type" class="form-control">
+          <option value="">Select Type</option>
+        </select>
+      </div>
 
-        <div class="form-group">
-          <label for="rooms">Number of Rooms</label>
-          <input type="number" id="rooms" min="1" required>
-        </div>
+      <div class="form-group">
+        <label>Price (₦)</label>
+        <input type="number" id="add-price" class="form-control" placeholder="e.g. 150000">
+      </div>
 
-        <div class="form-group">
-          <label for="type">Type</label>
-          <select id="type">
-            <option>Shared</option>
-            <option>Private</option>
-          </select>
-        </div>
+      <div class="form-group">
+        <label>Number of Rooms</label>
+        <input type="number" id="add-rooms" class="form-control" placeholder="1">
+      </div>
 
-        <div class="form-group">
-          <label>Amenities</label>
-          <div class="checkboxes">
-            <label><input type="checkbox" name="amenities" value="WiFi"> WiFi</label>
-            <label><input type="checkbox" name="amenities" value="Laundry"> Laundry</label>
-            <label><input type="checkbox" name="amenities" value="Parking"> Parking</label>
-            <label><input type="checkbox" name="amenities" value="Gym"> Gym</label>
-          </div>
-        </div>
+      <div class="form-group">
+        <label>Image URLs (Provide 3 image links)</label>
+        <input type="url" id="add-img1" class="form-control" placeholder="Image URL 1" style="margin-bottom:0.5rem;">
+        <input type="url" id="add-img2" class="form-control" placeholder="Image URL 2" style="margin-bottom:0.5rem;">
+        <input type="url" id="add-img3" class="form-control" placeholder="Image URL 3">
+      </div>
 
-        <div class="form-group">
-          <label for="photo">Photo URL</label>
-          <input type="url" id="photo">
-        </div>
+      <div class="form-group">
+        <label>Contact Phone</label>
+        <input type="text" id="add-phone" class="form-control" placeholder="080...">
+      </div>
+      
+      <div class="form-group">
+        <label>Contact WhatsApp</label>
+        <input type="text" id="add-wa" class="form-control" placeholder="080...">
+      </div>
 
-        <div class="form-group">
-          <label for="description">Description</label>
-          <textarea id="description" rows="4"></textarea>
-        </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="add-desc" class="form-control" rows="4" placeholder="Important details..."></textarea>
+      </div>
 
-        <div class="form-group">
-          <label for="contact">Contact Info</label>
-          <input type="text" id="contact" required>
-        </div>
+      <button class="btn-submit" onclick="submitHouse()">Add House</button>
+    </main>
+  </div>
 
-        <button type="submit" class="btn btn-primary">Save Listing</button>
-      </form>
-    </div>
-  </main>
+  <script src="data.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = window.getCurrentUser();
+      if(!user || user.role !== 'admin') {
+        alert("Access Denied. Admins only.");
+        window.location.href = "home.html";
+        return;
+      }
 
-  <footer class="footer">
-    <div class="container">
-      <p>&copy; 2026 StudentHome. All rights reserved.</p>
-    </div>
-  </footer>
+      const schoolSelect = document.getElementById('add-school');
+      Object.keys(window.NIGERIA_UNIVERSITIES).forEach(school => {
+        const op = document.createElement('option');
+        op.value = school;
+        op.textContent = school;
+        schoolSelect.appendChild(op);
+      });
 
-  <script src="admin-form.js"></script>
+      const typeSelect = document.getElementById('add-type');
+      window.HOUSE_TYPES.forEach(t => {
+        const op = document.createElement('option');
+        op.value = t;
+        op.textContent = t;
+        typeSelect.appendChild(op);
+      });
+    });
+
+    document.getElementById('add-school').addEventListener('change', (e) => {
+      const areaSelect = document.getElementById('add-area');
+      areaSelect.innerHTML = '<option value="">Select Area</option>';
+      const areas = window.NIGERIA_UNIVERSITIES[e.target.value] || [];
+      areas.forEach(a => {
+        const op = document.createElement('option');
+        op.value = a;
+        op.textContent = a;
+        areaSelect.appendChild(op);
+      });
+    });
+
+    function submitHouse() {
+      const title = document.getElementById('add-title').value;
+      const school = document.getElementById('add-school').value;
+      const area = document.getElementById('add-area').value;
+      const type = document.getElementById('add-type').value;
+      const price = parseInt(document.getElementById('add-price').value);
+      const rooms = parseInt(document.getElementById('add-rooms').value);
+      const img1 = document.getElementById('add-img1').value;
+      const img2 = document.getElementById('add-img2').value;
+      const img3 = document.getElementById('add-img3').value;
+      const phone = document.getElementById('add-phone').value;
+      const whatsapp = document.getElementById('add-wa').value;
+      const desc = document.getElementById('add-desc').value;
+
+      if(!title || !school || !area || !type || !price || !img1 || !phone) {
+        alert("Please fill in all major fields.");
+        return;
+      }
+
+      const house = {
+        id: Date.now(),
+        title, school, area, type, price, rooms,
+        status: "Active",
+        photos: [img1, img2, img3].filter(i=>i),
+        description: desc,
+        contact: { phone, whatsapp }
+      };
+
+      window.addListing(house);
+      alert("House added successfully!");
+      window.location.href = "admin.html";
+    }
+  </script>
 </body>
-
 </html>

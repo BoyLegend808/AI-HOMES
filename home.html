@@ -1,109 +1,81 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StudentHome - Find Your Campus Home</title>
+  <title>StudentHome - Home</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="home.css">
 </head>
-
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="#" class="logo">StudentHome</a>
-      <ul class="nav-links">
-        <li><a href="home.html" class="active">Home</a></li>
-        <li><a href="listings.html">Listings</a></li>
-        <li><a href="details.html">Details</a></li>
-        <li><a href="admin.html">Landlord</a></li>
-      </ul>
-      <div class="mobile-menu" id="mobile-menu">
-        <ul>
-          <li><a href="home.html">Home</a></li>
-          <li><a href="listings.html">Listings</a></li>
-          <li><a href="details.html">Details</a></li>
-          <li><a href="admin.html">Landlord</a></li>
-        </ul>
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="logo">
+        <span class="logo-icon">SH</span> 
+        <span class="logo-text" style="display: none;">Student</span>
       </div>
-      <button class="mobile-menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu">☰</button>
-    </div>
-  </nav>
+      <nav class="nav-links">
+        <!-- populated by data.js -->
+      </nav>
+    </header>
 
-  <main>
-    <section class="hero">
-      <div class="container">
-        <h1>Find Your Perfect Student Home</h1>
-        <p>Browse verified listings near campus with ease.</p>
-        <a href="#search" class="btn btn-primary">Get Started</a>
-      </div>
-    </section>
-
-    <section id="search" class="search-section">
-      <div class="container">
-        <form class="search-form">
-          <input type="text" placeholder="Location (e.g., Sycamore)" class="search-input">
-          <input type="number" placeholder="Max Price" class="search-input">
-          <select class="search-input">
-            <option>Type</option>
-            <option>Shared</option>
-            <option>Private</option>
-          </select>
-          <button type="submit" class="btn btn-primary">Search</button>
-        </form>
-      </div>
-    </section>
-
-    <section class="featured">
-      <div class="container">
-        <h2>Featured Listings</h2>
-        <div class="listings-grid" id="featured-listings">
-          <!-- Cards will be populated by JS -->
-        </div>
-      </div>
-    </section>
-
-    <section class="how-it-works">
-      <div class="container">
-        <h2>How It Works</h2>
-        <div class="steps">
-          <div class="step">
-            <div class="step-icon">🔍</div>
-            <h3>Search</h3>
-            <p>Find homes that match your needs.</p>
-          </div>
-          <div class="step">
-            <div class="step-icon">📋</div>
-            <h3>Compare</h3>
-            <p>View details and compare options.</p>
-          </div>
-          <div class="step">
-            <div class="step-icon">📞</div>
-            <h3>Contact</h3>
-            <p>Reach out to landlords directly.</p>
+    <main>
+      <section class="featured-section">
+        <div class="section-header">
+          <h2>Featured Housing</h2>
+          <div class="controls">
+            <button class="nav-btn" onclick="document.getElementById('carousel').scrollBy(-160, 0)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button class="nav-btn" onclick="document.getElementById('carousel').scrollBy(160, 0)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
           </div>
         </div>
-      </div>
-    </section>
-
-    <section class="testimonials">
-      <div class="container">
-        <h2>What Students Say</h2>
-        <div class="testimonial">
-          <p>"Found my perfect place in minutes!"</p>
-          <cite>- Alex, Student</cite>
+        
+        <div class="carousel" id="carousel">
+          <!-- populated by js -->
         </div>
-      </div>
-    </section>
-  </main>
+      </section>
 
-  <footer class="footer">
-    <div class="container">
-      <p>&copy; 2026 StudentHome. All rights reserved.</p>
-    </div>
-  </footer>
+      <section class="search-section">
+        <div class="search-bar">
+          <input type="text" placeholder="Select location, budget..." id="quick-search">
+          <button class="search-btn" onclick="goToShop()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </button>
+        </div>
+      </section>
 
-  <script src="home.js"></script>
+      <section class="about-section">
+        <h2>About StudentHome</h2>
+        <p>We bridge the gap to provide excellent student housing options for our university's students. We offer hassle-free bookings, simple rental agreements, and verified providers.</p>
+        <div class="about-image"></div>
+      </section>
+    </main>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    function renderFeatured() {
+      const carousel = document.getElementById('carousel');
+      const listings = window.getListings().slice(0, 5); // top 5
+      carousel.innerHTML = listings.map(l => `
+        <div class="house-card" onclick="window.location.href='details.html?id=${l.id}'">
+          <div class="card-image" style="background-image: url('${l.photos[0]}')"></div>
+          <div class="card-content">
+            <h3>${l.title}</h3>
+            <p>${l.rooms} bed • ${l.area}</p>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function goToShop() {
+       window.location.href = "shop.html";
+    }
+
+    document.addEventListener('DOMContentLoaded', renderFeatured);
+  </script>
 </body>
-
 </html>

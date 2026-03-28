@@ -1,72 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StudentHome - Admin Dashboard</title>
-  <link rel="stylesheet" href="admin.css">
+  <title>StudentHome - Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="home.css">
+  <style>
+    .admin-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+    .admin-header h2 {
+      font-size: 1.6rem;
+    }
+    .admin-header p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .status-card {
+      background: var(--bg-dark);
+      margin: 1.5rem;
+      padding: 1.5rem;
+      border-radius: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--card-border);
+    }
+    .status-card h3 { font-size: 2rem; color: var(--accent); }
+    .status-card p { color: var(--text-muted); font-size: 0.9rem; }
+    
+    .btn-add {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 0.8rem 1.2rem;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      margin: 0 1.5rem 1rem 1.5rem;
+    }
+
+    .listed-houses {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+    }
+    .house-item {
+      background: var(--bg-dark);
+      padding: 1rem;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid var(--card-border);
+    }
+    .house-info h4 { font-size: 1.1rem; }
+    .house-info p { font-size: 0.85rem; color: var(--text-muted); }
+  </style>
 </head>
-
 <body>
-  <nav class="navbar">
-    <div class="container">
-      <a href="#" class="logo">StudentHome</a>
-      <ul class="nav-links">
-        <li><a href="home.html">Home</a></li>
-        <li><a href="listings.html">Listings</a></li>
-        <li><a href="details.html">Details</a></li>
-        <li><a href="admin.html" class="active">Landlord</a></li>
-      </ul>
-      <div class="mobile-menu" id="mobile-menu">
-        <ul>
-          <li><a href="home.html">Home</a></li>
-          <li><a href="listings.html">Listings</a></li>
-          <li><a href="details.html">Details</a></li>
-          <li><a href="admin.html">Landlord</a></li>
-        </ul>
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="logo">
+        <span class="logo-icon">SH</span> 
+        <span class="logo-text" style="display: none;">Student</span>
       </div>
-      <button class="mobile-menu-toggle" onclick="toggleMenu()" aria-label="Toggle menu">☰</button>
-    </div>
-  </nav>
+      <nav class="nav-links"></nav>
+    </header>
 
-  <main class="admin-dashboard">
-    <div class="container">
-      <h1>Admin Dashboard</h1>
-
-      <div class="dashboard-actions">
-        <a href="admin-form.html" class="btn btn-primary">Add New Listing</a>
+    <main>
+      <div class="admin-header">
+        <h2>Admin Dashboard</h2>
+        <p>Manage your properties</p>
       </div>
 
-      <section class="listings-table">
-        <div class="table-header">
-          <input type="search" id="search-listings" placeholder="Search listings...">
+      <div class="status-card">
+        <div>
+          <h3 id="prop-count">0</h3>
+          <p>Active Properties</p>
         </div>
-        <table id="listings-table">
-          <thead>
-            <tr>
-              <th>Title</th>
-              <th>Location</th>
-              <th>Price</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="listings-body">
-            <!-- Rows populated by JS -->
-          </tbody>
-        </table>
-      </section>
-    </div>
-  </main>
+      </div>
 
-  <footer class="footer">
-    <div class="container">
-      <p>&copy; 2026 StudentHome. All rights reserved.</p>
-    </div>
-  </footer>
+      <a href="admin-form.html" class="btn-add">+ Add New House</a>
 
-  <script src="admin.js"></script>
+      <div class="listed-houses" id="listed-houses">
+        <!-- Rendered by JS -->
+      </div>
+    </main>
+  </div>
+
+  <script src="data.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const user = window.getCurrentUser();
+      if(!user || user.role !== 'admin') {
+        alert("Access Denied. Admins only.");
+        window.location.href = "home.html";
+        return;
+      }
+
+      const listings = window.getListings();
+      document.getElementById('prop-count').textContent = listings.length;
+
+      const container = document.getElementById('listed-houses');
+      if(listings.length === 0) {
+        container.innerHTML = '<p style="color:var(--text-muted);">No houses listed yet.</p>';
+      } else {
+        container.innerHTML = listings.map(l => `
+          <div class="house-item">
+            <div class="house-info">
+              <h4>${l.title}</h4>
+              <p>${l.school} • ${l.area}</p>
+            </div>
+            <div style="font-weight:600; color:var(--accent);">₦${l.price.toLocaleString()}</div>
+          </div>
+        `).join('');
+      }
+    });
+  </script>
 </body>
-
 </html>
