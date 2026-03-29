@@ -131,9 +131,8 @@
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo">
-        <span class="logo-icon">SH</span> 
-        <span class="logo-text" style="display: none;">Student</span>
+      <div class="logo" onclick="window.location.href='home.html'">
+        <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
       <nav class="nav-links"></nav>
     </header>
@@ -226,11 +225,11 @@
     function renderShopGrid(listings) {
       const container = document.getElementById('shop-container');
       if(listings.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-muted);text-align:center;grid-column:1/-1;padding:3rem;">No houses found matching your criteria.</p>';
+        container.innerHTML = window.getEmptyStateHTML("Oops! No houses found", "We couldn't find any pad matching those filters. Try searching for a different school or area.");
         return;
       }
       container.innerHTML = listings.map(l => `
-        <div class="list-card" onclick="window.location.href='details.html?id=${l.id}'">
+        <div class="list-card reveal" onclick="window.location.href='details.html?id=${l.id}'">
           <img src="${l.photos[0]}" alt="${l.title}">
           <div class="list-info">
             <h3>${l.title}</h3>
@@ -242,6 +241,8 @@
           </div>
         </div>
       `).join('');
+
+      if(window.initReveal) window.initReveal();
     }
   </script>
 </body>

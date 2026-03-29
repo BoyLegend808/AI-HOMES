@@ -5,148 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StudentHome - Find Your Pad</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="home.css">
+  <link rel="stylesheet" href="home.css?v=2.0">
   <style>
-    /* Premium Hero Section */
-    .hero-banner {
-      position: relative;
-      height: 65vh;
-      min-height: 500px;
-      border-radius: 32px;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      margin-top: 1rem;
-      margin-bottom: 4rem;
-      background: linear-gradient(to right, rgba(18,22,27,0.9), rgba(18,22,27,0.5)), 
-                  url('https://images.unsplash.com/photo-1541885084-517726a8fd3d?auto=format&fit=crop&q=80&w=1400') center/cover no-repeat;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-    }
-    .hero-content {
-      z-index: 2;
-      max-width: 800px;
-      padding: 2rem;
-    }
-    .hero-badge {
-      display: inline-block;
-      background: rgba(217, 108, 66, 0.2);
-      color: var(--accent);
-      padding: 0.5rem 1.2rem;
-      border-radius: 30px;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      margin-bottom: 1.5rem;
-      border: 1px solid rgba(217, 108, 66, 0.4);
-    }
-    .hero-content h1 {
-      font-size: clamp(2.4rem, 5vw, 4.5rem);
-      font-weight: 800;
-      line-height: 1.1;
-      margin-bottom: 1.5rem;
-      letter-spacing: -0.02em;
-    }
-    .hero-content h1 span {
-      color: var(--accent);
-    }
-    .hero-content p {
-      font-size: clamp(1rem, 2vw, 1.25rem);
-      color: var(--text-muted);
-      margin-bottom: 2.5rem;
-      line-height: 1.6;
-    }
-    
-    .hero-btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 1.2rem 2.5rem;
-      border-radius: 16px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s ease;
-      display: inline-block;
-      text-decoration: none;
-    }
-    .hero-btn:hover {
-      background: #e87b51;
-      transform: translateY(-3px);
-      box-shadow: 0 10px 25px rgba(217, 108, 66, 0.4);
-    }
-
-    /* Benefits Grid */
-    .benefits-wrapper {
-      margin: 5rem 0;
-    }
-    .benefits-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 2rem;
-    }
-    .benefit-card {
-      background: var(--bg-panel);
-      padding: 2.5rem;
-      border-radius: 24px;
-      border: 1px solid var(--card-border);
-      text-align: center;
-      transition: transform 0.3s;
-    }
-    .benefit-card:hover { transform: translateY(-10px); }
-    .b-icon {
-      width: 70px; height: 70px;
-      background: rgba(217, 108, 66, 0.1);
-      color: var(--accent);
-      display: flex; align-items: center; justify-content: center;
-      border-radius: 20px;
-      font-size: 2rem;
-      margin: 0 auto 1.5rem auto;
-    }
-    .benefit-card h3 { font-size: 1.3rem; margin-bottom: 1rem; }
-    .benefit-card p { color: var(--text-muted); line-height: 1.6; font-size: 0.95rem; }
-
-    /* Landlord CTA Banner */
-    .landlord-cta {
-      margin: 5rem 0;
-      background: linear-gradient(135deg, #d96c42, #b5502c);
-      padding: 4rem 2rem;
-      border-radius: 32px;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-    }
-    .landlord-cta::after {
-      content: '';
-      position: absolute; top:0; left:0; width: 100%; height: 100%;
-      background: url('https://www.transparenttextures.com/patterns/cubes.png');
-      opacity: 0.1;
-      pointer-events: none;
-    }
-    .landlord-cta h2 { font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; margin-bottom: 1rem; }
-    .landlord-cta p { font-size: 1.2rem; color: rgba(255,255,255,0.9); margin-bottom: 2.5rem; max-width: 600px; margin-left: auto; margin-right: auto; }
-    .btn-light {
-      background: #fff;
-      color: #b5502c;
-      padding: 1.2rem 2.5rem;
-      border-radius: 16px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      cursor: pointer;
-      border: none;
-      transition: transform 0.3s;
-    }
-    .btn-light:hover { transform: scale(1.05); }
-
+    /* Moved to home.css for better performance and organization */
   </style>
 </head>
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo">
-        <span class="logo-icon">SH</span> 
-        <span class="logo-text" style="display: none;">Student</span>
+      <div class="logo" onclick="window.location.href='home.html'">
+        <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
       <nav class="nav-links">
         <!-- populated by data.js -->
@@ -161,6 +29,28 @@
           <h1>Find Your Perfect<br><span>Student Pad</span> Instantly</h1>
           <p>We bridge the gap between students and landlords to provide excellent, secure, and affordable housing options strictly close to your University campus.</p>
           <a href="shop.html" class="hero-btn">Browse Houses Now</a>
+        </div>
+      </section>
+
+      <!-- STATISTICS SECTION -->
+      <section class="stats-section reveal">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <span class="stat-num">500+</span>
+            <span class="stat-label">Verified Houses</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">10k+</span>
+            <span class="stat-label">Students Served</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">4</span>
+            <span class="stat-label">Top Universities</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-num">100+</span>
+            <span class="stat-label">Trusted Landlords</span>
+          </div>
         </div>
       </section>
 
@@ -207,41 +97,270 @@
         </div>
       </section>
 
+      <!-- HOW IT WORKS SECTION -->
+      <section class="how-it-works">
+        <div class="section-header" style="justify-content: center; margin-bottom: 3rem;">
+          <h2>How It Works</h2>
+        </div>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <h3>Search Near You</h3>
+            <p>Select your university and filter by preferred price, amenities, and proximity.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <h3>Pick A Room</h3>
+            <p>View high-quality photos, verified details, and virtual video tours for houses.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <h3>Contact Directly</h3>
+            <p>Message or call the verified property owner directly with zero middleman or agency fees.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PREMIUM TESTIMONIALS SECTION -->
+      <section class="testimonials-section">
+        <div class="section-header">
+          <h2>What Students Say</h2>
+        </div>
+        
+        <div class="testimonial-scroller" id="reviews-carousel">
+          <div class="testimonial-track" id="reviews-track">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <div class="add-review-container" style="margin-top:2rem;">
+          <div id="review-form-box" class="review-form-card"></div>
+        </div>
+      </section>
+
       <!-- LANDLORD CTA -->
       <section class="landlord-cta">
         <h2>Are You A Landlord?</h2>
         <p>List your property directly to thousands of actively looking students across Nigeria. Fill your vacant apartments in a matter of hours.</p>
         <button class="btn-light" onclick="window.location.href='auth.html'">Register as a Student to contact us</button>
       </section>
+
+      <!-- PRE-FOOTER FOLLOW US -->
+      <section class="pre-footer">
+        <h3>Follow Us</h3>
+        <div class="social-circles">
+          <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+          <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg></a>
+          <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
+          <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+        </div>
+      </section>
     </main>
+
+    <footer class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo">
+            <span class="logo-icon circular">SH</span> 
+            <span class="logo-text-premium"><span class="underline">Student</span>Home</span>
+          </div>
+          <p>Nigeria's leading platform for student housing. We provide premium, verified apartments close to campus, eliminating extreme agency fees.</p>
+          <div class="footer-social-small">
+            <a href="#">Fb</a>
+            <a href="#">Tw</a>
+            <a href="#">Li</a>
+            <a href="#">Ig</a>
+          </div>
+        </div>
+        
+        <div class="footer-links-col">
+          <h3>Quick Links</h3>
+          <a href="home.html">Home</a>
+          <a href="about.html">About Us</a>
+          <a href="shop.html">Browse Houses</a>
+          <a href="listings.html">Hot Deals</a>
+          <a href="contact.html">Contact</a>
+        </div>
+
+        <div class="footer-links-col">
+          <h3>Student Services</h3>
+          <a href="#">Hostel Vetting</a>
+          <a href="#">Roommate Finder</a>
+          <a href="#">Moving Services</a>
+          <a href="#">Maintenance</a>
+          <a href="#">Consultation</a>
+        </div>
+        
+        <div class="footer-newsletter">
+          <h3>Newsletter</h3>
+          <p>Subscribe to our newsletter for the latest campus housing updates and offers.</p>
+          <div class="newsletter-form">
+            <input type="email" placeholder="Your email">
+            <button type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <div class="footer-bottom-content">
+          <p>&copy; 2026 StudentHome Nigeria Limited. All Rights Reserved.</p>
+          <div class="footer-bottom-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+          </div>
+        </div>
+      </div>
+    </footer>
   </div>
 
   <script src="data.js"></script>
   <script>
-    function renderFeatured() {
-      // Show logo text on inner pages for desktop
-      const lt = document.querySelector('.logo-text');
-      if(lt && window.innerWidth > 480) lt.style.display = 'inline-block';
-
+    function renderHome() {
+      // 1. Featured Houses
       const carousel = document.getElementById('carousel');
-      const listings = window.getListings().slice(0, 8); // Top 8 featured
+      const listings = window.getListings().slice(0, 8);
+      if(carousel) {
+        if(listings.length === 0) {
+          carousel.innerHTML = '<p style="color:var(--text-muted);width:100%;text-align:center;">No trending houses.</p>';
+        } else {
+          carousel.innerHTML = listings.map(l => `
+            <div class="house-card reveal" onclick="window.location.href='details.html?id=${l.id}'">
+              <div class="card-image" style="background-image: url('${l.photos && l.photos[0] ? l.photos[0] : ''}')"></div>
+              <div class="card-content">
+                <h3>${l.title}</h3>
+                <p>${l.school} • ${l.area}</p>
+              </div>
+            </div>
+          `).join('');
+          
+          // Re-trigger reveal observer for dynamic content
+          if(window.initReveal) window.initReveal();
+        }
+      }
+
+      // 2. Reviews with Infinite Loop
+      const rCarousel = document.getElementById('reviews-carousel');
+      const rTrack = document.getElementById('reviews-track');
+      const reviews = window.getReviews();
       
-      if(listings.length === 0) {
-        carousel.innerHTML = '<p style="color:var(--text-muted);width:100%;text-align:center;">No trending houses at the moment.</p>';
-      } else {
-        carousel.innerHTML = listings.map(l => `
-          <div class="house-card" onclick="window.location.href='details.html?id=${l.id}'">
-            <div class="card-image" style="background-image: url('${l.photos && l.photos[0] ? l.photos[0] : ''}')"></div>
-            <div class="card-content">
-              <h3>${l.title}</h3>
-              <p>${l.school} • ${l.area}</p>
+      if(rCarousel && rTrack) {
+        // Double the content ONLY once, ensuring we have enough for a seamless loop
+        const doubleReviews = [...reviews, ...reviews];
+        
+        rTrack.innerHTML = doubleReviews.map(r => `
+          <div class="testimonial-card">
+            <blockquote style="margin:0; padding:0; border:none; background:none; font-style:italic;">"${r.text}"</blockquote>
+            <div class="client-profile">
+              <div class="client-img-wrapper">
+                <img src="${r.avatar || 'https://ui-avatars.com/api/?name='+r.name}" class="client-avatar">
+              </div>
+              <div class="client-info">
+                <cite>${r.name}</cite>
+                <span class="client-role">${r.school}</span>
+              </div>
             </div>
           </div>
         `).join('');
+
+        // 🧠 JS INFINITE SCROLL LOGIC 🧠
+        // Ensure only one loop runs
+        if (window.loopId) cancelAnimationFrame(window.loopId);
+        
+        let scrollPos = rCarousel.scrollLeft || 0;
+        let isMoving = true;
+        const speed = 0.5;
+        
+        function step() {
+          if (isMoving && !window.isManualScrolling) {
+            scrollPos += speed;
+            const max = rCarousel.scrollWidth / 2;
+            if (scrollPos >= max) {
+              scrollPos = 0;
+            }
+            rCarousel.scrollLeft = scrollPos;
+          } else if (window.isManualScrolling) {
+            // Update the animation's pointer to match where the user scrolled
+            scrollPos = rCarousel.scrollLeft;
+          }
+          window.loopId = requestAnimationFrame(step);
+        }
+        
+        window.loopId = requestAnimationFrame(step);
+
+        // Interaction Handlers (Desktop & Mobile)
+        rCarousel.onmouseenter = () => isMoving = false;
+        rCarousel.onmouseleave = () => { if(!window.isManualScrolling) isMoving = true; scrollPos = rCarousel.scrollLeft; };
+        
+        let momentumTimer;
+        // Touch events for Android - ensure we wait for momentum to stop before auto-moving again
+        rCarousel.ontouchstart = () => { 
+          clearTimeout(momentumTimer);
+          window.isManualScrolling = true; 
+          isMoving = false; 
+        };
+        rCarousel.ontouchend = () => { 
+           // Delay resumption of move to allow momentum scroll to finish
+           momentumTimer = setTimeout(() => {
+              scrollPos = rCarousel.scrollLeft;
+              window.isManualScrolling = false; 
+              isMoving = true; 
+           }, 800); 
+        };
+
+        // Manual Scroll Sync & Boundary Check
+        rCarousel.onscroll = () => {
+          const max = rCarousel.scrollWidth / 2;
+          // Boundary teleportation logic
+          if (rCarousel.scrollLeft >= max) {
+            rCarousel.scrollLeft = 0; 
+            scrollPos = 0;
+          } else if (rCarousel.scrollLeft < 0) {
+            rCarousel.scrollLeft = max;
+            scrollPos = max;
+          }
+        };
+      }
+
+      // 3. Review Form Box
+      const formBox = document.getElementById('review-form-box');
+      const user = window.getCurrentUser();
+      if(formBox) {
+        if(!user) {
+          formBox.innerHTML = `
+            <div style="text-align:center; padding: 2rem;">
+              <h3 style="margin-bottom:1rem;color:#fff;">Share Your Experience</h3>
+              <p style="color:var(--text-muted);margin-bottom:1.5rem;">Only logged-in students can leave a review.</p>
+              <a href="auth.html" class="hero-btn" style="padding: 0.8rem 1.5rem; font-size: 1rem;">Login to Review</a>
+            </div>
+          `;
+        } else {
+          formBox.innerHTML = `
+            <h3>Hi ${user.name}, Write a Review</h3>
+            <textarea id="review-text" placeholder="Tell other students about your experience with StudentHome..." rows="4"></textarea>
+            <button class="hero-btn" onclick="submitReview()" style="width:100%; margin-top:1rem;">Post Review</button>
+          `;
+        }
       }
     }
+
+    function submitReview() {
+      const text = document.getElementById('review-text').value;
+      const user = window.getCurrentUser();
+      if(!text.trim()) return alert("Please write something first.");
+      
+      window.addReview({
+        name: user.name,
+        school: user.school || "Student",
+        text: text,
+        avatar: "" // default
+      });
+      alert("Review posted! Thanks for sharing.");
+      renderHome();
+    }
     
-    document.addEventListener('DOMContentLoaded', renderFeatured);
+    document.addEventListener('DOMContentLoaded', renderHome);
   </script>
 </body>
 </html>

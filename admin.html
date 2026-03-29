@@ -3,138 +3,171 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StudentHome - Admin</title>
+  <title>StudentHome - Admin Dashboard</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="home.css">
-  <style>
-    .admin-header {
-      padding: 1.5rem;
-      border-bottom: 1px solid var(--card-border);
-    }
-    .admin-header h2 {
-      font-size: 1.6rem;
-    }
-    .admin-header p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-    .status-card {
-      background: var(--bg-dark);
-      margin: 1.5rem;
-      padding: 1.5rem;
-      border-radius: 16px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid var(--card-border);
-    }
-    .status-card h3 { font-size: 2rem; color: var(--accent); }
-    .status-card p { color: var(--text-muted); font-size: 0.9rem; }
-    
-    .btn-add {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 0.8rem 1.2rem;
-      border-radius: 10px;
-      font-weight: 600;
-      cursor: pointer;
-      text-decoration: none;
-      display: inline-block;
-      margin: 0 1.5rem 1rem 1.5rem;
-    }
-
-    .listed-houses {
-      padding: 0 1.5rem 1.5rem 1.5rem;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 1.5rem;
-    }
-    .house-item {
-      background: var(--bg-dark);
-      padding: 1.5rem;
-      border-radius: 12px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border: 1px solid var(--card-border);
-    }
-    .house-info h4 { font-size: 1.1rem; }
-    .house-info p { font-size: 0.85rem; color: var(--text-muted); }
-  </style>
+  <link rel="stylesheet" href="admin.css">
 </head>
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo">
-        <span class="logo-icon">SH</span> 
-        <span class="logo-text" style="display: none;">Student</span>
+      <div class="logo" onclick="window.location.href='home.html'">
+        <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
-      <nav class="nav-links"></nav>
+      <nav class="nav-links">
+        <!-- populated by data.js -->
+      </nav>
     </header>
 
-    <main>
-      <div class="admin-header">
-        <h2>Admin Dashboard</h2>
-        <p>Manage your properties</p>
-      </div>
 
-      <div class="status-card">
-        <div>
-          <h3 id="prop-count">0</h3>
-          <p>Active Properties</p>
+    <main class="admin-dashboard">
+      <div class="container">
+        <div class="dashboard-header">
+          <div class="header-content">
+            <h1>Admin Dashboard</h1>
+            <p>Welcome back! Here's what's happening today.</p>
+          </div>
+          <a href="admin-form.html" class="btn btn-primary">+ Add New Property</a>
         </div>
-      </div>
 
-      <a href="admin-form.html" class="btn-add">+ Add New House</a>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🏠</div>
+            <div class="stat-content">
+              <h3 id="prop-count">0</h3>
+              <p>Total Houses</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+              <h3 id="active-count">0</h3>
+              <p>Active Listings</p>
+            </div>
+          </div>
+        </div>
 
-      <div class="listed-houses" id="listed-houses">
-        <!-- Rendered by JS -->
+        <section class="listings-section">
+          <div class="section-header">
+            <h2>Property Management</h2>
+            <div class="search-wrapper">
+              <input type="text" id="admin-search" placeholder="Search by name, school or area...">
+            </div>
+          </div>
+
+          <!-- Desktop Table (Hidden on small screens via CSS) -->
+          <div class="listings-table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="listings-body">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile Cards (Visible only on small screens via CSS) -->
+          <div class="listings-cards" id="listings-cards">
+            <!-- Rendered by JS -->
+          </div>
+        </section>
       </div>
     </main>
   </div>
 
   <script src="data.js"></script>
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
+    function toggleMenu() {
+        const m = document.getElementById('mobile-menu');
+        m.classList.toggle('active');
+    }
+
+    function renderDashboard(filter = '') {
       const user = window.getCurrentUser();
       if(!user || user.role !== 'admin') {
-        alert("Access Denied. Admins only.");
         window.location.href = "home.html";
         return;
       }
 
-      const listings = window.getListings();
-      document.getElementById('prop-count').textContent = listings.length;
+      const allListings = window.getListings();
+      const listings = allListings.filter(l => 
+        l.title.toLowerCase().includes(filter.toLowerCase()) ||
+        l.school.toLowerCase().includes(filter.toLowerCase()) ||
+        l.area.toLowerCase().includes(filter.toLowerCase())
+      );
 
-      const container = document.getElementById('listed-houses');
+      document.getElementById('prop-count').textContent = allListings.length;
+      document.getElementById('active-count').textContent = allListings.filter(h => h.status === 'Active').length;
+
+      const body = document.getElementById('listings-body');
+      const cards = document.getElementById('listings-cards');
+
       if(listings.length === 0) {
-        container.innerHTML = '<p style="color:var(--text-muted);">No houses listed yet.</p>';
+        body.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:3rem; color:var(--muted);">No results found</td></tr>';
+        cards.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--muted);">No results found</p>';
       } else {
-        container.innerHTML = listings.map(l => `
-          <div class="house-item">
-            <div class="house-info">
+        const rowsHtml = listings.map(l => `
+          <tr>
+            <td>
+              <div class="property-cell">
+                <img src="${l.photos[0]}" class="property-thumb" alt="">
+                <div class="property-info">
+                  <h4>${l.title}</h4>
+                  <p>${l.school} • ${l.area}</p>
+                </div>
+              </div>
+            </td>
+            <td>₦${l.price.toLocaleString()}</td>
+            <td><span class="status active">${l.status}</span></td>
+            <td>
+              <div class="actions">
+                <button class="btn btn-small btn-edit" onclick="window.location.href='admin-form.html?edit=${l.id}'">Edit</button>
+                <button class="btn btn-small btn-delete" onclick="handleDelete(${l.id})">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+
+        const cardsHtml = listings.map(l => `
+          <div class="listing-card">
+            <img src="${l.photos[0]}" alt="">
+            <div class="listing-card-content">
               <h4>${l.title}</h4>
               <p>${l.school} • ${l.area}</p>
-            </div>
-            <div style="text-align: right;">
-              <div style="font-weight:600; color:var(--accent); font-size:1.1rem; margin-bottom: 0.5rem;">₦${l.price.toLocaleString()}</div>
-              <div>
-                <button onclick="window.location.href='admin-form.html?edit=${l.id}'" style="background:#334155; color:#fff; border:none; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer; margin-right:0.5rem; transition:0.2s;">Edit</button>
-                <button onclick="handleDelete(${l.id})" style="background:#f43f5e; color:#fff; border:none; padding:0.4rem 0.8rem; border-radius:6px; cursor:pointer; transition:0.2s;">Delete</button>
+              <div style="font-weight:700; color:var(--accent); margin-bottom:1rem;">₦${l.price.toLocaleString()}</div>
+              <div class="listing-card-actions">
+                <button class="btn btn-small btn-edit" style="flex:1;" onclick="window.location.href='admin-form.html?edit=${l.id}'">Edit</button>
+                <button class="btn btn-small btn-delete" style="flex:1;" onclick="handleDelete(${l.id})">Delete</button>
               </div>
             </div>
           </div>
         `).join('');
-      }
-    });
 
-    function handleDelete(id) {
-      if(confirm('Are you strictly sure you want to permanently delete this house?')) {
-        window.deleteListing(id);
-        window.location.reload();
+        body.innerHTML = rowsHtml;
+        cards.innerHTML = cardsHtml;
       }
     }
+
+    function handleDelete(id) {
+      if(confirm('Delete this listing permanently?')) {
+        window.deleteListing(id);
+        renderDashboard();
+      }
+    }
+
+    document.getElementById('admin-search').addEventListener('input', (e) => {
+      renderDashboard(e.target.value);
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderDashboard();
+    });
   </script>
 </body>
 </html>

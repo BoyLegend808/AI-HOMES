@@ -108,6 +108,12 @@ body {
   cursor: pointer;
 }
 
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: block !important;
+  }
+}
+
 /* Listings Page Layout */
 .listings-page .container {
   display: grid;

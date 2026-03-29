@@ -89,9 +89,8 @@
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo">
-        <span class="logo-icon">SH</span> 
-        <span class="logo-text" style="display: none;">Student</span>
+      <div class="logo" onclick="window.location.href='home.html'">
+        <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
       <nav class="nav-links">
         <a href="home.html">Home</a>
@@ -132,6 +131,14 @@
           <input type="email" id="reg-email" class="form-control" placeholder="you@university.edu" />
         </div>
         <div class="form-group">
+          <label>Phone Number</label>
+          <input type="text" id="reg-phone" class="form-control" placeholder="080..." />
+        </div>
+        <div class="form-group">
+          <label>University</label>
+          <input type="text" id="reg-uni" class="form-control" placeholder="e.g. University of Lagos" />
+        </div>
+        <div class="form-group">
           <label>Password</label>
           <input type="password" id="reg-pass" class="form-control" placeholder="••••••••" />
         </div>
@@ -162,6 +169,12 @@
       loginView.classList.remove('hidden');
     };
 
+    // Auto-switch to Registration if linked directly
+    const params = new URLSearchParams(window.location.search);
+    if(params.get('mode') === 'register') {
+      document.getElementById('go-to-reg').click();
+    }
+
     document.getElementById('btn-login').onclick = () => {
       const email = document.getElementById('login-email').value.trim().toLowerCase();
       const pass = document.getElementById('login-pass').value.trim();
@@ -169,7 +182,11 @@
 
       const res = loginUser(email, pass);
       if(res.success) {
-         window.location.href = 'shop.html';
+         if(res.user.role === 'admin') {
+           window.location.href = 'admin.html';
+         } else {
+           window.location.href = 'shop.html';
+         }
       } else {
          alert(res.message);
       }
@@ -178,13 +195,15 @@
     document.getElementById('btn-reg').onclick = () => {
       const name = document.getElementById('reg-name').value.trim();
       const email = document.getElementById('reg-email').value.trim().toLowerCase();
+      const phone = document.getElementById('reg-phone').value.trim();
+      const uni = document.getElementById('reg-uni').value.trim();
       const pass = document.getElementById('reg-pass').value.trim();
-      if(!name || !email || !pass) return alert("Fill all fields");
+      
+      if(!name || !email || !pass || !phone || !uni) return alert("Please fill all registration fields.");
 
-      // registerUser now handles forcing role="student" automatically within data.js
-      const res = registerUser({ name, email, password: pass });
+      const res = registerUser({ name, email, phone, university: uni, password: pass });
       if(res.success) {
-        alert("Registration successful! Please login.");
+        alert("Registration successful! Welcome to StudentHome.");
         document.getElementById('go-to-login').click();
       } else {
         alert(res.message);

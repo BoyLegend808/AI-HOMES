@@ -57,11 +57,13 @@ body {
 }
 
 .nav-links a {
-  color: #cbd5e1;
+  color: #fff !important;
   text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  transition: background 0.2s;
+  font-weight: 500;
+  font-size: 1.05rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.01em;
+  display: inline-block;
 }
 
 .nav-links a.active,
@@ -106,6 +108,12 @@ body {
   color: var(--text);
   font-size: 1.5rem;
   cursor: pointer;
+}
+
+@media (max-width: 768px) {
+  .mobile-menu-toggle {
+    display: block !important;
+  }
 }
 
 /* Property Details Layout */

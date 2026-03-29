@@ -2,46 +2,32 @@
 const STORAGE_KEY = "studenthome_listings";
 const USERS_KEY = "studenthome_users";
 const AUTH_KEY = "studenthome_auth";
+const UNIVERSITIES_KEY = "studenthome_unis";
+const REVIEWS_KEY = "studenthome_reviews";
 
 /* ==========================================
    ADMIN DATABASE (EDIT THIS TO ADD ADMINS)
 ========================================== */
 const SYSTEM_ADMINS = [
-  { 
-    name: "Main Admin", 
-    email: "admin@studenthome.com", 
-    password: "admin", 
-    role: "admin" 
-  },
-  { 
-    name: "Owner", 
-    email: "owner@studenthome.com", 
-    password: "owner123", 
-    role: "admin" 
-  }
-  // Add more admins here like the above objects
+  { name: "Main Admin", email: "admin@studenthome.com", password: "admin", role: "admin" },
+  { name: "Owner", email: "owner@studenthome.com", password: "owner123", role: "admin" }
 ];
 
-/* ==========================================
-   STUDENT DATABASE (HARDCODED TEST ACCOUNTS)
-========================================== */
 const SYSTEM_STUDENTS = [
-  {
-    name: "EBSU Fresher",
-    email: "ebsu@student.com",
-    password: "123",
-    role: "student"
-  }
+  { name: "EBSU Fresher", email: "ebsu@student.com", password: "123", role: "student" }
 ];
 
-const NIGERIA_UNIVERSITIES = {
-  "EBSU": ["Presco", "Palmsite", "Town", "CAS"],
-  "UNN": ["Hilltop", "Odenigwe", "Behind Flat", "Zik's Flat"],
-  "UNILAG": ["Akoka", "Yaba", "Bariga"],
-  "ABU": ["Samaru", "Kongo", "Shika"]
+const DEFAULT_UNIVERSITIES = {
+  "EBSU": ["Presco", "Palmsite", "Town", "CAS", "Ishieke", "Front Gate"],
+  "UNN": ["Hilltop", "Odenigwe", "Behind Flat", "Zik's Flat", "Greenview"],
+  "UNILAG": ["Akoka", "Yaba", "Bariga", "Onike"],
+  "ABU": ["Samaru", "Kongo", "Shika", "Aviation"],
+  "UI": ["Agbowo", "Orogun", "Bodija"],
+  "OAU": ["Gate", "Ife Town", "Ede Road"]
 };
 
-const HOUSE_TYPES = ["1 Bedroom", "2 Bedroom", "3 Bedroom", "Self-contain", "Single Room", "Shared Room"];
+// FULL HOUSE TYPES
+const HOUSE_TYPES = ["1 Bedroom", "2 Bedroom", "3 Bedroom", "Self-contain", "Single Room", "Shared Room", "Mini Flat", "Studio Apartment"];
 
 const defaultData = [
   {
@@ -55,138 +41,115 @@ const defaultData = [
     status: "Active",
     photos: [
       "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1502672260266-1c1de2d9d0c0?fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?fit=crop&w=400&q=80"
+      "https://images.unsplash.com/photo-1502672260266-1c1de2d9d0c0?fit=crop&w=400&q=80"
     ],
-    description: "A very nice self-contain apartment located just 5 minutes from the Presco campus gate. Features steady water, prepaid meter, and excellent security.",
+    description: "Premium self-contain with steady light and water. Just 2 mins from gate.",
     contact: { phone: "08012345678", whatsapp: "08012345678" }
   },
   {
     id: 2,
-    title: "2 Bedroom Flat near Palmsite",
-    school: "EBSU",
-    area: "Palmsite",
+    title: "Spacious 2 Bed Flat - Hilltop",
+    school: "UNN",
+    area: "Hilltop",
     type: "2 Bedroom",
-    price: 250000,
+    price: 280000,
     rooms: 2,
     status: "Active",
     photos: [
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1554995207-c18c203602cb?fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1484154218962-a197022b5858?fit=crop&w=400&q=80"
+      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?fit=crop&w=400&q=80"
     ],
-    description: "Spacious two-bedroom flat suitable for friends to share. Good road network and very serene environment ideal for deep study sessions.",
+    description: "Great for friends sharing. Very quiet and safe.",
     contact: { phone: "08198765432", whatsapp: "08198765432" }
   },
   {
     id: 3,
-    title: "Hilltop Boys Quarters",
-    school: "UNN",
-    area: "Hilltop",
-    type: "Single Room",
-    price: 80000,
+    title: "Akoka Modern Studio",
+    school: "UNILAG",
+    area: "Akoka",
+    type: "Studio Apartment",
+    price: 350000,
     rooms: 1,
     status: "Active",
     photos: [
-      "https://images.unsplash.com/photo-1598928506311-c55f435ce08f?fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1560185007-cde436f6a4d0?fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1556020685-e631950d2bbf?fit=crop&w=400&q=80"
+      "https://images.unsplash.com/photo-1536376073347-4573968d90cb?fit=crop&w=400&q=80"
     ],
-    description: "Highly affordable room for a student. Very close to the main gate. Comes with essential shared amenities and a great student community.",
+    description: "Fast WiFi, backup power, and modern fittings. Best for serious students.",
     contact: { phone: "07033334444", whatsapp: "07033334444" }
   }
 ];
 
-if (!localStorage.getItem(STORAGE_KEY)) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-}
+const defaultReviews = [
+  { id: 1, name: "Chiamaka N.", school: "UNILAG Student", text: "Finding a place in Akoka used to be a nightmare. StudentHome saved me so much stress!", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+  { id: 2, name: "Obinna E.", school: "UNN Student", text: "Direct WhatsApp with the landlord was a game changer. Got my Hilltop lodge in 2 days.", avatar: "https://randomuser.me/api/portraits/men/32.jpg" },
+  { id: 3, name: "Aisha K.", school: "ABU Student", text: "Mapped exactly where my faculty was. Found my Samaru room instantly!", avatar: "https://randomuser.me/api/portraits/women/90.jpg" }
+];
 
-// We only store normal user accounts in localStorage now to prevent spoofing.
-if (!localStorage.getItem(USERS_KEY)) {
-  localStorage.setItem(USERS_KEY, JSON.stringify([]));
-}
+// INITIALIZATION
+if (!localStorage.getItem(UNIVERSITIES_KEY)) localStorage.setItem(UNIVERSITIES_KEY, JSON.stringify(DEFAULT_UNIVERSITIES));
+if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
+if (!localStorage.getItem(USERS_KEY)) localStorage.setItem(USERS_KEY, JSON.stringify([]));
+if (!localStorage.getItem(REVIEWS_KEY)) localStorage.setItem(REVIEWS_KEY, JSON.stringify(defaultReviews));
 
-function getListings() { 
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } 
-  catch(e) { return []; } 
-}
+/* ==========================================
+   DATA GETTERS/SETTERS
+========================================== */
+function getUniversities() { try { return JSON.parse(localStorage.getItem(UNIVERSITIES_KEY)); } catch(e) { return DEFAULT_UNIVERSITIES; } }
+function getListings() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) { return []; } }
 function saveListings(l) { localStorage.setItem(STORAGE_KEY, JSON.stringify(l)); }
 function getListingById(id) { return getListings().find(l => l.id == id); }
-function addListing(house) {
-  const l = getListings();
-  l.push(house);
-  saveListings(l);
-}
-function updateListing(house) {
-  const l = getListings();
-  const idx = l.findIndex(h => h.id == house.id);
-  if(idx > -1) l[idx] = house;
-  saveListings(l);
-}
-function deleteListing(id) {
-  let l = getListings();
-  l = l.filter(h => h.id != id);
-  saveListings(l);
-}
-
-function getUsers() { 
-  try { return JSON.parse(localStorage.getItem(USERS_KEY)) || []; } 
-  catch(e) { return []; } 
-}
+function getUsers() { try { return JSON.parse(localStorage.getItem(USERS_KEY)); } catch(e) { return []; } }
 function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+function getReviews() { try { return JSON.parse(localStorage.getItem(REVIEWS_KEY)); } catch(e) { return []; } }
 
-function registerUser(data) {
-  // Hardcode assignment so any registration via UI is STRICTLY a student.
-  data.role = "student"; 
-  
-  const users = getUsers();
-  // Check if someone is trying to register with a system admin email
-  if (SYSTEM_ADMINS.find(admin => admin.email.toLowerCase() === data.email.toLowerCase())) {
-    return { success: false, message: "Email is reserved by system." };
+/* ==========================================
+   AUTH LOGIC
+========================================== */
+function getCurrentUser() { const u = localStorage.getItem(AUTH_KEY); return u ? JSON.parse(u) : null; }
+function logoutUser() { localStorage.removeItem(AUTH_KEY); window.location.href = "home.html"; }
+function loginUser(email, password) {
+  const checkEmail = email.toLowerCase().trim();
+  const user = [...SYSTEM_ADMINS, ...SYSTEM_STUDENTS, ...getUsers()].find(u => u.email.toLowerCase() === checkEmail && u.password === password);
+  if(user) {
+    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+    return { success: true, user };
   }
-  if(users.find(u => u.email.toLowerCase() === data.email.toLowerCase())) return { success: false, message: "Email already exists" };
-  
+  return { success: false, message: "Invalid credentials" };
+}
+function registerUser(data) {
+  data.role = "student";
+  const users = getUsers();
+  if (SYSTEM_ADMINS.find(admin => admin.email.toLowerCase() === data.email.toLowerCase())) return { success: false, message: "Email reserved." };
+  if(users.find(u => u.email.toLowerCase() === data.email.toLowerCase())) return { success: false, message: "Email exists." };
   users.push(data);
   saveUsers(users);
   return { success: true };
 }
 
-function loginUser(email, password) {
-  const checkEmail = email.toLowerCase().trim();
+/* ==========================================
+   MOBILE NAVIGATION CONTROLLER (SENIOR REFACTOR)
+========================================== */
+function toggleMobileMenu(e) {
+  if (e) e.stopPropagation();
+  const nav = document.querySelector('.nav-links');
+  const overlay = document.querySelector('.nav-overlay');
+  if (!nav || !overlay) return;
   
-  // 1. Check if it's a special System Admin 
-  const admin = SYSTEM_ADMINS.find(u => u.email.toLowerCase() === checkEmail && u.password === password);
-  if(admin) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(admin));
-    return { success: true, user: admin };
+  const isOpen = nav.classList.contains('active');
+  if (isOpen) {
+    closeMobileMenu();
+  } else {
+    nav.classList.add('active');
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
   }
-  
-  // 1.5 Check if it's a hardcoded System Student
-  const sysStudent = SYSTEM_STUDENTS.find(u => u.email.toLowerCase() === checkEmail && u.password === password);
-  if(sysStudent) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(sysStudent));
-    return { success: true, user: sysStudent };
-  }
-  
-  // 2. Otherwise check normal student users
-  const users = getUsers();
-  const user = users.find(u => u.email.toLowerCase() === checkEmail && u.password === password);
-  if(user) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-    return { success: true, user };
-  }
-  
-  return { success: false, message: "Invalid credentials" };
 }
 
-function logoutUser() {
-  localStorage.removeItem(AUTH_KEY);
-  window.location.href = "home.html";
-}
-
-function getCurrentUser() {
-  const u = localStorage.getItem(AUTH_KEY);
-  return u ? JSON.parse(u) : null;
+function closeMobileMenu() {
+  const nav = document.querySelector('.nav-links');
+  const overlay = document.querySelector('.nav-overlay');
+  if(nav) nav.classList.remove('active');
+  if(overlay) overlay.classList.remove('active');
+  document.body.style.overflow = '';
 }
 
 function renderGlobalNav() {
@@ -194,41 +157,115 @@ function renderGlobalNav() {
   const navContainer = document.querySelector('.nav-links');
   if(!navContainer) return;
 
-  const currentPath = window.location.pathname.split('/').pop() || 'home.html';
-  const isActive = (path) => currentPath === path || (path==='shop.html' && currentPath==='listings.html') ? 'active' : '';
+  // Header & Overlay Check
+  const head = document.querySelector('.top-nav');
+  if(head && !document.querySelector('.mobile-menu-toggle')) {
+    const btn = document.createElement('button');
+    btn.className = 'mobile-menu-toggle';
+    btn.innerHTML = `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>`;
+    btn.onclick = toggleMobileMenu;
+    head.appendChild(btn);
+  }
+  
+  if(!document.querySelector('.nav-overlay')) {
+    const overlay = document.createElement('div');
+    overlay.className = 'nav-overlay';
+    overlay.onclick = closeMobileMenu;
+    document.body.appendChild(overlay);
+  }
+
+  const currentPath = window.location.pathname;
+  const isActive = (path) => currentPath.includes(path) ? 'active' : '';
 
   let html = `
-    <a href="home.html" class="${isActive('home.html')}">Home</a>
-    <a href="shop.html" class="${isActive('shop.html')}">Shop</a>
-    <a href="contact.html" class="${isActive('contact.html')}">Contact</a>
-    <a href="about.html" class="${isActive('about.html')}">About</a>
+    <a href="home.html" data-nav-link class="${isActive('home.html')}">Home</a>
+    <a href="shop.html" data-nav-link class="${isActive('shop.html')}">Search Houses</a>
+    <a href="about.html" data-nav-link class="${isActive('about.html')}">About Us</a>
+    <a href="contact.html" data-nav-link class="${isActive('contact.html')}">Contact</a>
   `;
 
   if(user) {
-    if(user.role === 'admin') {
-       html += `<a href="admin.html" class="${isActive('admin.html')}">Admin</a>`;
-    }
-    html += `<a href="#" onclick="logoutUser()">Logout</a>`;
+    if(user.role === 'admin') html += `<a href="admin.html" data-nav-link class="${isActive('admin.html')}">Admin Panel</a>`;
+    html += `<a href="#" data-logout-btn style="color:var(--accent); font-weight:700;">Logout</a>`;
   } else {
-    html += `<a href="auth.html" class="${isActive('auth.html')}">Login</a>`;
+    html += `<a href="auth.html" data-nav-link class="${isActive('auth.html')}">Login</a>`;
+    html += `<a href="auth.html?mode=register" data-nav-link class="hero-btn" style="padding: 0.5rem 1.2rem; margin-left:1rem; font-size:0.9rem;">Join Now</a>`;
   }
   
   navContainer.innerHTML = html;
+
+  // Delegation
+  navContainer.onclick = (e) => {
+    if (e.target.closest('[data-nav-link]')) closeMobileMenu();
+    if (e.target.closest('[data-logout-btn]')) { e.preventDefault(); closeMobileMenu(); logoutUser(); }
+  };
 }
 
-window.NIGERIA_UNIVERSITIES = NIGERIA_UNIVERSITIES;
+/* ==========================================
+   UI UTILITIES
+========================================== */
+function initReveal() {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('active');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+}
+
+function getEmptyStateHTML(title = "No results found", subtext = "Try adjusting your search.") {
+  return `
+    <div class="empty-state">
+      <div class="empty-illustration">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </div>
+      <h3 class="empty-heading">${title}</h3>
+      <p class="empty-subtext">${subtext}</p>
+      <button class="btn-clear" onclick="window.location.reload()">Reset Search</button>
+    </div>
+  `;
+}
+
+/* ==========================================
+   LIFECYCLE
+========================================== */
+document.addEventListener('DOMContentLoaded', () => {
+    renderGlobalNav();
+    initReveal();
+    
+    // Global Outside Click Detection
+    document.addEventListener('click', (e) => {
+      const nav = document.querySelector('.nav-links');
+      const toggle = document.querySelector('.mobile-menu-toggle');
+      if (!nav || !nav.classList.contains('active')) return;
+      if (!nav.contains(e.target) && !toggle.contains(e.target)) {
+        closeMobileMenu();
+      }
+    });
+
+    // Android Scroll Fix
+    const scroller = document.querySelector('.testimonial-scroller');
+    if(scroller) {
+       scroller.addEventListener('touchstart', () => { window.isManualScrolling = true; }, {passive: true});
+       scroller.addEventListener('touchend', () => { window.isManualScrolling = false; }, {passive: true});
+    }
+});
+
+// EXPORT TO WINDOW
+window.NIGERIA_UNIVERSITIES = getUniversities();
 window.HOUSE_TYPES = HOUSE_TYPES;
 window.getListings = getListings;
 window.saveListings = saveListings;
 window.getListingById = getListingById;
-window.addListing = addListing;
-window.updateListing = updateListing;
-window.deleteListing = deleteListing;
-window.registerUser = registerUser;
-window.loginUser = loginUser;
-window.logoutUser = logoutUser;
 window.getCurrentUser = getCurrentUser;
-
-document.addEventListener('DOMContentLoaded', () => {
-    renderGlobalNav();
-});
+window.loginUser = loginUser;
+window.registerUser = registerUser;
+window.logoutUser = logoutUser;
+window.toggleMobileMenu = toggleMobileMenu;
+window.closeMobileMenu = closeMobileMenu;
+window.getUniversities = getUniversities;
+window.getReviews = getReviews;
+window.getEmptyStateHTML = getEmptyStateHTML;
