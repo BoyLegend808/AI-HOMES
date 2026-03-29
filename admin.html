@@ -154,9 +154,10 @@
       }
     }
 
-    function handleDelete(id) {
+    async function handleDelete(id) {
       if(confirm('Delete this listing permanently?')) {
-        window.deleteListing(id);
+        const res = await window.deleteListing(id);
+        if(!res.success) alert("Delete Error: " + res.error.message);
         renderDashboard();
       }
     }

@@ -7,7 +7,7 @@ const REVIEWS_KEY = "studenthome_reviews";
 
 // 🚀 SUPABASE CONFIGURATION
 const SUPABASE_URL = 'https://loapruxjeolxyngmcszf.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_MJiWLJjrftbcBQ1snxpIMg_vCxU29cg';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYXBydXhqZW9seHluZ21jc3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NDY4MzQsImV4cCI6MjA5MDMyMjgzNH0.t5H3u-L4M8lODuwWre4NHjKtR_qDboZBBwwzmEXXZh8';
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // GLOBAL CACHE
@@ -53,10 +53,9 @@ async function fetchAllData() {
     // Trigger any page-specific renders that depend on data
     if (window.renderHome) window.renderHome();
     if (window.renderShopGrid) window.renderShopGrid(CACHED_LISTINGS);
-    if (window.renderAdminDashboard) window.renderAdminDashboard();
+    if (window.renderDashboard) window.renderDashboard();
   } catch(e) {
     console.warn("Supabase Fetch Error:", e);
-    // Fallback to local storage if DB fails
     CACHED_LISTINGS = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
   }
 }
@@ -64,15 +63,45 @@ async function fetchAllData() {
 function getListings() { return CACHED_LISTINGS; }
 function getReviews() { return CACHED_REVIEWS; }
 function getListingById(id) { return CACHED_LISTINGS.find(l => l.id == id); }
-function getUniversities() { return DEFAULT_UNIVERSITIES; } // Hardcoded for consistency
+function getUniversities() { return DEFAULT_UNIVERSITIES; }
+
+// --- LIVE CLOUD ACTIONS ---
+
+async function addListing(house) {
+  // Map fields to DB (remove local UI attributes if any)
+  const entry = { ...house };
+  delete entry.id; // Let DB generate ID
+  
+  const { data, error } = await supabase.from('houses').insert([entry]).select();
+  if (!error) await fetchAllData(); // Refresh local cache
+  return { success: !error, error };
+}
+
+async function updateListing(house) {
+  const { error } = await supabase.from('houses').update(house).eq('id', house.id);
+  if (!error) await fetchAllData();
+  return { success: !error, error };
+}
+
+async function deleteListing(id) {
+  const { error } = await supabase.from('houses').delete().eq('id', id);
+  if (!error) await fetchAllData();
+  return { success: !error, error };
+}
+
+async function addReview(review) {
+  const { error } = await supabase.from('reviews').insert([review]);
+  if (!error) await fetchAllData();
+  return { success: !error, error };
+}
 
 async function saveListings(l) { 
-  // In production, we'd use supabase.from('houses').upsert(l)
+  // Fallback for older code using this function
   localStorage.setItem(STORAGE_KEY, JSON.stringify(l)); 
 }
 
 /* ==========================================
-   AUTH LOGIC (SUPABASE AUTH READY)
+   AUTH LOGIC
 ========================================== */
 function getCurrentUser() { 
   const u = localStorage.getItem(AUTH_KEY); 
@@ -82,14 +111,12 @@ function getCurrentUser() {
 async function loginUser(email, password) {
   const checkEmail = email.toLowerCase().trim();
   
-  // 1. Check Hardcoded Admins First (for prototype convenience)
   const admin = [...SYSTEM_ADMINS, ...SYSTEM_STUDENTS].find(u => u.email.toLowerCase() === checkEmail && u.password === password);
   if(admin) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(admin));
     return { success: true, user: admin };
   }
 
-  // 2. Real Supabase Auth Integration
   const { data, error } = await supabase.auth.signInWithPassword({
     email: checkEmail,
     password: password
@@ -103,14 +130,12 @@ async function loginUser(email, password) {
 }
 
 async function registerUser(data) {
-  const { data: authData, error } = await supabase.auth.signUp({
+  const { error } = await supabase.auth.signUp({
     email: data.email,
     password: data.password,
     options: { data: { full_name: data.name } }
   });
-
-  if (error) return { success: false, message: error.message };
-  return { success: true };
+  return { success: !error, message: error ? error.message : "" };
 }
 
 function logoutUser() { 
@@ -195,7 +220,7 @@ function renderGlobalNav() {
 
 /* ==========================================
    UI UTILITIES
-========================================== */
+========================================= */
 function initReveal() {
   const observer = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
@@ -228,7 +253,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     renderGlobalNav();
     initReveal();
     
-    // START DB FETCH
+    // Initial fetch sync
     await fetchAllData();
     
     document.addEventListener('click', (e) => {
@@ -262,3 +287,8 @@ window.getUniversities = getUniversities;
 window.getEmptyStateHTML = getEmptyStateHTML;
 window.HOUSE_TYPES = HOUSE_TYPES;
 window.NIGERIA_UNIVERSITIES = DEFAULT_UNIVERSITIES;
+window.addListing = addListing;
+window.updateListing = updateListing;
+window.deleteListing = deleteListing;
+window.addReview = addReview;
+window.fetchAllData = fetchAllData;

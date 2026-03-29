@@ -346,17 +346,19 @@
       }
     }
 
-    function submitReview() {
+    async function submitReview() {
       const text = document.getElementById('review-text').value;
       const user = window.getCurrentUser();
       if(!text.trim()) return alert("Please write something first.");
       
-      window.addReview({
+      const res = await window.addReview({
         name: user.name,
         school: user.school || "Student",
         text: text,
         avatar: "" // default
       });
+      
+      if(!res.success) alert("Review Error: " + res.error.message);
       alert("Review posted! Thanks for sharing.");
       renderHome();
     }

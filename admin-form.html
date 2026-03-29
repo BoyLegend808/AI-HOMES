@@ -239,7 +239,7 @@
       }
     });
 
-    function submitHouse() {
+    async function submitHouse() {
       const title = document.getElementById('add-title').value;
       const school = document.getElementById('add-school').value;
       const area = document.getElementById('add-area').value;
@@ -256,7 +256,6 @@
       }
 
       const house = {
-        id: editingId ? parseInt(editingId) : Date.now(),
         title, school, area, exactLocation, type, price,
         status: "Active",
         photos: uploadedPhotos,
@@ -265,10 +264,13 @@
       };
 
       if(editingId) {
-        window.updateListing(house);
+        house.id = parseInt(editingId);
+        const res = await window.updateListing(house);
+        if(!res.success) return alert("Database Error: " + res.error.message);
         alert("Property Updated Successfully!");
       } else {
-        window.addListing(house);
+        const res = await window.addListing(house);
+        if(!res.success) return alert("Database Error: " + res.error.message);
         alert("Property Listed Successfully!");
       }
       window.location.href = "admin.html";
