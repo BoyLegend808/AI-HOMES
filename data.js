@@ -1,9 +1,18 @@
-// studenthome global data & auth
+// studenthome global data & Supabase Integration
 const STORAGE_KEY = "studenthome_listings";
 const USERS_KEY = "studenthome_users";
 const AUTH_KEY = "studenthome_auth";
 const UNIVERSITIES_KEY = "studenthome_unis";
 const REVIEWS_KEY = "studenthome_reviews";
+
+// 🚀 SUPABASE CONFIGURATION
+const SUPABASE_URL = 'https://loapruxjeolxyngmcszf.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_MJiWLJjrftbcBQ1snxpIMg_vCxU29cg';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// GLOBAL CACHE
+let CACHED_LISTINGS = [];
+let CACHED_REVIEWS = [];
 
 /* ==========================================
    ADMIN DATABASE (EDIT THIS TO ADD ADMINS)
@@ -26,107 +35,92 @@ const DEFAULT_UNIVERSITIES = {
   "OAU": ["Gate", "Ife Town", "Ede Road"]
 };
 
-// FULL HOUSE TYPES
 const HOUSE_TYPES = ["1 Bedroom", "2 Bedroom", "3 Bedroom", "Self-contain", "Single Room", "Shared Room", "Mini Flat", "Studio Apartment"];
 
-const defaultData = [
-  {
-    id: 1,
-    title: "Luxury Self-Con at Presco",
-    school: "EBSU",
-    area: "Presco",
-    type: "Self-contain",
-    price: 150000,
-    rooms: 1,
-    status: "Active",
-    photos: [
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?fit=crop&w=400&q=80",
-      "https://images.unsplash.com/photo-1502672260266-1c1de2d9d0c0?fit=crop&w=400&q=80"
-    ],
-    description: "Premium self-contain with steady light and water. Just 2 mins from gate.",
-    contact: { phone: "08012345678", whatsapp: "08012345678" }
-  },
-  {
-    id: 2,
-    title: "Spacious 2 Bed Flat - Hilltop",
-    school: "UNN",
-    area: "Hilltop",
-    type: "2 Bedroom",
-    price: 280000,
-    rooms: 2,
-    status: "Active",
-    photos: [
-      "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?fit=crop&w=400&q=80"
-    ],
-    description: "Great for friends sharing. Very quiet and safe.",
-    contact: { phone: "08198765432", whatsapp: "08198765432" }
-  },
-  {
-    id: 3,
-    title: "Akoka Modern Studio",
-    school: "UNILAG",
-    area: "Akoka",
-    type: "Studio Apartment",
-    price: 350000,
-    rooms: 1,
-    status: "Active",
-    photos: [
-      "https://images.unsplash.com/photo-1536376073347-4573968d90cb?fit=crop&w=400&q=80"
-    ],
-    description: "Fast WiFi, backup power, and modern fittings. Best for serious students.",
-    contact: { phone: "07033334444", whatsapp: "07033334444" }
-  }
-];
-
-const defaultReviews = [
-  { id: 1, name: "Chiamaka N.", school: "UNILAG Student", text: "Finding a place in Akoka used to be a nightmare. StudentHome saved me so much stress!", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
-  { id: 2, name: "Obinna E.", school: "UNN Student", text: "Direct WhatsApp with the landlord was a game changer. Got my Hilltop lodge in 2 days.", avatar: "https://randomuser.me/api/portraits/men/32.jpg" },
-  { id: 3, name: "Aisha K.", school: "ABU Student", text: "Mapped exactly where my faculty was. Found my Samaru room instantly!", avatar: "https://randomuser.me/api/portraits/women/90.jpg" }
-];
-
-// INITIALIZATION
-if (!localStorage.getItem(UNIVERSITIES_KEY)) localStorage.setItem(UNIVERSITIES_KEY, JSON.stringify(DEFAULT_UNIVERSITIES));
-if (!localStorage.getItem(STORAGE_KEY)) localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultData));
-if (!localStorage.getItem(USERS_KEY)) localStorage.setItem(USERS_KEY, JSON.stringify([]));
-if (!localStorage.getItem(REVIEWS_KEY)) localStorage.setItem(REVIEWS_KEY, JSON.stringify(defaultReviews));
-
 /* ==========================================
-   DATA GETTERS/SETTERS
+   DATA GETTERS/SETTERS (SUPABASE POWERED)
 ========================================== */
-function getUniversities() { try { return JSON.parse(localStorage.getItem(UNIVERSITIES_KEY)); } catch(e) { return DEFAULT_UNIVERSITIES; } }
-function getListings() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch(e) { return []; } }
-function saveListings(l) { localStorage.setItem(STORAGE_KEY, JSON.stringify(l)); }
-function getListingById(id) { return getListings().find(l => l.id == id); }
-function getUsers() { try { return JSON.parse(localStorage.getItem(USERS_KEY)); } catch(e) { return []; } }
-function saveUsers(u) { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
-function getReviews() { try { return JSON.parse(localStorage.getItem(REVIEWS_KEY)); } catch(e) { return []; } }
-
-/* ==========================================
-   AUTH LOGIC
-========================================== */
-function getCurrentUser() { const u = localStorage.getItem(AUTH_KEY); return u ? JSON.parse(u) : null; }
-function logoutUser() { localStorage.removeItem(AUTH_KEY); window.location.href = "home.html"; }
-function loginUser(email, password) {
-  const checkEmail = email.toLowerCase().trim();
-  const user = [...SYSTEM_ADMINS, ...SYSTEM_STUDENTS, ...getUsers()].find(u => u.email.toLowerCase() === checkEmail && u.password === password);
-  if(user) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-    return { success: true, user };
+async function fetchAllData() {
+  try {
+    const [listingsRes, reviewsRes] = await Promise.all([
+      supabase.from('houses').select('*').order('created_at', { ascending: false }),
+      supabase.from('reviews').select('*').order('created_at', { ascending: false })
+    ]);
+    
+    if (listingsRes.data) CACHED_LISTINGS = listingsRes.data;
+    if (reviewsRes.data) CACHED_REVIEWS = reviewsRes.data;
+    
+    // Trigger any page-specific renders that depend on data
+    if (window.renderHome) window.renderHome();
+    if (window.renderShopGrid) window.renderShopGrid(CACHED_LISTINGS);
+    if (window.renderAdminDashboard) window.renderAdminDashboard();
+  } catch(e) {
+    console.warn("Supabase Fetch Error:", e);
+    // Fallback to local storage if DB fails
+    CACHED_LISTINGS = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
   }
-  return { success: false, message: "Invalid credentials" };
 }
-function registerUser(data) {
-  data.role = "student";
-  const users = getUsers();
-  if (SYSTEM_ADMINS.find(admin => admin.email.toLowerCase() === data.email.toLowerCase())) return { success: false, message: "Email reserved." };
-  if(users.find(u => u.email.toLowerCase() === data.email.toLowerCase())) return { success: false, message: "Email exists." };
-  users.push(data);
-  saveUsers(users);
+
+function getListings() { return CACHED_LISTINGS; }
+function getReviews() { return CACHED_REVIEWS; }
+function getListingById(id) { return CACHED_LISTINGS.find(l => l.id == id); }
+function getUniversities() { return DEFAULT_UNIVERSITIES; } // Hardcoded for consistency
+
+async function saveListings(l) { 
+  // In production, we'd use supabase.from('houses').upsert(l)
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(l)); 
+}
+
+/* ==========================================
+   AUTH LOGIC (SUPABASE AUTH READY)
+========================================== */
+function getCurrentUser() { 
+  const u = localStorage.getItem(AUTH_KEY); 
+  return u ? JSON.parse(u) : null; 
+}
+
+async function loginUser(email, password) {
+  const checkEmail = email.toLowerCase().trim();
+  
+  // 1. Check Hardcoded Admins First (for prototype convenience)
+  const admin = [...SYSTEM_ADMINS, ...SYSTEM_STUDENTS].find(u => u.email.toLowerCase() === checkEmail && u.password === password);
+  if(admin) {
+    localStorage.setItem(AUTH_KEY, JSON.stringify(admin));
+    return { success: true, user: admin };
+  }
+
+  // 2. Real Supabase Auth Integration
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: checkEmail,
+    password: password
+  });
+
+  if (error) return { success: false, message: error.message };
+  
+  const user = { name: data.user.email.split('@')[0], email: data.user.email, role: 'student' };
+  localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+  return { success: true, user };
+}
+
+async function registerUser(data) {
+  const { data: authData, error } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.password,
+    options: { data: { full_name: data.name } }
+  });
+
+  if (error) return { success: false, message: error.message };
   return { success: true };
 }
 
+function logoutUser() { 
+  supabase.auth.signOut();
+  localStorage.removeItem(AUTH_KEY); 
+  window.location.href = "home.html"; 
+}
+
 /* ==========================================
-   MOBILE NAVIGATION CONTROLLER (SENIOR REFACTOR)
+   MOBILE NAVIGATION CONTROLLER
 ========================================== */
 function toggleMobileMenu(e) {
   if (e) e.stopPropagation();
@@ -157,7 +151,6 @@ function renderGlobalNav() {
   const navContainer = document.querySelector('.nav-links');
   if(!navContainer) return;
 
-  // Header & Overlay Check
   const head = document.querySelector('.top-nav');
   if(head && !document.querySelector('.mobile-menu-toggle')) {
     const btn = document.createElement('button');
@@ -194,7 +187,6 @@ function renderGlobalNav() {
   
   navContainer.innerHTML = html;
 
-  // Delegation
   navContainer.onclick = (e) => {
     if (e.target.closest('[data-nav-link]')) closeMobileMenu();
     if (e.target.closest('[data-logout-btn]')) { e.preventDefault(); closeMobileMenu(); logoutUser(); }
@@ -232,11 +224,13 @@ function getEmptyStateHTML(title = "No results found", subtext = "Try adjusting 
 /* ==========================================
    LIFECYCLE
 ========================================== */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     renderGlobalNav();
     initReveal();
     
-    // Global Outside Click Detection
+    // START DB FETCH
+    await fetchAllData();
+    
     document.addEventListener('click', (e) => {
       const nav = document.querySelector('.nav-links');
       const toggle = document.querySelector('.mobile-menu-toggle');
@@ -246,7 +240,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // Android Scroll Fix
     const scroller = document.querySelector('.testimonial-scroller');
     if(scroller) {
        scroller.addEventListener('touchstart', () => { window.isManualScrolling = true; }, {passive: true});
@@ -255,10 +248,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // EXPORT TO WINDOW
-window.NIGERIA_UNIVERSITIES = getUniversities();
-window.HOUSE_TYPES = HOUSE_TYPES;
+window.supabase = supabase;
 window.getListings = getListings;
-window.saveListings = saveListings;
+window.getReviews = getReviews;
 window.getListingById = getListingById;
 window.getCurrentUser = getCurrentUser;
 window.loginUser = loginUser;
@@ -267,5 +259,6 @@ window.logoutUser = logoutUser;
 window.toggleMobileMenu = toggleMobileMenu;
 window.closeMobileMenu = closeMobileMenu;
 window.getUniversities = getUniversities;
-window.getReviews = getReviews;
 window.getEmptyStateHTML = getEmptyStateHTML;
+window.HOUSE_TYPES = HOUSE_TYPES;
+window.NIGERIA_UNIVERSITIES = DEFAULT_UNIVERSITIES;
