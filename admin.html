@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StudentHome - Admin Dashboard</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="home.css">
   <link rel="stylesheet" href="admin.css">
 </head>
+
 <body>
   <div class="app-container">
     <header class="top-nav">
@@ -15,9 +18,21 @@
         <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
       <nav class="nav-links">
-        <!-- populated by data.js -->
+        <ul class="nav-list">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="shop.html">Browse Houses</a></li>
+          <li><a href="listings.html">Hot Deals</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
       </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
     </header>
+    <div class="nav-overlay"></div>
 
 
     <main class="admin-dashboard">
@@ -55,6 +70,13 @@
             </div>
           </div>
 
+          <div id="admin-loading" class="admin-loading" style="display:none;">
+            <div class="admin-loading-card"></div>
+            <div class="admin-loading-card"></div>
+            <div class="admin-loading-card"></div>
+            <div class="admin-loading-card"></div>
+          </div>
+
           <!-- Desktop Table (Hidden on small screens via CSS) -->
           <div class="listings-table-container">
             <table>
@@ -81,25 +103,29 @@
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js"></script>
   <script>
-    function toggleMenu() {
-        const m = document.getElementById('mobile-menu');
-        m.classList.toggle('active');
+    function setAdminLoading(isLoading) {
+      const loadingEl = document.getElementById('admin-loading');
+      const tableWrap = document.querySelector('.listings-table-container');
+      const cardsWrap = document.getElementById('listings-cards');
+      if (loadingEl) loadingEl.style.display = isLoading ? 'grid' : 'none';
+      if (tableWrap) tableWrap.style.display = isLoading ? 'none' : '';
+      if (cardsWrap) cardsWrap.style.display = isLoading ? 'none' : '';
     }
 
     function renderDashboard(filter = '') {
       const user = window.getCurrentUser();
-      if(!user || user.role !== 'admin') {
+      if (!user || user.role !== 'admin') {
         window.location.href = "home.html";
         return;
       }
 
       const allListings = window.getListings();
-      const listings = allListings.filter(l => 
+      const listings = allListings.filter(l =>
         l.title.toLowerCase().includes(filter.toLowerCase()) ||
-        l.school.toLowerCase().includes(filter.toLowerCase()) ||
-        l.area.toLowerCase().includes(filter.toLowerCase())
+        l.location.toLowerCase().includes(filter.toLowerCase())
       );
 
       document.getElementById('prop-count').textContent = allListings.length;
@@ -108,18 +134,19 @@
       const body = document.getElementById('listings-body');
       const cards = document.getElementById('listings-cards');
 
-      if(listings.length === 0) {
-        body.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:3rem; color:var(--muted);">No results found</td></tr>';
+      if (listings.length === 0) {
+        body.innerHTML =
+          '<tr><td colspan="4" style="text-align:center; padding:3rem; color:var(--muted);">No results found</td></tr>';
         cards.innerHTML = '<p style="text-align:center; padding:2rem; color:var(--muted);">No results found</p>';
       } else {
         const rowsHtml = listings.map(l => `
           <tr>
             <td>
               <div class="property-cell">
-                <img src="${l.photos[0]}" class="property-thumb" alt="">
+                <img src="${l.photo || (l.photos && l.photos[0]) || ''}" class="property-thumb" alt="">
                 <div class="property-info">
                   <h4>${l.title}</h4>
-                  <p>${l.school} • ${l.area}</p>
+                  <p>${l.location}</p>
                 </div>
               </div>
             </td>
@@ -136,10 +163,10 @@
 
         const cardsHtml = listings.map(l => `
           <div class="listing-card">
-            <img src="${l.photos[0]}" alt="">
+            <img src="${l.photo || (l.photos && l.photos[0]) || ''}" alt="">
             <div class="listing-card-content">
               <h4>${l.title}</h4>
-              <p>${l.school} • ${l.area}</p>
+              <p>${l.location}</p>
               <div style="font-weight:700; color:var(--accent); margin-bottom:1rem;">₦${l.price.toLocaleString()}</div>
               <div class="listing-card-actions">
                 <button class="btn btn-small btn-edit" style="flex:1;" onclick="window.location.href='admin-form.html?edit=${l.id}'">Edit</button>
@@ -155,9 +182,9 @@
     }
 
     async function handleDelete(id) {
-      if(confirm('Delete this listing permanently?')) {
+      if (confirm('Delete this listing permanently?')) {
         const res = await window.deleteListing(id);
-        if(!res.success) alert("Delete Error: " + res.error.message);
+        if (!res.success) alert("Delete Error: " + res.error.message);
         renderDashboard();
       }
     }
@@ -166,9 +193,15 @@
       renderDashboard(e.target.value);
     });
 
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
+      const isAdmin = await window.ensureAdminAccess();
+      if (!isAdmin) return;
+      setAdminLoading(true);
+      if (window.fetchAllData) await window.fetchAllData();
+      setAdminLoading(false);
       renderDashboard();
     });
   </script>
 </body>
+
 </html>

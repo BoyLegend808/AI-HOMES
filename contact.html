@@ -112,12 +112,25 @@
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo">
-        <span class="logo-icon">SH</span> 
-        <span class="logo-text" style="display: none;">Student</span>
+      <div class="logo" onclick="window.location.href='home.html'">
+        <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
-      <nav class="nav-links"></nav>
+      <nav class="nav-links">
+        <ul class="nav-list">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="shop.html">Browse Houses</a></li>
+          <li><a href="listings.html">Hot Deals</a></li>
+          <li><a href="contact.html" class="active">Contact</a></li>
+        </ul>
+      </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
     </header>
+    <div class="nav-overlay"></div>
 
     <main class="contact-wrapper">
       <div class="contact-header">
@@ -160,6 +173,7 @@
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', () => {

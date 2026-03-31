@@ -93,9 +93,21 @@
         <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
       <nav class="nav-links">
-        <a href="home.html">Home</a>
+        <ul class="nav-list">
+          <li><a href="home.html" class="active">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="shop.html">Browse Houses</a></li>
+          <li><a href="listings.html">Hot Deals</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
       </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
     </header>
+    <div class="nav-overlay"></div>
 
     <div class="auth-wrapper">
       <div id="login-view" class="auth-card">
@@ -136,7 +148,9 @@
         </div>
         <div class="form-group">
           <label>University</label>
-          <input type="text" id="reg-uni" class="form-control" placeholder="e.g. University of Lagos" />
+          <select id="reg-uni" class="form-control" style="appearance:none; background:var(--bg-panel); color:white;">
+            <option value="">Select University</option>
+          </select>
         </div>
         <div class="form-group">
           <label>Password</label>
@@ -153,62 +167,8 @@
     </div>
   </div>
 
-  <!-- Added direct strict versioning -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js?v=999"></script>
-  <script>
-    const loginView = document.getElementById('login-view');
-    const regView = document.getElementById('reg-view');
-
-    document.getElementById('go-to-reg').onclick = () => {
-      loginView.classList.add('hidden');
-      regView.classList.remove('hidden');
-    };
-
-    document.getElementById('go-to-login').onclick = () => {
-      regView.classList.add('hidden');
-      loginView.classList.remove('hidden');
-    };
-
-    // Auto-switch to Registration if linked directly
-    const params = new URLSearchParams(window.location.search);
-    if(params.get('mode') === 'register') {
-      document.getElementById('go-to-reg').click();
-    }
-
-    document.getElementById('btn-login').onclick = () => {
-      const email = document.getElementById('login-email').value.trim().toLowerCase();
-      const pass = document.getElementById('login-pass').value.trim();
-      if(!email || !pass) return alert("Fill all fields");
-
-      const res = loginUser(email, pass);
-      if(res.success) {
-         if(res.user.role === 'admin') {
-           window.location.href = 'admin.html';
-         } else {
-           window.location.href = 'shop.html';
-         }
-      } else {
-         alert(res.message);
-      }
-    };
-
-    document.getElementById('btn-reg').onclick = () => {
-      const name = document.getElementById('reg-name').value.trim();
-      const email = document.getElementById('reg-email').value.trim().toLowerCase();
-      const phone = document.getElementById('reg-phone').value.trim();
-      const uni = document.getElementById('reg-uni').value.trim();
-      const pass = document.getElementById('reg-pass').value.trim();
-      
-      if(!name || !email || !pass || !phone || !uni) return alert("Please fill all registration fields.");
-
-      const res = registerUser({ name, email, phone, university: uni, password: pass });
-      if(res.success) {
-        alert("Registration successful! Welcome to StudentHome.");
-        document.getElementById('go-to-login').click();
-      } else {
-        alert(res.message);
-      }
-    };
-  </script>
+  <script src="auth.js"></script>
 </body>
 </html>

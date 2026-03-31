@@ -1,141 +1,269 @@
-const STORAGE_KEY = "studenthome_listings";
+let editingId = null;
+let uploadedPhotos = [];
 
-const defaultData = [
-  {
-    id: 1,
-    title: "The Elm Street Shared House",
-    location: "Sycamore",
-    type: "Shared",
-    price: 600,
-    rooms: 3,
-    status: "Active",
-    photo:
-      "https://images.unsplash.com/photo-1499084732479-de2c02d45fc4?fit=crop&w=840&q=80",
-  },
-  {
-    id: 2,
-    title: "Lakeside Student Loft",
-    location: "Oakridge",
-    type: "Private",
-    price: 950,
-    rooms: 2,
-    status: "Active",
-    photo:
-      "https://images.unsplash.com/photo-1568605114967-8130f3a36994?fit=crop&w=840&q=80",
-  },
-  {
-    id: 3,
-    title: "Campus Central Studio",
-    location: "Sycamore",
-    type: "Private",
-    price: 800,
-    rooms: 1,
-    status: "Hidden",
-    photo:
-      "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?fit=crop&w=840&q=80",
-  },
-];
+const normalizeTextInput = (value) => String(value || "").trim();
 
-function getListings() {
-  const stored = localStorage.getItem(STORAGE_KEY);
-  return stored ? JSON.parse(stored) : defaultData;
-}
+const ensureUniqueArea = (areas, candidate) => {
+  const normalized = candidate.toLowerCase();
+  return !areas.some((a) => String(a).toLowerCase() === normalized);
+};
 
-function saveListings(listings) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(listings));
-}
-
-function addListing(listing) {
-  const listings = getListings();
-  listing.id = Date.now();
-  listings.push(listing);
-  saveListings(listings);
-}
-
-function updateListing(id, updates) {
-  const listings = getListings();
-  const index = listings.findIndex((l) => l.id === id);
-  if (index !== -1) {
-    listings[index] = { ...listings[index], ...updates };
-    saveListings(listings);
+const notify = (message, type = "info") => {
+  if (window.showToast) {
+    window.showToast(message, type);
+    return;
   }
+  alert(message);
+};
+
+const populateUnis = () => {
+  const schoolSelect = document.getElementById("add-school");
+  if (!schoolSelect) return;
+  const savedVal = schoolSelect.value;
+  schoolSelect.innerHTML = '<option value="">Select School</option>';
+  const unis = window.getUniversities();
+  Object.keys(unis).forEach((u) => {
+    const op = document.createElement("option");
+    op.value = u;
+    op.textContent = u;
+    schoolSelect.appendChild(op);
+  });
+  if (savedVal) schoolSelect.value = savedVal;
+};
+
+const populateAreas = (schoolName) => {
+  const areaSelect = document.getElementById("add-area");
+  if (!areaSelect) return;
+  const savedVal = areaSelect.value;
+  areaSelect.innerHTML = '<option value="">Select Area</option>';
+  const unis = window.getUniversities();
+  const areas = unis[schoolName] || [];
+  areas.forEach((a) => {
+    const op = document.createElement("option");
+    op.value = a;
+    op.textContent = a;
+    areaSelect.appendChild(op);
+  });
+  if (savedVal) areaSelect.value = savedVal;
+};
+
+async function addNewSchool() {
+  const name = normalizeTextInput(prompt("Enter the new school name"));
+  if (!name) return;
+
+  const unis = window.getUniversities ? window.getUniversities() : {};
+  if (Object.keys(unis).some((u) => u.toLowerCase() === name.toLowerCase())) {
+    notify("That school already exists.", "error");
+    populateUnis();
+    const schoolSelect = document.getElementById("add-school");
+    if (schoolSelect) schoolSelect.value = name;
+    populateAreas(name);
+    return;
+  }
+
+  const res = await window.addUniversity(name);
+  if (!res?.success) {
+    notify(
+      "Add School Error: " + (res?.error?.message || "Unable to save."),
+      "error",
+    );
+    return;
+  }
+
+  populateUnis();
+  const schoolSelect = document.getElementById("add-school");
+  if (schoolSelect) schoolSelect.value = name;
+  populateAreas(name);
+  notify("School added successfully.", "success");
 }
 
-function getListingById(id) {
-  return getListings().find((l) => l.id == id);
+async function addNewArea() {
+  const schoolSelect = document.getElementById("add-school");
+  const school = normalizeTextInput(schoolSelect?.value);
+  if (!school) {
+    notify("Select a school first.", "error");
+    return;
+  }
+
+  const area = normalizeTextInput(prompt(`Enter a new area for ${school}`));
+  if (!area) return;
+
+  const unis = window.getUniversities ? window.getUniversities() : {};
+  const currentAreas = unis[school] || [];
+  if (!ensureUniqueArea(currentAreas, area)) {
+    notify("That area already exists for this school.", "error");
+    populateAreas(school);
+    const areaSelect = document.getElementById("add-area");
+    if (areaSelect) areaSelect.value = area;
+    return;
+  }
+
+  const res = await window.addAreaToUniversity(school, area);
+  if (!res?.success) {
+    notify("Add Area Error: " + (res?.error?.message || "Unable to save."), "error");
+    return;
+  }
+
+  populateAreas(school);
+  const areaSelect = document.getElementById("add-area");
+  if (areaSelect) areaSelect.value = area;
+  notify("Area added successfully.", "success");
 }
 
-const listingForm = document.getElementById("listing-form");
+// Handle photo uploads
+const handleFileUpload = (e) => {
+  const files = Array.from(e.target.files);
+  const container = document.getElementById("preview-container");
+  const label = document.getElementById("upload-label");
 
-listingForm.addEventListener("submit", (e) => {
-  e.preventDefault();
+  files.forEach((file) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64 = event.target.result;
+      uploadedPhotos.push(base64);
+      const div = document.createElement("div");
+      div.style =
+        "width:100px; height:80px; position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--accent);";
+      div.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover;">`;
+      container.appendChild(div);
+      if (label) label.style.display = "none";
+    };
+    reader.readAsDataURL(file);
+  });
+};
 
-  const urlParams = new URLSearchParams(window.location.search);
-  const editId = urlParams.get("edit");
+const submitHouse = async () => {
+  const title = document.getElementById("add-title").value;
+  const school = document.getElementById("add-school").value;
+  const area = document.getElementById("add-area").value;
+  const exactLocation = document.getElementById("add-location").value;
+  const type = document.getElementById("add-type").value;
+  const price = parseInt(document.getElementById("add-price").value);
+  const rooms = parseInt(document.getElementById("add-rooms").value) || 1;
+  const phone = document.getElementById("add-phone").value;
+  const whatsapp = document.getElementById("add-wa").value;
+  const desc = document.getElementById("add-desc").value;
 
-  const formData = new FormData(e.target);
-  const listing = {
-    title: formData.get("title"),
-    location: formData.get("location"),
-    price: parseInt(formData.get("price")),
-    rooms: parseInt(formData.get("rooms")),
-    type: formData.get("type"),
+  if (!title || !school || !area || !price || uploadedPhotos.length === 0) {
+    alert("Please fill required details and upload photos.");
+    return;
+  }
+
+  const house = {
+    title,
+    school,
+    area,
+    exactLocation,
+    type,
+    price,
+    rooms,
     status: "Active",
-    photo:
-      formData.get("photo") ||
-      "https://images.unsplash.com/photo-1499084732479-de2c02d45fc4?fit=crop&w=840&q=80",
+    photos: uploadedPhotos,
+    photo: uploadedPhotos[0], // Main display image
+    location: `${area} (${school})`, // Combined string for display/search
+    description: desc,
+    desc: desc, // Alias for older components
+    contact: { phone, whatsapp },
   };
 
-  if (editId) {
-    updateListing(parseInt(editId), listing);
+  const btn = document.getElementById("btn-submit");
+  btn.textContent = "Processing...";
+  btn.disabled = true;
+
+  if (editingId) {
+    house.id = parseInt(editingId);
+    const res = await window.updateListing(house);
+    if (!res.success) alert("Update Error: " + res.error?.message);
+    else {
+      if (window.fetchAllData) await window.fetchAllData();
+      alert("Property Updated Successfully!");
+    }
   } else {
-    addListing(listing);
+    const res = await window.addListing(house);
+    if (!res.success) alert("Listing Error: " + res.error?.message);
+    else alert("Property Listed Successfully!");
   }
-
-  alert("Listing saved successfully!");
   window.location.href = "admin.html";
-});
+};
 
-// Handle edit mode
-document.addEventListener("DOMContentLoaded", () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const editId = urlParams.get("edit");
+document.addEventListener("DOMContentLoaded", async () => {
+  const isAdmin = await window.ensureAdminAccess();
+  if (!isAdmin) return;
 
-  if (editId) {
-    const listing = getListingById(parseInt(editId));
-    if (listing) {
-      document.getElementById("title").value = listing.title;
-      document.getElementById("location").value = listing.location;
-      document.getElementById("price").value = listing.price;
-      document.getElementById("rooms").value = listing.rooms;
-      document.getElementById("type").value = listing.type;
-      document.getElementById("photo").value = listing.photo;
-    }
+  const formBody = document.getElementById("form-body");
+  const formSkeleton = document.getElementById("form-skeleton");
+  const toggleSkeleton = (show) => {
+    if (formSkeleton) formSkeleton.style.display = show ? "grid" : "none";
+    if (formBody) formBody.style.display = show ? "none" : "";
+  };
+
+  populateUnis();
+
+  const typeSelect = document.getElementById("add-type");
+  if (typeSelect) {
+    typeSelect.innerHTML =
+      '<option value="">Select Type</option>' +
+      (window.HOUSE_TYPES || [])
+        .map((t) => `<option value="${t}">${t}</option>`)
+        .join("");
   }
-});
 
-function toggleMenu() {
-  const mobileMenu = document.getElementById("mobile-menu");
-  mobileMenu.classList.toggle("active");
-}
+  const schoolSelect = document.getElementById("add-school");
+  if (schoolSelect)
+    schoolSelect.addEventListener("change", (e) =>
+      populateAreas(e.target.value),
+    );
 
-document.addEventListener("DOMContentLoaded", () => {
-  const menuLinks = document.querySelectorAll("#mobile-menu a");
-  menuLinks.forEach((link) => {
-    link.addEventListener("click", () => {
-      document.getElementById("mobile-menu").classList.remove("active");
-    });
-  });
+  const fileInput = document.getElementById("file-upload");
+  if (fileInput) fileInput.addEventListener("change", handleFileUpload);
 
-  document.addEventListener("click", (e) => {
-    const menu = document.getElementById("mobile-menu");
-    const toggle = document.querySelector(".mobile-menu-toggle");
-    if (
-      !menu.contains(e.target) &&
-      !toggle.contains(e.target) &&
-      menu.classList.contains("active")
-    ) {
-      menu.classList.remove("active");
+  const submitBtn = document.getElementById("btn-submit");
+  if (submitBtn) submitBtn.addEventListener("click", submitHouse);
+
+  const urlParams = new URLSearchParams(window.location.search);
+  editingId = urlParams.get("edit");
+
+  if (editingId) {
+    toggleSkeleton(true);
+    if (window.fetchAllData) {
+      await window.fetchAllData();
     }
-  });
+    const listing = window.getListingById(editingId);
+    if (listing) {
+      document.getElementById("form-title").textContent = "Update Listing";
+      document.getElementById("add-title").value = listing.title;
+      document.getElementById("add-location").value =
+        listing.exactLocation || "";
+      document.getElementById("add-price").value = listing.price;
+      document.getElementById("add-rooms").value = listing.rooms || 1;
+      document.getElementById("add-type").value = listing.type;
+      document.getElementById("add-phone").value = listing.contact?.phone || "";
+      document.getElementById("add-wa").value = listing.contact?.whatsapp || "";
+      document.getElementById("add-desc").value =
+        listing.description || listing.desc || "";
+
+      document.getElementById("add-school").value = listing.school;
+      populateAreas(listing.school);
+      document.getElementById("add-area").value = listing.area;
+
+      if (listing.photos && listing.photos.length > 0) {
+        uploadedPhotos = listing.photos;
+        const container = document.getElementById("preview-container");
+        const label = document.getElementById("upload-label");
+        if (label) label.style.display = "none";
+        listing.photos.forEach((img) => {
+          const div = document.createElement("div");
+          div.style =
+            "width:100px; height:80px; position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--accent);";
+          div.innerHTML = `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">`;
+          container.appendChild(div);
+        });
+      }
+    } else {
+      notify("Listing not found in the database.", "error");
+    }
+    toggleSkeleton(false);
+  } else {
+    toggleSkeleton(false);
+  }
 });

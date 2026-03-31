@@ -508,15 +508,7 @@ body {
     width: 100%;
   }
 
-  .nav-links {
-    display: none;
-  }
-
   .mobile-menu-toggle {
-    display: block;
-  }
-
-  .mobile-menu.active {
     display: block;
   }
 }

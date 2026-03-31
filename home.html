@@ -17,9 +17,21 @@
         <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
       <nav class="nav-links">
-        <!-- populated by data.js -->
+        <ul class="nav-list">
+          <li><a href="home.html" class="active">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="shop.html">Browse Houses</a></li>
+          <li><a href="listings.html">Hot Deals</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
       </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
     </header>
+    <div class="nav-overlay"></div>
 
     <main>
       <!-- EPIC HERO BANNER -->
@@ -138,11 +150,11 @@
         </div>
       </section>
 
-      <!-- LANDLORD CTA -->
-      <section class="landlord-cta">
+      <!-- LANDLORD CTA (DYNAMIFIED) -->
+      <section class="landlord-cta" id="dynamic-cta">
         <h2>Are You A Landlord?</h2>
         <p>List your property directly to thousands of actively looking students across Nigeria. Fill your vacant apartments in a matter of hours.</p>
-        <button class="btn-light" onclick="window.location.href='auth.html'">Register as a Student to contact us</button>
+        <button class="btn-light" onclick="window.location.href='auth.html'">Get Started Now</button>
       </section>
 
       <!-- PRE-FOOTER FOLLOW US -->
@@ -218,20 +230,20 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js"></script>
   <script>
-    function renderHome() {
+    window.renderHome = function() {
       // 1. Featured Houses
       const carousel = document.getElementById('carousel');
-      const listings = window.getListings().slice(0, 8);
+      const listings = (window.getListings() || []).slice(0, 8);
       if(carousel) {
         if(listings.length === 0) {
-          carousel.innerHTML = '<p style="color:var(--text-muted);width:100%;text-align:center;">No trending houses.</p>';
+          carousel.innerHTML = '<p style="color:var(--text-muted);width:100%;text-align:center;padding:2rem;">No trending houses yet.</p>';
         } else {
           carousel.innerHTML = listings.map(l => `
             <div class="house-card reveal" onclick="window.location.href='details.html?id=${l.id}'">
-              <div class="card-image" style="background-image: url('${l.photos && l.photos[0] ? l.photos[0] : ''}')"></div>
+              <div class="card-image" style="background-image: url('${l.photo || (l.photos && l.photos[0]) || ''}')"></div>
               <div class="card-content">
                 <h3>${l.title}</h3>
-                <p>${l.school} • ${l.area}</p>
+                <p>${l.location} • ${l.type}</p>
               </div>
             </div>
           `).join('');
@@ -247,12 +259,16 @@
       const reviews = window.getReviews();
       
       if(rCarousel && rTrack) {
-        // Double the content ONLY once, ensuring we have enough for a seamless loop
+        // Always double the reviews to ensure the infinite scroll has no gaps
         const doubleReviews = [...reviews, ...reviews];
         
         rTrack.innerHTML = doubleReviews.map(r => `
           <div class="testimonial-card">
-            <blockquote style="margin:0; padding:0; border:none; background:none; font-style:italic;">"${r.text}"</blockquote>
+            <div class="testimonial-header">
+              <div class="rating-stars">★★★★★</div>
+              <div class="verified-badge">Verified Student</div>
+            </div>
+            <blockquote class="testimonial-text">"${r.text}"</blockquote>
             <div class="client-profile">
               <div class="client-img-wrapper">
                 <img src="${r.avatar || 'https://ui-avatars.com/api/?name='+r.name}" class="client-avatar">
@@ -344,6 +360,25 @@
           `;
         }
       }
+
+      // 4. Dynamic Landlord/Student CTA
+      const dCta = document.getElementById('dynamic-cta');
+      if(dCta) {
+        if(user) {
+          dCta.innerHTML = `
+            <h2>Ready to find your Pad, ${user.name}?</h2>
+            <p>We've updated our marketplace with 50+ new verified listings near your campus faculty today.</p>
+            <button class="btn-light" onclick="window.location.href='shop.html'">Browse The Market</button>
+          `;
+          dCta.style.background = "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)"; // Subtle dark shift for students
+        } else {
+          dCta.innerHTML = `
+            <h2>Are You A Landlord?</h2>
+            <p>List your property directly to thousands of actively looking students across Nigeria. Fill your vacant apartments in a matter of hours.</p>
+            <button class="btn-light" onclick="window.location.href='auth.html'">Get Started Now</button>
+          `;
+        }
+      }
     }
 
     async function submitReview() {
@@ -353,7 +388,7 @@
       
       const res = await window.addReview({
         name: user.name,
-        school: user.school || "Student",
+        school: user.university || "Student",
         text: text,
         avatar: "" // default
       });

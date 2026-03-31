@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StudentHome - Details</title>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
   <link rel="stylesheet" href="home.css">
   <style>
     /* Split layout logic for desktop */
@@ -13,12 +15,13 @@
       grid-template-columns: 1fr;
       gap: 2rem;
     }
-    
+
     @media (min-width: 900px) {
       .details-grid {
         grid-template-columns: 1.2fr 1fr;
         align-items: start;
       }
+
       .checkout-wrapper {
         position: sticky;
         top: 100px;
@@ -26,7 +29,7 @@
         border: 1px solid var(--card-border);
         border-radius: 20px;
         padding: 2rem;
-        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
       }
     }
 
@@ -36,9 +39,14 @@
       background-position: center;
       position: relative;
       border-radius: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
     }
-    @media (min-width: 900px) { .hero-image { height: 450px; } }
+
+    @media (min-width: 900px) {
+      .hero-image {
+        height: 450px;
+      }
+    }
 
     .back-btn {
       position: absolute;
@@ -57,7 +65,10 @@
       cursor: pointer;
       transition: background 0.2s;
     }
-    .back-btn:hover { background: rgba(17, 21, 28, 0.9); }
+
+    .back-btn:hover {
+      background: rgba(17, 21, 28, 0.9);
+    }
 
     .gallery-row {
       display: flex;
@@ -65,7 +76,11 @@
       padding-top: 1.5rem;
       overflow-x: auto;
     }
-    .gallery-row::-webkit-scrollbar { display: none; }
+
+    .gallery-row::-webkit-scrollbar {
+      display: none;
+    }
+
     .gallery-img {
       width: 100px;
       height: 100px;
@@ -76,21 +91,25 @@
       cursor: pointer;
       transition: border-color 0.2s, transform 0.2s;
     }
+
     .gallery-img:hover {
       border-color: var(--accent);
       transform: translateY(-2px);
     }
+
     .details-title {
       font-size: 2.2rem;
       font-weight: 700;
       margin-bottom: 0.5rem;
       line-height: 1.2;
     }
+
     .details-meta {
       color: var(--text-muted);
       font-size: 1.1rem;
       margin-bottom: 1.5rem;
     }
+
     .price {
       font-size: 2.5rem;
       color: var(--accent);
@@ -98,26 +117,35 @@
       display: block;
       margin-bottom: 0.5rem;
     }
-    .price-sub { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 2rem; display:block; }
-    
+
+    .price-sub {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+      display: block;
+    }
+
     .section-title {
       font-size: 1.3rem;
       font-weight: 600;
       margin-bottom: 1rem;
       margin-top: 1rem;
     }
+
     .desc {
       color: var(--text-muted);
       line-height: 1.8;
       font-size: 1.05rem;
       margin-bottom: 2.5rem;
     }
+
     .features {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
       gap: 1rem;
       margin-bottom: 2rem;
     }
+
     .feature-tag {
       background: var(--bg-panel);
       padding: 1rem;
@@ -128,17 +156,19 @@
       align-items: center;
       gap: 0.6rem;
     }
-    
+
     @media (max-width: 899px) {
       .checkout-wrapper {
         position: sticky;
         bottom: 0;
         padding: 1.5rem;
         background: linear-gradient(to top, var(--bg-panel) 80%, transparent);
-        margin: 0 -2rem -2rem -2rem; /* Extend across padding */
+        margin: 0 -2rem -2rem -2rem;
+        /* Extend across padding */
         z-index: 20;
       }
     }
+
     .btn-checkout {
       width: 100%;
       background: var(--accent);
@@ -151,12 +181,19 @@
       cursor: pointer;
       transition: background 0.2s, transform 0.2s;
     }
-    .btn-checkout:hover { background: #e87b51; transform: translateY(-3px); }
+
+    .btn-checkout:hover {
+      background: #e87b51;
+      transform: translateY(-3px);
+    }
 
     .modal-overlay {
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.8);
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
       backdrop-filter: blur(8px);
       z-index: 1000;
       display: none;
@@ -164,6 +201,7 @@
       justify-content: center;
       padding: 1.5rem;
     }
+
     .modal-content {
       background: var(--bg-panel);
       width: 100%;
@@ -174,6 +212,7 @@
       text-align: center;
       position: relative;
     }
+
     .modal-close {
       position: absolute;
       top: 1.5rem;
@@ -185,15 +224,22 @@
       cursor: pointer;
       transition: color 0.2s;
     }
-    .modal-close:hover { color: var(--accent); }
-    .modal-content h3 { font-size: 1.8rem; margin-bottom: 1rem; }
-    
+
+    .modal-close:hover {
+      color: var(--accent);
+    }
+
+    .modal-content h3 {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+
     .contact-option {
       display: flex;
       align-items: center;
       justify-content: center;
       gap: 1rem;
-      background: rgba(255,255,255,0.05);
+      background: rgba(255, 255, 255, 0.05);
       padding: 1.2rem;
       border-radius: 14px;
       margin-bottom: 1rem;
@@ -203,19 +249,44 @@
       text-decoration: none;
       transition: background 0.2s, transform 0.2s;
     }
-    .contact-option:hover { transform: translateY(-3px); background: rgba(255,255,255,0.1); }
-    .contact-option.whatsapp { color: #25D366; }
-    .contact-option.call { color: var(--accent); }
+
+    .contact-option:hover {
+      transform: translateY(-3px);
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .contact-option.whatsapp {
+      color: #25D366;
+    }
+
+    .contact-option.call {
+      color: var(--accent);
+    }
   </style>
 </head>
+
 <body>
   <div class="app-container">
     <header class="top-nav">
       <div class="logo" onclick="window.location.href='home.html'">
         <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
-      <nav class="nav-links"></nav>
+      <nav class="nav-links">
+        <ul class="nav-list">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="shop.html" class="active">Browse Houses</a></li>
+          <li><a href="listings.html">Hot Deals</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
     </header>
+    <div class="nav-overlay"></div>
 
     <main id="app">
       <!-- UI will be rendered by JS -->
@@ -227,19 +298,28 @@
       <button class="modal-close" onclick="closeModal()">×</button>
       <h3>Owner Contacts</h3>
       <p style="color:var(--text-muted);margin-bottom:2rem;font-size:1.05rem;">Reach out to the landlord directly.</p>
-      
+
       <a href="#" class="contact-option call" id="contact-call">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path
+            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+          </path>
+        </svg>
         <span id="call-text">Call</span>
       </a>
-      
+
       <a href="#" class="contact-option whatsapp" id="contact-wa">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path
+            d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+          </path>
+        </svg>
         <span id="wa-text">WhatsApp</span>
       </a>
     </div>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js"></script>
   <script>
     let listing = null;
@@ -247,29 +327,31 @@
     document.addEventListener('DOMContentLoaded', () => {
       // Show logo text on inner pages
       const lt = document.querySelector('.logo-text');
-      if(lt && window.innerWidth > 480) lt.style.display = 'inline-block';
+      if (lt && window.innerWidth > 480) lt.style.display = 'inline-block';
 
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
-      
-      if(!id) {
-         const all = window.getListings();
-         if(all.length > 0) listing = all[0];
+
+      if (!id) {
+        const all = window.getListings();
+        if (all.length > 0) listing = all[0];
       } else {
-         listing = window.getListingById(id);
+        listing = window.getListingById(id);
       }
 
-      if(!listing) {
-        document.getElementById('app').innerHTML = '<div style="padding:2rem;">Listing not found. <a href="shop.html" style="color:var(--accent);">Go back</a></div>';
+      if (!listing) {
+        document.getElementById('app').innerHTML =
+          '<div style="padding:2rem;">Listing not found. <a href="shop.html" style="color:var(--accent);">Go back</a></div>';
         return;
       }
-      
+
       renderDetails();
+      window.incrementViews(id);
     });
 
     function renderDetails() {
       const app = document.getElementById('app');
-      
+
       const mainPhoto = listing.photos && listing.photos.length > 0 ? listing.photos[0] : '';
       const photosHtml = (listing.photos || []).map(p => `
         <img src="${p}" class="gallery-img" onclick="setMainImage('${p}')">
@@ -323,11 +405,20 @@
 
     function handleCheckout() {
       const user = window.getCurrentUser();
-      if(!user) {
+      if (!user) {
         alert("Please login or create an account to view owner contact details.");
         window.location.href = "auth.html";
         return;
       }
+
+      // Record the lead in the database
+      window.createLead({
+        house_id: listing.id,
+        student_name: user.name,
+        student_phone: user.phone,
+        university: user.university
+      });
+
       document.getElementById('call-text').textContent = 'Call ' + (listing.contact?.phone || "Unavailable");
       document.getElementById('contact-call').href = 'tel:' + (listing.contact?.phone || "");
       document.getElementById('wa-text').textContent = 'WhatsApp ' + (listing.contact?.whatsapp || "Unavailable");
@@ -340,4 +431,5 @@
     }
   </script>
 </body>
+
 </html>

@@ -1,48 +1,4 @@
 // StudentHome - Main Application Script
-const STORAGE_KEY = "studenthome_listings";
-
-// Default listing data
-const defaultData = [
-  {
-    id: 1,
-    title: "The Elm Street Shared House",
-    location: "Sycamore",
-    type: "Shared",
-    price: 600,
-    rooms: 3,
-    status: "Active",
-    photo: "https://images.unsplash.com/photo-1499084732479-de2c02d45fc4?fit=crop&w=840&q=80",
-    desc: "Shared house with utilities included, 10 min from campus",
-    amenities: ["WiFi", "Laundry", "Parking"]
-  },
-  {
-    id: 2,
-    title: "Lakeside Student Loft",
-    location: "Oakridge",
-    type: "Private",
-    price: 950,
-    rooms: 2,
-    status: "Active",
-    photo: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?fit=crop&w=840&q=80",
-    desc: "Modern loft with lake view and study area",
-    amenities: ["WiFi", "Study Room", "Parking"]
-  },
-  {
-    id: 3,
-    title: "Campus Central Studio",
-    location: "Campus",
-    type: "Studio",
-    price: 800,
-    rooms: 1,
-    status: "Hidden",
-    photo: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?fit=crop&w=840&q=80",
-    desc: "Cozy studio near campus with quick access and security",
-    amenities: ["WiFi", "Laundry"]
-  }
-];
-
-// Initialize data
-let data = [...defaultData];
 
 // DOM Elements
 const screens = document.querySelectorAll('.page');
@@ -78,11 +34,11 @@ navLinks.forEach((link) => {
 // Render Card Template
 const renderCard = (item) => `
   <article class="card-item" data-id="${item.id}">
-    <img src="${item.photo}" alt="${item.title}" />
+    <img src="${item.photo || item.photos?.[0]}" alt="${item.title}" />
     <div class="card-body">
       <h3>${item.title}</h3>
       <p class="muted">${item.location} • ${item.type}</p>
-      <p class="price">$${item.price}/mo</p>
+      <p class="price">${window.formatPrice(item.price, true)}</p>
       <p class="details-meta">
         <span class="badge">${item.rooms} BR</span>
         <span class="badge">${item.status}</span>
@@ -94,11 +50,12 @@ const renderCard = (item) => `
 
 // Refresh Lists
 const refreshLists = () => {
-  const cardHtml = data.map(renderCard).join('');
+  const listings = window.getListings();
+  const cardHtml = listings.map(renderCard).join('');
   if (featured) featured.innerHTML = cardHtml;
   if (listingCards) listingCards.innerHTML = cardHtml;
   if (adminListings) {
-    adminListings.innerHTML = data.map((item) => `
+    adminListings.innerHTML = listings.map((item) => `
       <div class="list-row">
         <h3>${item.title}</h3>
         <span class="status-pill">${item.status}</span>
@@ -114,7 +71,7 @@ function filterData() {
   const typeVal = typeFilter?.value || 'all';
   const q = search?.value?.trim().toLowerCase() || '';
 
-  return data.filter((item) => {
+  return window.getListings().filter((item) => {
     const priceOk = item.price <= limit;
     const locationOk = locationVal === 'all' || item.location === locationVal;
     const typeOk = typeVal === 'all' || item.type === typeVal;
@@ -147,7 +104,7 @@ if (adminSearch) {
   adminSearch.addEventListener('input', () => {
     const q = adminSearch.value.toLowerCase();
     if (adminListings) {
-      adminListings.innerHTML = data
+      adminListings.innerHTML = window.getListings()
         .filter((item) => item.title.toLowerCase().includes(q) || item.status.toLowerCase().includes(q))
         .map((item) => `<div class="list-row"><h3>${item.title}</h3><span class="status-pill">${item.status}</span></div>`)
         .join('');
@@ -159,15 +116,15 @@ if (adminSearch) {
 function renderDetails(item) {
   if (detailsTitle) detailsTitle.textContent = item.title;
   if (detailsLocation) detailsLocation.textContent = item.location;
-  if (detailsPrice) detailsPrice.textContent = `$${item.price}/mo`;
+  if (detailsPrice) detailsPrice.textContent = window.formatPrice(item.price, true);
   if (detailsDesc) detailsDesc.textContent = item.desc;
-  if (detailsImage) detailsImage.src = item.photo;
+  if (detailsImage) detailsImage.src = item.photo || item.photos?.[0];
   if (detailsMeta) detailsMeta.innerHTML = item.amenities.map((a) => `<li>${a}</li>`).join('');
 }
 
 // Choose Item by ID
 function chooseItemById(id) {
-  const item = data.find((x) => x.id === Number(id));
+  const item = window.getListings().find((x) => String(x.id) === String(id));
   if (!item) return;
   renderDetails(item);
   activateScreen('details');
@@ -191,32 +148,96 @@ if (requestInfo) {
   });
 }
 
+// Mobile Menu Toggle
+function toggleMenu() {
+  const navLinks = document.querySelector('.nav-links');
+  const navOverlay = document.querySelector('.nav-overlay');
+  const body = document.body;
+  
+  if (navLinks) navLinks.classList.toggle('menu-active');
+  if (navOverlay) navOverlay.classList.toggle('menu-active');
+  body.classList.toggle('menu-open');
+}
+
+// Initialize mobile menu functionality
+document.addEventListener('DOMContentLoaded', () => {
+  // Add click event to hamburger button
+  const hamburgerBtn = document.querySelector('.mobile-menu-toggle');
+  if (hamburgerBtn) {
+    hamburgerBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleMenu();
+    });
+  }
+
+  // Add click event to overlay
+  const navOverlay = document.querySelector('.nav-overlay');
+  if (navOverlay) {
+    navOverlay.addEventListener('click', (e) => {
+      e.preventDefault();
+      toggleMenu();
+    });
+  }
+
+  // Close menu when clicking on a link
+  const menuLinks = document.querySelectorAll('.nav-list a');
+  menuLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      const navLinks = document.querySelector('.nav-links');
+      const navOverlay = document.querySelector('.nav-overlay');
+      const body = document.body;
+      
+      if (navLinks) navLinks.classList.remove('menu-active');
+      if (navOverlay) navOverlay.classList.remove('menu-active');
+      body.classList.remove('menu-open');
+    });
+  });
+
+  // Close menu when clicking outside
+  document.addEventListener('click', (e) => {
+    const navLinks = document.querySelector('.nav-links');
+    const toggle = document.querySelector('.mobile-menu-toggle');
+    const navOverlay = document.querySelector('.nav-overlay');
+    
+    if (
+      navLinks &&
+      toggle &&
+      !navLinks.contains(e.target) &&
+      !toggle.contains(e.target) &&
+      navLinks.classList.contains('menu-active')
+    ) {
+      navLinks.classList.remove('menu-active');
+      if (navOverlay) navOverlay.classList.remove('menu-active');
+      document.body.classList.remove('menu-open');
+    }
+  });
+});
+
 // Listing Form Submit
 if (listingForm) {
   listingForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const form = new FormData(listingForm);
-    const amenities = Array.from(form.getAll('amenities'));
-    
-    data.push({
-      id: Date.now(),
+    const listing = {
       title: form.get('title'),
       location: form.get('location'),
       price: Number(form.get('price')),
       rooms: Number(form.get('rooms')),
       status: 'Active',
-      type: 'Shared',
-      photo: form.get('photo') || 'https://images.unsplash.com/photo-1499084732479-de2c02d45fc4?fit=crop&w=840&q=80',
-      desc: form.get('description') || 'No description available',
-      amenities,
-    });
+      type: form.get('type') || 'Shared',
+      photo: form.get('photo'),
+      desc: form.get('description'),
+      amenities: Array.from(form.getAll('amenities')),
+    };
     
-    listingForm.reset();
-    refreshLists();
-    alert('Listing saved.');
-    activateScreen('admin');
+    window.addListing(listing).then(() => {
+        listingForm.reset();
+        alert('Listing saved to Cloud.');
+        window.location.reload();
+    });
   });
 }
 
 // Initialize
+window.renderShopGrid = refreshLists; // Link to cloud engine
 refreshLists();

@@ -11,13 +11,25 @@
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo" onclick="window.location.href='admin.html'">
+      <a class="logo" href="home.html">
         <img src="logo.png" alt="StudentHomes" class="brand-logo">
-      </div>
-      <div>
-        <a href="admin.html" class="btn btn-small btn-secondary" style="color:white; text-decoration:none;">← Back</a>
-      </div>
+      </a>
+      <nav class="nav-links">
+        <ul class="nav-list">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="about.html">About</a></li>
+          <li><a href="shop.html">Browse Houses</a></li>
+          <li><a href="listings.html">Hot Deals</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
     </header>
+    <div class="nav-overlay"></div>
 
     <main class="admin-dashboard">
       <div class="container">
@@ -26,10 +38,33 @@
               <h1 id="form-title">House Creator</h1>
               <p>Add full property details and upload gallery photos.</p>
            </div>
+           <a href="admin.html" class="btn btn-secondary">← Back to Dashboard</a>
         </div>
 
         <section class="listings-section" style="padding: 2.5rem;">
-           <div style="max-width: 800px; margin: 0 auto;">
+           <div id="form-skeleton" class="admin-form-skeleton" style="display:none;">
+              <div class="skeleton-short"></div>
+              <div class="skeleton-block"></div>
+              <div class="skeleton-block"></div>
+              <div class="skeleton-row">
+                <div class="skeleton-block"></div>
+                <div class="skeleton-block"></div>
+              </div>
+              <div class="skeleton-row">
+                <div class="skeleton-block"></div>
+                <div class="skeleton-block"></div>
+                <div class="skeleton-block"></div>
+              </div>
+              <div class="skeleton-upload"></div>
+              <div class="skeleton-row">
+                <div class="skeleton-block"></div>
+                <div class="skeleton-block"></div>
+              </div>
+              <div class="skeleton-textarea"></div>
+              <div class="skeleton-button"></div>
+           </div>
+
+           <div id="form-body" style="max-width: 800px; margin: 0 auto;">
               <div class="stats-grid" style="grid-template-columns: 1fr; gap: 1.5rem;">
                  
                  <div class="form-group">
@@ -69,6 +104,10 @@
                       <label style="color:var(--muted); display:block; margin-bottom:0.5rem;">Price (₦)</label>
                       <input type="number" id="add-price" class="search-wrapper" style="width:100%; border-radius:12px; height:50px; background:var(--bg); border:1px solid #334155; color:#fff; padding:0 1rem;" placeholder="e.g. 150000">
                     </div>
+                    <div class="form-group">
+                      <label style="color:var(--muted); display:block; margin-bottom:0.5rem;">Number of Rooms</label>
+                      <input type="number" id="add-rooms" class="search-wrapper" style="width:100%; border-radius:12px; height:50px; background:var(--bg); border:1px solid #334155; color:#fff; padding:0 1rem;" placeholder="e.g. 1">
+                    </div>
                  </div>
 
                  <div class="form-group">
@@ -96,7 +135,7 @@
                    <textarea id="add-desc" class="search-wrapper" style="width:100%; height:120px; border-radius:12px; padding:1rem; background:var(--bg); border:1px solid #334155; color:#fff; resize:none;" placeholder="Water availability, distance from gate, security details..."></textarea>
                  </div>
 
-                 <button class="btn btn-primary" onclick="submitHouse()" style="height:60px; font-size:1.2rem; margin-top:1.5rem;" id="btn-submit">Publish Property</button>
+                 <button class="btn btn-primary" style="height:60px; font-size:1.2rem; margin-top:1.5rem;" id="btn-submit">Publish Property</button>
               </div>
            </div>
         </section>
@@ -104,177 +143,8 @@
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js"></script>
-  <script>
-    let editingId = null;
-    let uploadedPhotos = [];
-
-    function populateUnis() {
-      const schoolSelect = document.getElementById('add-school');
-      const savedVal = schoolSelect.value;
-      schoolSelect.innerHTML = '<option value="">Select School</option>';
-      const unis = window.getUniversities();
-      Object.keys(unis).forEach(u => {
-        const op = document.createElement('option');
-        op.value = u; op.textContent = u;
-        schoolSelect.appendChild(op);
-      });
-      if(savedVal) schoolSelect.value = savedVal;
-    }
-
-    function populateAreas(schoolName) {
-      const areaSelect = document.getElementById('add-area');
-      const savedVal = areaSelect.value;
-      areaSelect.innerHTML = '<option value="">Select Area</option>';
-      const unis = window.getUniversities();
-      const areas = unis[schoolName] || [];
-      areas.forEach(a => {
-        const op = document.createElement('option');
-        op.value = a; op.textContent = a;
-        areaSelect.appendChild(op);
-      });
-      if(savedVal) areaSelect.value = savedVal;
-    }
-
-    function addNewSchool() {
-      const name = prompt("Enter University Name (e.g. UNN, EBSU, IMSU):");
-      if(name) {
-        window.addUniversity(name.toUpperCase(), []);
-        populateUnis();
-        document.getElementById('add-school').value = name.toUpperCase();
-        populateAreas(name.toUpperCase());
-      }
-    }
-
-    function addNewArea() {
-      const school = document.getElementById('add-school').value;
-      if(!school) return alert("Select a school first!");
-      const area = prompt(`Add area near ${school}:`);
-      if(area) {
-        window.addAreaToUniversity(school, area);
-        populateAreas(school);
-        document.getElementById('add-area').value = area;
-      }
-    }
-
-    document.getElementById('add-school').addEventListener('change', (e) => {
-      populateAreas(e.target.value);
-    });
-
-    // File Handling
-    document.getElementById('file-upload').addEventListener('change', (e) => {
-      const files = Array.from(e.target.files);
-      const container = document.getElementById('preview-container');
-      const label = document.getElementById('upload-label');
-      
-      files.forEach(file => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          const base64 = event.target.result;
-          uploadedPhotos.push(base64);
-          
-          const div = document.createElement('div');
-          div.style = "width:100px; height:80px; position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--accent);";
-          div.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover;">`;
-          container.appendChild(div);
-          label.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
-      });
-    });
-
-    document.addEventListener('DOMContentLoaded', () => {
-      // DEBUG: console.log("Form Loaded, checking types...", window.HOUSE_TYPES);
-      
-      const user = window.getCurrentUser();
-      if(!user || user.role !== 'admin') {
-        window.location.href = "home.html";
-        return;
-      }
-
-      populateUnis();
-      
-      // Defensively populate types
-      const typeSelect = document.getElementById('add-type');
-      typeSelect.innerHTML = '<option value="">Select Type</option>';
-      const types = window.HOUSE_TYPES || ["Self-contain", "1 Bedroom", "2 Bedroom", "3 Bedroom", "Single Room", "Shared Room"];
-      types.forEach(t => {
-        const op = document.createElement('option');
-        op.value = t; op.textContent = t;
-        typeSelect.appendChild(op);
-      });
-
-      const params = new URLSearchParams(window.location.search);
-      editingId = params.get('edit');
-      
-      if(editingId) {
-        const house = window.getListingById(editingId);
-        if(house) {
-          document.getElementById('form-title').textContent = "Update Listing";
-          document.getElementById('add-title').value = house.title;
-          document.getElementById('add-location').value = house.exactLocation || house.area || '';
-          document.getElementById('add-price').value = house.price;
-          document.getElementById('add-type').value = house.type;
-          document.getElementById('add-phone').value = house.contact?.phone || '';
-          document.getElementById('add-wa').value = house.contact?.whatsapp || '';
-          document.getElementById('add-desc').value = house.description || '';
-          
-          document.getElementById('add-school').value = house.school;
-          populateAreas(house.school);
-          document.getElementById('add-area').value = house.area;
-
-          if(house.photos) {
-            uploadedPhotos = house.photos;
-            const container = document.getElementById('preview-container');
-            const label = document.getElementById('upload-label');
-            house.photos.forEach(img => {
-              const div = document.createElement('div');
-              div.style = "width:100px; height:80px; position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--accent);";
-              div.innerHTML = `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">`;
-              container.appendChild(div);
-            });
-            if(house.photos.length > 0) label.style.display = 'none';
-          }
-        }
-      }
-    });
-
-    async function submitHouse() {
-      const title = document.getElementById('add-title').value;
-      const school = document.getElementById('add-school').value;
-      const area = document.getElementById('add-area').value;
-      const exactLocation = document.getElementById('add-location').value;
-      const type = document.getElementById('add-type').value;
-      const price = parseInt(document.getElementById('add-price').value);
-      const phone = document.getElementById('add-phone').value;
-      const whatsapp = document.getElementById('add-wa').value;
-      const desc = document.getElementById('add-desc').value;
-
-      if(!title || !school || !area || !exactLocation || !price || uploadedPhotos.length === 0 || !phone) {
-        alert("Please fill all details and upload at least one photo.");
-        return;
-      }
-
-      const house = {
-        title, school, area, exactLocation, type, price,
-        status: "Active",
-        photos: uploadedPhotos,
-        description: desc,
-        contact: { phone, whatsapp }
-      };
-
-      if(editingId) {
-        house.id = parseInt(editingId);
-        const res = await window.updateListing(house);
-        if(!res.success) return alert("Database Error: " + res.error.message);
-        alert("Property Updated Successfully!");
-      } else {
-        const res = await window.addListing(house);
-        if(!res.success) return alert("Database Error: " + res.error.message);
-        alert("Property Listed Successfully!");
-      }
-      window.location.href = "admin.html";
-    }
-  </script>
+  <script src="admin-form.js"></script>
 </body>
 </html>

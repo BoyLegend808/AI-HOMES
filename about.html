@@ -119,12 +119,25 @@
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo">
-        <span class="logo-icon">SH</span> 
-        <span class="logo-text" style="display: none;">Student</span>
+      <div class="logo" onclick="window.location.href='home.html'">
+        <img src="logo.png" alt="StudentHomes" class="brand-logo">
       </div>
-      <nav class="nav-links"></nav>
+      <nav class="nav-links">
+        <ul class="nav-list">
+          <li><a href="home.html">Home</a></li>
+          <li><a href="about.html" class="active">About</a></li>
+          <li><a href="shop.html">Browse Houses</a></li>
+          <li><a href="listings.html">Hot Deals</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
     </header>
+    <div class="nav-overlay"></div>
 
     <main>
       <section class="about-hero">
@@ -140,7 +153,7 @@
             <h2>Solving The Nigerian Student Housing Crisis</h2>
             <p>Every year, thousands of students at institutions like EBSU, UNN, UNILAG, and ABU struggle to find secure, affordable housing near their campuses.</p>
             <p>We built <strong>StudentHome</strong> to cut out the aggressive agents, fake housing agents, and fraudulent offline listings. By acting directly as the digital bridge between trusted landlords and students, we save you time, money, and stress.</p>
-            <p>What started as a massive headache for university freshers has now transformed into a seamless tap-and-move-in experience.</p>
+            <p>What started as a massive headache for new students has now transformed into a seamless tap-and-move-in experience.</p>
           </div>
           <div class="story-image"></div>
         </div>
@@ -204,13 +217,8 @@
     </main>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="data.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      // Show logo text on inner pages
-      const lt = document.querySelector('.logo-text');
-      if(lt && window.innerWidth > 480) lt.style.display = 'inline-block';
-    });
-  </script>
+  <script src="about.js"></script>
 </body>
 </html>
