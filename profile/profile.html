@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Profile | AI HOMES</title>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../js/nav.css">
+  <link rel="stylesheet" href="profile.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="logo">
+        <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo" onclick="window.location.href='../home/home.html'">
+      </div>
+      <nav class="nav-links">
+        <!-- Rendered by data.js -->
+      </nav>
+    </header>
+
+    <main class="profile-main">
+      <section class="profile-header text-center">
+        <div class="container">
+          <div class="profile-avatar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="60" height="60"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <h1 id="user-name">Loading...</h1>
+          <p id="user-email" class="text-muted"></p>
+          <div class="profile-badge">
+            <span id="user-uni"></span>
+          </div>
+        </div>
+      </section>
+
+      <section class="profile-content container">
+        <div class="profile-tabs">
+          <button class="tab-btn active">Saved Houses</button>
+        </div>
+
+        <div class="shop-grid" id="saved-container">
+          <!-- Rendered by profile.js -->
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/data.js"></script>
+  <script src="profile.js"></script>
+</body>
+</html>

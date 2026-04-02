@@ -1,0 +1,130 @@
+:root {
+  --bg-primary: #0F172A;
+  --bg-dark: #020617;
+  --bg-panel: #1E293B;
+  --bg-panel-hover: #334155;
+  --accent: #F97316;
+  --accent-light: #FFEDD5;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --card-border: rgba(255, 255, 255, 0.08);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+
+/* Extracted from contact.html */
+.contact-wrapper {
+      padding: 3rem 0;
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .contact-header {
+      text-align: center;
+      margin-bottom: 4rem;
+    }
+    .contact-header h1 {
+      font-size: clamp(2.5rem, 4vw, 3.5rem);
+      margin-bottom: 1rem;
+    }
+    .contact-header p {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+    }
+    
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.5fr;
+      gap: 3rem;
+    }
+
+    .contact-info {
+      background: var(--bg-panel);
+      padding: 3rem 2rem;
+      border-radius: 24px;
+      border: 1px solid var(--card-border);
+    }
+    .info-block {
+      margin-bottom: 2rem;
+    }
+    .info-block h3 {
+      font-size: 1.2rem;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .info-block p {
+      color: var(--text-muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+    }
+    
+    .contact-form {
+      background: var(--bg-dark);
+      padding: 3rem;
+      border-radius: 24px;
+      border: 1px solid var(--card-border);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    .form-group label {
+      display: block;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      font-size: 0.95rem;
+    }
+    .form-control {
+      width: 100%;
+      background: var(--bg-panel);
+      border: 1px solid rgba(255,255,255,0.05);
+      color: var(--text-main);
+      padding: 1rem;
+      border-radius: 12px;
+      font-family: inherit;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: var(--accent); }
+    
+    textarea.form-control {
+      resize: vertical;
+      min-height: 150px;
+    }
+    
+    .btn-submit {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 1.2rem;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.2s;
+    }
+    .btn-submit:hover {
+      background: #e87b51;
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 800px) {
+      .contact-grid { grid-template-columns: 1fr; }
+      .contact-form { padding: 2rem; }
+    }

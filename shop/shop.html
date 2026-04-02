@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentHome - Shop</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../js/nav.css">
+  <link rel="stylesheet" href="shop.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="logo" onclick="window.location.href='../home/home.html'">
+        <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+      </div>
+      <nav class="nav-links">
+        <ul class="nav-list">
+          <li><a href="../home/home.html">Home</a></li>
+          <li><a href="../about/about.html">About</a></li>
+          <li><a href="../shop/shop.html" class="active">Browse Houses</a></li>
+          <li><a href="shop.html">Hot Deals</a></li>
+          <li><a href="../contact/contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
+    </header>
+    <div class="nav-overlay"></div>
+
+    <main>
+      <div id="recently-viewed-section" style="display:none; margin-bottom: 3rem;">
+        <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-muted);">Recently Viewed</h3>
+        <div class="shop-grid" id="recent-container" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;"></div>
+      </div>
+
+      <div class="shop-header" id="shop-header">
+        <h2>Available Houses</h2>
+
+        <div class="cool-filter">
+          <div class="filter-row">
+            <select id="flt-school" class="filter-select">
+              <option value="">Select University</option>
+            </select>
+          </div>
+          <div class="filter-row">
+            <select id="flt-area" class="filter-select">
+              <option value="">Select Area / Location</option>
+            </select>
+            <select id="flt-type" class="filter-select">
+              <option value="">House Type</option>
+            </select>
+          </div>
+          <div class="filter-row" style="align-items: center; gap: 1rem; background: var(--bg-dark); padding: 0.5rem 1rem; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+            <label style="color:var(--text-muted);font-size:0.95rem;white-space:nowrap;">Max Price:</label>
+            <input type="range" id="flt-price" min="50000" max="1500000" step="50000" value="1500000" style="flex:1;">
+            <span id="price-display" style="font-weight:700;color:var(--accent);">₦1,500,000</span>
+          </div>
+          <button class="btn-filter" onclick="applyFilters()">Apply Filter</button>
+        </div>
+      </div>
+
+      <div class="shop-grid" id="shop-container">
+        <!-- Rendered by js -->
+      </div>
+    </main>
+    
+    <div class="mobile-sticky-action-bar">
+      <button onclick="document.getElementById('shop-header').scrollIntoView({behavior: 'smooth'})">⚙ Filters</button>
+      <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆ Top</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/data.js"></script>
+  <script src="shop.js"></script>
+</body>
+
+</html>

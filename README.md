@@ -163,9 +163,8 @@ StudentHome/
 
 ## 📝 Notes
 
-- Frontend only (no backend, no database, no APIs)
-- Data persists in browser localStorage
-- All images are from Unsplash (placeholder)
+- Full-stack integration with Supabase (Database, Auth, and Storage Buckets)
+- High-performance caching layers via data.js
 - Designed for modern browsers
 
 ## 🎯 Goal

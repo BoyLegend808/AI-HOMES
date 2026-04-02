@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentHome - Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../js/nav.css">
+  <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="logo" onclick="window.location.href='../home/home.html'">
+        <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+      </div>
+      <nav class="nav-links">
+        <ul class="nav-list">
+          <li><a href="../home/home.html">Home</a></li>
+          <li><a href="../about/about.html">About</a></li>
+          <li><a href="../shop/shop.html">Browse Houses</a></li>
+          <li><a href="../shop/shop.html">Hot Deals</a></li>
+          <li><a href="../contact/contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
+    </header>
+    <div class="nav-overlay"></div>
+
+    <input type="file" id="uni-logo-upload" style="display:none;" accept="image/*">
+
+    <main class="admin-dashboard">
+      <div class="container">
+        <div class="dashboard-header">
+          <div class="header-content">
+            <h1>Admin Dashboard</h1>
+            <p>Welcome back! Here's what's happening today.</p>
+          </div>
+          <a href="../admin-form/admin-form.html" class="btn btn-primary">+ Add New Property</a>
+        </div>
+
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-icon">🏠</div>
+            <div class="stat-content">
+              <h3 id="prop-count">0</h3>
+              <p>Total Houses</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">✅</div>
+            <div class="stat-content">
+              <h3 id="active-count">0</h3>
+              <p>Active Listings</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon">🎓</div>
+            <div class="stat-content">
+              <h3 id="uni-count">0</h3>
+              <p>Total Universities</p>
+            </div>
+          </div>
+        </div>
+
+        <section class="listings-section">
+          <div class="section-header">
+            <h2>Property Management</h2>
+            <div class="search-wrapper">
+              <input type="text" id="admin-search" placeholder="Search by name, school or area...">
+            </div>
+          </div>
+
+          <div id="admin-loading" class="admin-loading" style="display:none;">
+            <div class="admin-loading-card"></div>
+            <div class="admin-loading-card"></div>
+            <div class="admin-loading-card"></div>
+            <div class="admin-loading-card"></div>
+          </div>
+
+          <!-- Desktop Table (Hidden on small screens via CSS) -->
+          <div class="listings-table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Property</th>
+                  <th>Price</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="listings-body">
+                <!-- Rendered by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mobile Cards (Visible only on small screens via CSS) -->
+          <div class="listings-cards" id="listings-cards">
+            <!-- Rendered by JS -->
+          </div>
+        </section>
+
+        <!-- UNIVERSITY LOGISTICS -->
+        <section class="listings-section" style="margin-top: 3rem;">
+          <div class="section-header">
+            <h2>University Management</h2>
+            <button class="btn btn-primary" onclick="addNewUniversity()">+ Add New University</button>
+          </div>
+          <p style="color:var(--text-muted); margin-bottom:1.5rem;">Upload the official University logos here. They will
+            appear powerfully on student navigation bars.</p>
+          <div id="uni-cards"
+            style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
+            <!-- Rendered by JS -->
+          </div>
+        </section>
+
+        <input type="file" id="uni-logo-upload" accept="image/*" style="display:none;" />
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/data.js"></script>
+  <script src="admin.js"></script>
+</body>
+
+</html>

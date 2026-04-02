@@ -1,0 +1,176 @@
+:root {
+  --bg-primary: #0F172A;
+  --bg-dark: #020617;
+  --bg-panel: #1E293B;
+  --bg-panel-hover: #334155;
+  --accent: #F97316;
+  --accent-light: #FFEDD5;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --card-border: rgba(255, 255, 255, 0.08);
+}
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+.profile-main {
+  padding: 4rem 1rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.profile-header {
+  margin-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.profile-avatar {
+  background: var(--bg-panel);
+  border-radius: 50%;
+  width: 100px;
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+  border: 2px solid var(--accent);
+}
+.profile-header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+.text-muted {
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  margin-bottom: 1rem;
+}
+.profile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(249, 115, 22, 0.1);
+  color: var(--accent);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+.profile-tabs {
+  border-bottom: 1px solid var(--card-border);
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 2rem;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 1rem 0;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+.tab-btn.active {
+  color: var(--text-main);
+  border-bottom-color: var(--accent);
+}
+.shop-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+.list-card {
+  background: var(--bg-panel);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--card-border);
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+.list-card:hover {
+  transform: translateY(-8px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+  border-color: rgba(217, 108, 66, 0.3);
+}
+.list-card img {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+  display: block;
+}
+.list-info {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+.list-info h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.4rem;
+}
+.list-meta {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  flex: 1;
+}
+.list-price-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.list-price {
+  font-size: 1.4rem;
+  color: var(--accent);
+  font-weight: 700;
+}
+.list-type {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.4rem 0.8rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+.empty-state {
+  text-align: center;
+  padding: 4rem 1rem;
+  background: var(--bg-panel);
+  border-radius: 20px;
+  border: 1px dashed var(--card-border);
+}
+.empty-state h3 {
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+.empty-state p {
+  color: var(--text-muted);
+  margin-bottom: 2rem;
+}
+.hero-btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: opacity 0.2s;
+}
+.hero-btn:hover {
+  opacity: 0.9;
+}

@@ -1,0 +1,434 @@
+/* StudentHome - Shared Navigation & Global Styles
+   Include this on EVERY page alongside data.js */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+  --bg-primary: #0F172A;
+  --bg-dark: #020617;
+  --bg-panel: #1E293B;
+  --bg-panel-hover: #334155;
+  --accent: #F97316;
+  --accent-light: #FFEDD5;
+  --text-main: #F8FAFC;
+  --text-muted: #94A3B8;
+  --card-border: rgba(255, 255, 255, 0.08);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+  position: relative;
+  font-family: 'Outfit', sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+.app-container {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ==========================================================================
+   GLOBAL NAVIGATION (UNIFIED SYSTEM)
+   ========================================================================== */
+.top-nav {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 max(1.5rem, 4vw);
+  height: 80px;
+  background: rgba(10, 12, 16, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  position: sticky;
+  width: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Glassmorphism Utility Classes */
+.glass-card {
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.glass-panel {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@supports not (position: sticky) {
+  .top-nav {
+    position: fixed;
+  }
+  body {
+    padding-top: 80px;
+  }
+}
+
+.logo {
+  text-decoration: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.brand-logo {
+  height: 60px;
+  transition: transform 0.3s ease;
+  width: auto;
+}
+
+.brand-logo:hover {
+  transform: scale(1.05);
+}
+
+/* Base Desktop Nav Styles */
+.nav-links {
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+
+.nav-list {
+  display: flex;
+  list-style: none;
+  align-items: center;
+  gap: 2rem;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-list li {
+  list-style: none;
+}
+
+.nav-list a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: color 0.3s ease;
+  letter-spacing: 0.01em;
+  opacity: 0.85;
+  padding: 0.5rem 0;
+  position: relative;
+}
+
+.nav-list a::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.3s ease;
+}
+
+.nav-list a:hover::after,
+.nav-list a.active::after {
+  width: 100%;
+}
+
+.nav-mobile-label {
+  display: none;
+}
+
+.nav-list a:hover,
+.nav-list a.active {
+  color: var(--accent);
+  opacity: 1;
+}
+
+.nav-identity-cluster {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0 2rem;
+}
+
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  padding: 10px 15px;
+  margin-right: -10px;
+  cursor: pointer;
+  z-index: 6001;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-toggle-text {
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.15em;
+  transition: color 0.3s ease;
+}
+
+.hamburger-box {
+  width: 24px;
+  height: 18px;
+  position: relative;
+}
+
+.hamburger-inner,
+.hamburger-inner::before,
+.hamburger-inner::after {
+  width: 24px;
+  height: 2px;
+  background-color: #fff;
+  position: absolute;
+  transition: all 0.3s ease;
+}
+
+.hamburger-inner {
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.hamburger-inner::before {
+  content: "";
+  top: -8px;
+  left: 0;
+}
+
+.hamburger-inner::after {
+  content: "";
+  bottom: -8px;
+  left: 0;
+}
+
+/* Hamburger toggle animation when menu is open */
+.menu-open .hamburger-inner {
+  background-color: transparent !important;
+}
+
+.menu-open .hamburger-inner::before {
+  transform: translateY(8px) rotate(45deg);
+}
+
+.menu-open .hamburger-inner::after {
+  transform: translateY(-8px) rotate(-45deg);
+}
+
+.nav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  z-index: 4500;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0.3s ease, background 0.3s ease;
+}
+
+body.menu-open {
+  overflow: hidden;
+}
+
+/* Hero Button (used on multiple pages) */
+.hero-btn {
+  background: var(--accent);
+  color: #fff;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-block;
+  transition: 0.3s;
+  border: none;
+  cursor: pointer;
+  font-size: 1rem;
+}
+.hero-btn:hover {
+  background: #e87b51;
+  transform: translateY(-2px);
+}
+
+/* Join Now button in nav */
+.nav-join-btn {
+  padding: 0.6rem 1.4rem !important;
+  font-size: 0.9rem !important;
+  border-radius: 10px;
+}
+
+/* Toast System */
+#toast-container {
+  position: fixed;
+  right: clamp(12px, 3vw, 24px);
+  bottom: clamp(16px, 4vw, 28px);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 9500;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(15, 23, 42, 0.95);
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 4px solid var(--accent);
+  padding: 12px 16px;
+  border-radius: 12px;
+  min-width: 220px;
+  max-width: min(360px, 90vw);
+  font-size: 0.9rem;
+  box-shadow: 0 14px 28px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: auto;
+}
+.toast--success { border-left-color: #22c55e; }
+.toast--error { border-left-color: #ef4444; }
+.toast--show { opacity: 1; transform: translateY(0); }
+
+/* Main Area */
+main {
+  flex: 1;
+  padding: clamp(1rem, 3vw, 2.5rem);
+}
+
+/* MOBILE RESPONSIVE NAV */
+@media (max-width: 768px) {
+  .top-nav {
+    z-index: 7000;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    height: 72px;
+    padding: 0 1.2rem;
+    position: fixed;
+  }
+
+  .app-container {
+    padding-top: 72px;
+  }
+
+  .nav-identity-cluster {
+    display: none !important;
+  }
+
+  .mobile-menu-toggle {
+    display: flex;
+    background: none;
+    border: none;
+    padding: 10px 15px;
+    margin-right: -10px;
+    cursor: pointer;
+    z-index: 9999;
+    align-items: center;
+    gap: 12px;
+    position: relative;
+    pointer-events: auto;
+  }
+
+  .nav-links {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: auto;
+    width: min(360px, 88vw);
+    max-width: 100%;
+    height: 100vh;
+    background: rgba(15, 23, 42, 0.98);
+    padding: 120px 1.5rem 2rem;
+    box-sizing: border-box;
+    z-index: 7500;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease, visibility 0.3s ease;
+    display: flex;
+    justify-content: flex-start;
+    box-shadow: -10px 0 30px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    overflow-y: auto;
+  }
+
+  .nav-links.menu-active {
+    transform: translateX(0);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .nav-mobile-label {
+    display: flex;
+    color: var(--accent);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    font-weight: 800;
+    letter-spacing: 0.25em;
+    margin-bottom: 2rem;
+    opacity: 0.6;
+    text-align: center;
+    width: 100%;
+  }
+
+  .nav-list {
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    gap: 1.5rem;
+  }
+
+  .nav-list a {
+    font-size: 1.7rem;
+    padding: 15px;
+    display: block;
+    text-align: center;
+    color: #ffffff !important;
+    opacity: 1 !important;
+    width: 100%;
+  }
+
+  .nav-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0);
+    z-index: 6500;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0.3s ease, background 0.3s ease;
+  }
+
+  .nav-overlay.menu-active {
+    background: rgba(0, 0, 0, 0.7);
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+}

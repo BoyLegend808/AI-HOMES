@@ -19,23 +19,75 @@ const MIME_TYPES = {
 
 http.createServer((req, res) => {
     // Get the pathname and strip query parameters (like ?v=2.0)
-    const urlPath = req.url.split('?')[0];
-    const relativePath = urlPath === '/' ? 'Onboarding.html' : urlPath;
-    const filePath = path.join(__dirname, relativePath);
+    let urlPath = req.url.split('?')[0];
 
-    console.log(`${req.method} ${urlPath} -> ${filePath}`);
+    // Redirect root to onboarding page
+    if (urlPath === '/' || urlPath === '/index.html') {
+        res.writeHead(302, { 'Location': '/onboarding/onboarding.html' });
+        res.end();
+        return;
+    }
+
+    // Try to find the file
+    let filePath = path.join(__dirname, urlPath);
+
+    // If no extension, try adding .html or looking in subdirectories
+    const ext = path.extname(filePath);
+    if (!ext) {
+        // Try adding .html first (e.g., /home -> /home.html)
+        if (fs.existsSync(filePath + '.html')) {
+            filePath += '.html';
+        } else {
+            // Try subdirectory (e.g., /home -> /home/home.html)
+            const basename = path.basename(urlPath);
+            const subDirFile = path.join(filePath, basename + '.html');
+            if (fs.existsSync(subDirFile)) {
+                filePath = subDirFile;
+            }
+        }
+    }
+
+    // If the file still doesn't exist, try a "flat" search (e.g., /home.html -> /home/home.html)
+    if (!fs.existsSync(filePath) && ext === '.html') {
+        const basename = path.basename(urlPath);
+        const folderName = basename.replace('.html', '');
+        const potentialPath = path.join(__dirname, folderName, basename);
+        if (fs.existsSync(potentialPath)) {
+            filePath = potentialPath;
+        }
+    }
+
+    console.log(`${req.method} ${req.url} -> ${filePath}`);
 
     const extname = path.extname(filePath).toLowerCase();
     const contentType = MIME_TYPES[extname] || 'application/octet-stream';
 
     fs.readFile(filePath, (error, content) => {
         if (error) {
-            if(error.code == 'ENOENT') {
+            if (error.code === 'ENOENT') {
                 res.writeHead(404);
-                res.end('File Not Found');
+                res.end('File Not Found: ' + urlPath);
+            } else if (error.code === 'EISDIR') {
+                // Handle directory requests (e.g., /home/ -> /home/home.html)
+                const basename = path.basename(urlPath);
+                const subDirFile = path.join(filePath, (basename || 'index') + '.html');
+                if (fs.existsSync(subDirFile)) {
+                    fs.readFile(subDirFile, (err, subContent) => {
+                        if (err) {
+                            res.writeHead(500);
+                            res.end('Server Error');
+                        } else {
+                            res.writeHead(200, { 'Content-Type': 'text/html' });
+                            res.end(subContent, 'utf-8');
+                        }
+                    });
+                } else {
+                    res.writeHead(404);
+                    res.end('Directory listing not allowed');
+                }
             } else {
                 res.writeHead(500);
-                res.end('Sorry, check with the site admin for error: '+error.code+' ..\n');
+                res.end('Sorry, check with the site admin for error: ' + error.code + ' ..\n');
             }
         } else {
             res.writeHead(200, { 'Content-Type': contentType });

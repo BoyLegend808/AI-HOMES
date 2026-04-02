@@ -2,10 +2,10 @@
   "name": "ai-homes",
   "version": "1.0.0",
   "description": "Student Housing Platform",
-  "main": "home.js",
+  "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "npx browser-sync start --server --index Onboarding.html --files '*.html, *.css, *.js'"
+    "dev": "npx browser-sync start --server --files '*.html, *.css, *.js'"
   },
   "keywords": [],
   "author": ""

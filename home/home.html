@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentHome - Find Your Pad</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="home.css">
+</head>
+<body>
+  <div class="app-container">
+    <header class="top-nav">
+      <div class="logo" onclick="window.location.href='../home/home.html'">
+        <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+      </div>
+      <nav class="nav-links">
+        <ul class="nav-list">
+          <li><a href="../home/home.html" class="active">Home</a></li>
+          <li><a href="../about/about.html">About</a></li>
+          <li><a href="../shop/shop.html">Browse Houses</a></li>
+          <li><a href="../shop/shop.html">Hot Deals</a></li>
+          <li><a href="../contact/contact.html">Contact</a></li>
+        </ul>
+      </nav>
+      <button class="mobile-menu-toggle" aria-label="Toggle menu">
+        <span class="hamburger-box">
+          <span class="hamburger-inner"></span>
+        </span>
+      </button>
+    </header>
+    <div class="nav-overlay"></div>
+
+    <main>
+      <!-- EPIC HERO BANNER -->
+      <section class="hero-banner">
+        <div class="hero-content">
+          <div class="hero-badge">NIGERIA'S #1 STUDENT HOUSING</div>
+          <h1>Find Your Perfect<br><span>Student Pad</span> Instantly</h1>
+          <p>We bridge the gap between students and landlords to provide excellent, secure, and affordable housing options strictly close to your University campus.</p>
+          <a href="../shop/shop.html" class="hero-btn">Browse Houses Now</a>
+        </div>
+      </section>
+
+      <!-- TOP UNIVERSITIES SECTION -->
+      <section class="uni-partners reveal">
+        <div class="section-header" style="justify-content: center; margin-bottom: 2rem;">
+          <h2 style="font-size: 1.2rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Trusted By Students From</h2>
+        </div>
+        <div class="uni-logo-track">
+          <div class="uni-logo-item">
+            <div class="uni-logo-placeholder">UNILAG</div>
+            <span>UNILAG</span>
+          </div>
+          <div class="uni-logo-item">
+            <div class="uni-logo-placeholder">UNN</div>
+            <span>UNN</span>
+          </div>
+          <div class="uni-logo-item">
+            <div class="uni-logo-placeholder">OAU</div>
+            <span>OAU</span>
+          </div>
+          <div class="uni-logo-item">
+            <div class="uni-logo-placeholder">ABU</div>
+            <span>ABU</span>
+          </div>
+          <div class="uni-logo-item">
+            <div class="uni-logo-placeholder">UI</div>
+            <span>UI</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- FEATURED HOUSES (Horizontal Scroll) -->
+      <section class="featured-section">
+        <div class="section-header">
+          <h2>Trending Houses</h2>
+          <div class="controls">
+            <button class="nav-btn" onclick="document.getElementById('carousel').scrollBy(-180, 0)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            </button>
+            <button class="nav-btn" onclick="document.getElementById('carousel').scrollBy(180, 0)">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+          </div>
+        </div>
+        
+        <div class="carousel" id="carousel">
+          <!-- populated by js -->
+        </div>
+      </section>
+
+      <!-- WHY CHOOSE US GRID -->
+      <section class="benefits-wrapper">
+        <div class="section-header" style="justify-content: center; margin-bottom: 3rem;">
+          <h2>Why Choose StudentHome?</h2>
+        </div>
+        <div class="benefits-grid">
+          <div class="benefit-card">
+            <div class="b-icon">🔒</div>
+            <h3>Verified Landlords</h3>
+            <p>Every landlord and property on our platform is physically vetted by our university network team to ensure you're never scammed.</p>
+          </div>
+          <div class="benefit-card">
+            <div class="b-icon">🎓</div>
+            <h3>Campus Focused</h3>
+            <p>We map strictly based on specific Nigerian Universities (EBSU, UNILAG, UNN, ABU) so you only see places right beside your lectures.</p>
+          </div>
+          <div class="benefit-card">
+            <div class="b-icon">💰</div>
+            <h3>Zero Hidden Fees</h3>
+            <p>We eliminate extreme agency fees and hidden costs. Connect with House Owners directly via WhatsApp or Call.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- HOW IT WORKS SECTION -->
+      <section class="how-it-works">
+        <div class="section-header" style="justify-content: center; margin-bottom: 3rem;">
+          <h2>How It Works</h2>
+        </div>
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <h3>Search Near You</h3>
+            <p>Select your university and filter by preferred price, amenities, and proximity.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <h3>Pick A Room</h3>
+            <p>View high-quality photos, verified details, and virtual video tours for houses.</p>
+          </div>
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <h3>Contact Directly</h3>
+            <p>Message or call the verified property owner directly with zero middleman or agency fees.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- PREMIUM TESTIMONIALS SECTION -->
+      <section class="testimonials-section">
+        <div class="section-header">
+          <h2>What Students Say</h2>
+        </div>
+        
+        <div class="testimonial-scroller" id="reviews-carousel">
+          <div class="testimonial-track" id="reviews-track">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <div class="add-review-container" style="margin-top:2rem;">
+          <div id="review-form-box" class="review-form-card"></div>
+        </div>
+      </section>
+
+      <!-- LANDLORD CTA (DYNAMIFIED) -->
+      <section class="landlord-cta" id="dynamic-cta">
+        <h2>Are You A Landlord?</h2>
+        <p>List your property directly to thousands of actively looking students across Nigeria. Fill your vacant apartments in a matter of hours.</p>
+        <button class="btn-light" onclick="window.location.href='../auth/auth.html'">Get Started Now</button>
+      </section>
+
+      <!-- PRE-FOOTER FOLLOW US -->
+      <section class="pre-footer">
+        <h3>Follow Us</h3>
+        <div class="social-circles">
+          <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg></a>
+          <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path></svg></a>
+          <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>
+          <a href="#"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <div class="logo">
+            <span class="logo-icon circular">SH</span> 
+            <span class="logo-text-premium"><span class="underline">Student</span>Home</span>
+          </div>
+          <p>Nigeria's leading platform for student housing. We provide premium, verified apartments close to campus, eliminating extreme agency fees.</p>
+          <div class="footer-social-small">
+            <a href="#">Fb</a>
+            <a href="#">Tw</a>
+            <a href="#">Li</a>
+            <a href="#">Ig</a>
+          </div>
+        </div>
+        
+        <div class="footer-links-col">
+          <h3>Quick Links</h3>
+          <a href="../home/home.html">Home</a>
+          <a href="../about/about.html">About Us</a>
+          <a href="../shop/shop.html">Browse Houses</a>
+          <a href="../shop/shop.html">Hot Deals</a>
+          <a href="../contact/contact.html">Contact</a>
+        </div>
+
+        <div class="footer-links-col">
+          <h3>Student Services</h3>
+          <a href="#">Hostel Vetting</a>
+          <a href="#">Roommate Finder</a>
+          <a href="#">Moving Services</a>
+          <a href="#">Maintenance</a>
+          <a href="#">Consultation</a>
+        </div>
+        
+        <div class="footer-newsletter">
+          <h3>Newsletter</h3>
+          <p>Subscribe to our newsletter for the latest campus housing updates and offers.</p>
+          <div class="newsletter-form">
+            <input type="email" placeholder="Your email">
+            <button type="button">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <div class="footer-bottom-content">
+          <p>&copy; 2026 StudentHome Nigeria Limited. All Rights Reserved.</p>
+          <div class="footer-bottom-links">
+            <a href="#">Privacy Policy</a>
+            <a href="#">Terms of Service</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/data.js"></script>
+  <script src="home.js"></script>
+</body>
+</html>
