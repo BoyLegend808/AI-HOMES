@@ -66,6 +66,48 @@ body {
   font-family: 'Outfit', sans-serif;
 }
 
+.nav-id-skeleton.in-menu {
+  margin-bottom: 2rem;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  width: 100%;
+}
+
+/* Global Back Link Button */
+.back-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 50px;
+  cursor: pointer;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  margin: 100px 0 1rem 24px;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(8px);
+}
+
+.back-link-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-4px);
+  border-color: var(--accent);
+}
+
+.back-link-btn svg {
+  stroke: var(--accent);
+}
+
+@media (min-width: 1200px) {
+  .back-link-btn {
+    margin-left: calc((100vw - 1200px) / 2 + 24px);
+  }
+}
+
 .nav-left,
 .nav-center,
 .nav-right {
