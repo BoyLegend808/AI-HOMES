@@ -11,23 +11,25 @@
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo" onclick="window.location.href='../home/home.html'">
-        <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+      <div class="nav-left">
+        <div class="logo" onclick="window.location.href='../home/home.html'">
+          <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+        </div>
       </div>
-      <nav class="nav-links">
-        <ul class="nav-list">
-          <li><a href="../home/home.html">Home</a></li>
-          <li><a href="../about/about.html" class="active">About</a></li>
-          <li><a href="../shop/shop.html">Browse Houses</a></li>
-          <li><a href="../shop/shop.html">Hot Deals</a></li>
-          <li><a href="../contact/contact.html">Contact</a></li>
-        </ul>
-      </nav>
-      <button class="mobile-menu-toggle" aria-label="Toggle menu">
-        <span class="hamburger-box">
-          <span class="hamburger-inner"></span>
-        </span>
-      </button>
+      <div class="nav-center">
+        <nav class="nav-links">
+          <ul class="nav-list is-loading">
+            <li></li><li></li><li></li><li></li><li></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+          <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+          </span>
+        </button>
+      </div>
     </header>
     <div class="nav-overlay"></div>
 

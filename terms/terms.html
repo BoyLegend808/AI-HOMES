@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms of Service - StudentHome</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../js/nav.css">
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --accent: #F97316;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --glass: rgba(30, 41, 59, 0.7);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            line-height: 1.7;
+        }
+
+        .legal-container {
+            max-width: 900px;
+            margin: 120px auto 80px;
+            padding: 0 24px;
+        }
+
+        .legal-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .legal-header h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .update-date {
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .content-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: clamp(2rem, 5vw, 4rem);
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::before {
+            content: "";
+            width: 4px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+            color: #cbd5e1;
+        }
+
+        .highlight-box {
+            background: rgba(249, 115, 22, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        .back-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-4px);
+        }
+
+        footer {
+            text-align: center;
+            padding: 4rem 0;
+            border-top: 1px solid rgba(0,0,0,0.1);
+            margin-top: 4rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="top-nav">
+        <div class="nav-left">
+          <div class="logo" onclick="window.location.href='../home/home.html'">
+            <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+          </div>
+        </div>
+        <div class="nav-center">
+          <nav class="nav-links">
+            <ul class="nav-list is-loading-total">
+               <div class="full-nav-skeleton"></div>
+            </ul>
+          </nav>
+        </div>
+        <div class="nav-right">
+          <button class="mobile-menu-toggle" aria-label="Toggle menu">
+            <span class="hamburger-box">
+              <span class="hamburger-inner"></span>
+            </span>
+          </button>
+        </div>
+      </header>
+
+    <div class="legal-container">
+        <button class="back-link-btn" onclick="history.back()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Back
+        </button>
+        <div class="legal-header">
+            <div class="update-date">Last Updated: April 12, 2026</div>
+            <h1>Terms of Service</h1>
+            <p>The rules of the house. Let's keep things fair for everyone.</p>
+        </div>
+
+        <div class="content-card">
+            <section>
+                <h2>1. What is StudentHome?</h2>
+                <p>StudentHome is a bridge. We connect students who need a place to live with property owners (landlords) who have rooms to rent. We aren't the landlords ourselves—we don't own the hostels or houses listed—but we put every listing through a vetting process to make sure they are real and safe.</p>
+            </section>
+
+            <section>
+                <h2>2. Your Responsibilities</h2>
+                <p>By using this platform, you agree to be a decent human being. This means:</p>
+                <ul>
+                    <li>You will provide accurate information when creating your profile.</li>
+                    <li>You won't use our platform to scam, harass, or mislead anyone (students or landlords).</li>
+                    <li>You agree that while we vet listings, you should still exercise common sense when visiting properties. Never send money to a landlord before you've seen the room or verified their identity in person.</li>
+                </ul>
+            </section>
+
+            <div class="highlight-box">
+                <p>CRITICAL SAFETY RULE: StudentHome will NEVER ask you to transfer rent money to a platform account. Payments are handled directly between you and the landlord. Be smart, stay safe.</p>
+            </div>
+
+            <section>
+                <h2>3. For Landlords</h2>
+                <p>If you're listing a property, you swear that it's real, it's yours to rent, and the photos are accurate. If we find out you're posting "clickbait" rooms or misleading students, we will ban your account faster than a Lagos traffic jam.</p>
+            </section>
+
+            <section>
+                <h2>4. Limitation of Liability</h2>
+                <p>We do our absolute best to make sure every listing is verified. However, since we aren't the property owners, we aren't legally responsible for the condition of the room, the personality of your roommate, or the speed of your landlord's repairs. We provide the connection; the tenancy is between you and the landlord.</p>
+            </section>
+
+            <section>
+                <h2>5. Termination</h2>
+                <p>We reserve the right to suspend any account that violates these terms or behaves in a way that harms the StudentHome community. We’re all here to make campus life easier—let’s keep it that way.</p>
+            </section>
+
+            <section>
+                <h2>6. Ownership</h2>
+                <p>All the smooth animations, the logo, and the code powering this "AI HOMES" experience belong to us. Feel free to enjoy the site, but please don't copy the code or brand without asking first.</p>
+            </section>
+
+            <section>
+                <h2>Closing Note</h2>
+                <p>Thanks for being part of the StudentHome journey. By using the site, you're agreeing to these rules. Let's find you a great place to stay!</p>
+            </section>
+        </div>
+
+        <footer>
+            &copy; 2026 StudentHome Nigeria.
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/data.js"></script>
+</body>
+</html>

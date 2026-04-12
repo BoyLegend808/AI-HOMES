@@ -23,9 +23,13 @@ function renderDashboard(filter = "") {
     (h) => h.status === "Active",
   ).length;
 
-  const unis = window.CLOUD_UNIVERSITIES_DATA || [];
+  const uniCountSource =
+    (window.getUniversities && window.getUniversities()) ||
+    window.NIGERIA_UNIVERSITIES ||
+    {};
   const uniCountEl = document.getElementById("uni-count");
-  if (uniCountEl) uniCountEl.textContent = unis.length;
+  if (uniCountEl)
+    uniCountEl.textContent = Object.keys(uniCountSource).length;
   if (window.renderUniversities) window.renderUniversities();
 
   const body = document.getElementById("listings-body");
@@ -251,43 +255,100 @@ window.addNewUniversity = async () => {
   }
 };
 
+window.addUniversityByName = async (name) => {
+  const trimmed = String(name || "").trim();
+  if (!trimmed) return;
+  if (!window.sb_client) return;
+  const { error } = await window.sb_client.from("universities").insert([
+    {
+      name: trimmed,
+      locations: [],
+      logo_url: "",
+      logo_scale: 1.1,
+    },
+  ]);
+
+  if (!error) {
+    if (window.fetchAllData) await window.fetchAllData();
+  } else {
+    alert("Error adding university: " + error.message);
+  }
+};
+
 window.renderUniversities = () => {
   const uniCards = document.getElementById("uni-cards");
   if (!uniCards) return;
 
-  const unis = window.CLOUD_UNIVERSITIES_DATA || [];
-  if (unis.length === 0) {
+  const cloudUnis = window.CLOUD_UNIVERSITIES_DATA || [];
+  const fallbackUnis =
+    (window.getUniversities && window.getUniversities()) ||
+    window.NIGERIA_UNIVERSITIES ||
+    {};
+  const cloudByName = {};
+  cloudUnis.forEach((u) => {
+    if (u && u.name) cloudByName[u.name.toLowerCase()] = u;
+  });
+
+  const merged = [];
+  Object.keys(fallbackUnis).forEach((name) => {
+    const cloud = cloudByName[name.toLowerCase()];
+    if (cloud) {
+      merged.push(cloud);
+    } else {
+      merged.push({
+        id: null,
+        name,
+        locations: fallbackUnis[name] || [],
+        logo_url: "",
+        logo_scale: 1.1,
+        localOnly: true,
+      });
+    }
+  });
+  cloudUnis.forEach((u) => {
+    if (!u?.name) return;
+    if (!fallbackUnis[u.name]) merged.push(u);
+  });
+
+  if (merged.length == 0) {
     uniCards.innerHTML = '<p class="muted">No universities found.</p>';
     return;
   }
 
-  uniCards.innerHTML = unis.map(u => `
+  uniCards.innerHTML = merged
+    .map(
+      (u) => `
         <div class="uni-card-container" style="background:var(--bg-panel); border:1px solid var(--card-border); padding:1.5rem; border-radius:16px; display:flex; flex-direction:column; gap:1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <div style="display:flex; flex-direction:column; align-items:center; gap:1rem;">
                 <div style="width:140px; height:140px; display:flex; align-items:center; justify-content:center; overflow:hidden; border:1px dashed var(--card-border); border-radius:12px; background:rgba(255,255,255,0.02); position:relative;">
-                    <img src="${u.logo_url || "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=200&auto=format&fit=crop"}" 
+                    <img src="${u.logo_url || "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=200&auto=format&fit=crop"}"
                          style="width:100%; height:100%; object-fit:contain; transform: scale(${u.logo_scale || 1.1}); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); transition: transform 0.1s ease-out;">
                 </div>
                 <div style="text-align:center; width:100%;">
                     <h4 style="margin-bottom:0.3rem; color:white; font-size:1.1rem;">${u.name}</h4>
                     <div style="display:flex; gap:0.5rem; justify-content:center;">
-                        <button class="btn btn-small" style="font-size:0.7rem; padding:0.3rem 0.6rem;" onclick="triggerUniLogoUpload(${u.id})">Upload Logo</button>
-                        <button class="btn btn-small" style="font-size:0.7rem; padding:0.3rem 0.6rem; background:rgba(239, 68, 68, 0.1); color:#ef4444; border-color:rgba(239, 68, 68, 0.2);" onclick="removeUniversity(${u.id})">Delete</button>
+                        ${u.localOnly
+                          ? `<button class="btn btn-small" style="font-size:0.7rem; padding:0.3rem 0.6rem;" onclick="addUniversityByName('${u.name.replace(/'/g, "\'")}')">Add To DB</button>`
+                          : `<button class="btn btn-small" style="font-size:0.7rem; padding:0.3rem 0.6rem;" onclick="triggerUniLogoUpload(${u.id})">Upload Logo</button>
+                             <button class="btn btn-small" style="font-size:0.7rem; padding:0.3rem 0.6rem; background:rgba(239, 68, 68, 0.1); color:#ef4444; border-color:rgba(239, 68, 68, 0.2);" onclick="removeUniversity(${u.id})">Delete</button>`}
                     </div>
+                    ${u.localOnly ? '<div style="margin-top:0.4rem; font-size:0.7rem; color:var(--text-muted);">Local only (not in DB)</div>' : ""}
                 </div>
             </div>
 
-            <div style="padding:0.5rem; background:rgba(0,0,0,0.2); border-radius:8px;">
-                <label style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:0.3rem;">Logo Size: ${u.logo_scale || 1.1}x</label>
-                <input type="range" min="0.5" max="3" step="0.1" value="${u.logo_scale || 1.1}" 
-                       style="width:100%; accent-color:var(--accent); cursor:pointer;"
-                       oninput="updateUniLogoScale(${u.id}, this.value)">
-            </div>
+            ${u.localOnly
+              ? ""
+              : `<div style="padding:0.5rem; background:rgba(0,0,0,0.2); border-radius:8px;">
+                  <label style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:0.3rem;">Logo Size: ${u.logo_scale || 1.1}x</label>
+                  <input type="range" min="0.5" max="3" step="0.1" value="${u.logo_scale || 1.1}"
+                         style="width:100%; accent-color:var(--accent); cursor:pointer;"
+                         oninput="updateUniLogoScale(${u.id}, this.value)">
+                </div>`}
 
             <div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
                     <span style="font-size:0.8rem; font-weight:700; color:var(--text-muted);">AREAS</span>
-                    <button onclick="addAreaToUni(${u.id})" style="background:var(--accent); color:black; border:none; border-radius:4px; width:20px; height:20px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:bold;">+</button>
+                    ${u.localOnly ? "" : `<button onclick="addAreaToUni(${u.id})" style="background:var(--accent); color:black; border:none; border-radius:4px; width:20px; height:20px; font-size:1rem; cursor:pointer; display:flex; align-items:center; justify-content:center; font-weight:bold;">+</button>`}
                 </div>
                 <div style="display:flex; flex-wrap:wrap; gap:0.4rem;">
                     ${(u.locations || [])
@@ -295,7 +356,7 @@ window.renderUniversities = () => {
                         (area) => `
                         <span style="font-size:0.7rem; background:rgba(255,255,255,0.05); padding:0.2rem 0.5rem; border-radius:4px; color:var(--text-muted); display:flex; align-items:center; gap:4px; border:1px solid rgba(255,255,255,0.1);">
                             ${area}
-                            <span onclick="removeAreaFromUni(${u.id}, '${area}')" style="cursor:pointer; color:#ef4444; font-weight:bold; font-size:0.8rem;">×</span>
+                            ${u.localOnly ? "" : `<span onclick="removeAreaFromUni(${u.id}, '${area}')" style="cursor:pointer; color:#ef4444; font-weight:bold; font-size:0.8rem;">?</span>`}
                         </span>
                     `,
                       )
@@ -309,6 +370,57 @@ window.renderUniversities = () => {
     .join("");
 };
 
+async function renderInquiries() {
+  const body = document.getElementById("inquiries-body");
+  if (!body) return;
+
+  if (!window.sb_client) {
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:var(--text-muted);">Cloud offline</td></tr>';
+    return;
+  }
+
+  // Fetch inquiries with profile and house info
+  // Note: we need to join inquiries.user_id -> profiles.id
+  const { data, error } = await window.sb_client
+    .from('inquiries')
+    .select(`
+      *,
+      profiles (full_name, email, phone, university),
+      houses (title)
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error || !data) {
+    console.error("Inquiries Fetch Error:", error);
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:var(--text-muted);">Error loading messages</td></tr>';
+    return;
+  }
+
+  if (data.length === 0) {
+    body.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1rem; color:var(--text-muted);">No messages yet</td></tr>';
+    return;
+  }
+
+  body.innerHTML = data.map(inq => `
+    <tr>
+      <td>
+        <div style="font-weight:700; color:white;">${inq.profiles?.full_name || 'Anonymous'}</div>
+        <div style="font-size:0.75rem; color:var(--text-muted);">${inq.profiles?.university || ''}</div>
+        <div style="font-size:0.75rem; color:var(--accent);">${inq.profiles?.phone || ''}</div>
+      </td>
+      <td>
+        <div style="color:var(--text-muted); font-size:0.9rem;">${inq.houses?.title || 'Unknown House'}</div>
+      </td>
+      <td>
+        <div style="color:white; max-width:300px; white-space: normal;">${inq.message}</div>
+      </td>
+      <td style="font-size:0.8rem; color:var(--text-muted);">
+        ${new Date(inq.created_at).toLocaleDateString()}
+      </td>
+    </tr>
+  `).join('');
+}
+
 document.getElementById("admin-search").addEventListener("input", (e) => {
   renderDashboard(e.target.value);
 });
@@ -320,5 +432,6 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.fetchAllData) await window.fetchAllData();
   setAdminLoading(false);
   renderDashboard();
+  renderInquiries();
   renderUniversities();
 });

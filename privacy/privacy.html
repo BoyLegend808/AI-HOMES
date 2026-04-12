@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - StudentHome</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../js/nav.css">
+    <style>
+        :root {
+            --bg-dark: #020617;
+            --accent: #F97316;
+            --text-main: #F8FAFC;
+            --text-muted: #94A3B8;
+            --glass: rgba(30, 41, 59, 0.7);
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            line-height: 1.7;
+        }
+
+        .legal-container {
+            max-width: 900px;
+            margin: 120px auto 80px;
+            padding: 0 24px;
+        }
+
+        .legal-header {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .legal-header h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 800;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .update-date {
+            color: var(--accent);
+            font-weight: 600;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            font-size: 0.8rem;
+        }
+
+        .content-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            padding: clamp(2rem, 5vw, 4rem);
+        }
+
+        section {
+            margin-bottom: 3rem;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #fff;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::before {
+            content: "";
+            width: 4px;
+            height: 24px;
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        p {
+            margin-bottom: 1.2rem;
+            color: #cbd5e1;
+        }
+
+        ul {
+            margin-bottom: 1.5rem;
+            padding-left: 1.2rem;
+        }
+
+        li {
+            margin-bottom: 0.8rem;
+            color: #cbd5e1;
+        }
+
+        .highlight-box {
+            background: rgba(249, 115, 22, 0.1);
+            border-left: 4px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 2rem 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+            font-weight: 500;
+            color: #fff;
+        }
+
+        footer {
+            text-align: center;
+            padding: 4rem 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 4rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .back-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .back-link-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(-4px);
+        }
+
+        @media (max-width: 768px) {
+            .legal-container { margin-top: 100px; }
+            .content-card { padding: 2rem 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <header class="top-nav">
+        <div class="nav-left">
+          <div class="logo" onclick="window.location.href='../home/home.html'">
+            <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+          </div>
+        </div>
+        <div class="nav-center">
+          <nav class="nav-links">
+            <ul class="nav-list is-loading-total">
+               <div class="full-nav-skeleton"></div>
+            </ul>
+          </nav>
+        </div>
+        <div class="nav-right">
+          <button class="mobile-menu-toggle" aria-label="Toggle menu">
+            <span class="hamburger-box">
+              <span class="hamburger-inner"></span>
+            </span>
+          </button>
+        </div>
+      </header>
+
+    <div class="legal-container">
+        <button class="back-link-btn" onclick="history.back()">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
+            Back
+        </button>
+        <div class="legal-header">
+            <div class="update-date">Effective Date: April 12, 2026</div>
+            <h1>Privacy Policy</h1>
+            <p>We care about your data as much as we care about your safety on campus.</p>
+        </div>
+
+        <div class="content-card">
+            <section>
+                <h2>Introduction</h2>
+                <p>Welcome to StudentHome. When we started this platform, we did so with a single mission: making student housing safe, transparent, and easy in Nigeria. To do that, we need to collect some information from you. But we want to be incredibly clear about one thing: <strong>Your privacy is not a commodity to us.</strong></p>
+                <p>This policy explains exactly what we collect, why we collect it, and how we protect it. We’ve tried to write this in plain English—no confusing "lawyer-speak"—because you deserve to understand what happens with your data.</p>
+            </section>
+
+            <section>
+                <h2>What We Collect (And Why)</h2>
+                <p>We only ask for things that are strictly necessary to make the platform work for you:</p>
+                <ul>
+                    <li><strong>Account Details:</strong> When you sign up, we ask for your name, email, and university. We need this to verify that you’re a real student and to keep the community exclusive.</li>
+                    <li><strong>Profile Photos:</strong> If you upload an avatar, it helps landlords and other students recognize you. It’s entirely optional.</li>
+                    <li><strong>Interactions:</strong> We keep track of the houses you "Save" (favorite) so you can find them later across all your devices.</li>
+                    <li><strong>Device Info:</strong> We collect basic technical info (like which browser you use) to make sure our "big rectangle" skeletons and animations look smooth on your specific phone or laptop.</li>
+                </ul>
+            </section>
+
+            <div class="highlight-box">
+                <p>Note: We do NOT sell your email address or personal details to third-party marketing companies. We find that practice as annoying as you do.</p>
+            </div>
+
+            <section>
+                <h2>How We Protect You</h2>
+                <p>We use **Supabase**, a world-class database system, to handle your authentication. This means your passwords are encrypted and we never actually see them. We also implement Row Level Security (RLS) on our servers, which is a fancy way of saying that no one—not even other users—can see your private data unless you explicitly allow it.</p>
+            </section>
+
+            <section>
+                <h2>Your Control</h2>
+                <p>You own your data. At any time, you can:</p>
+                <ul>
+                    <li>Update your profile info through your Dashboard.</li>
+                    <li>Remove your favorited houses.</li>
+                    <li>Delete your account entirely. If you choose to leave us, we’ll scrub your personal data from our active databases.</li>
+                </ul>
+            </section>
+
+            <section>
+                <h2>Changes to This Policy</h2>
+                <p>As we grow (and add more universities!), we might need to update this policy. When we do, we'll change the "Effective Date" at the top. If the changes are major, we’ll send you an email or post a notification in your Dashboard.</p>
+            </section>
+
+            <section>
+                <h2>Contact Us</h2>
+                <p>Got questions? Want to know more about how we handle things? We’re real people, and we’re happy to chat. Drop us a line at <a href="mailto:privacy@studenthome.ng" style="color:var(--accent); text-decoration:none;">privacy@studenthome.ng</a>.</p>
+            </section>
+        </div>
+
+        <footer>
+            &copy; 2026 StudentHome Nigeria. All rights reserved.
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="../js/data.js"></script>
+</body>
+</html>

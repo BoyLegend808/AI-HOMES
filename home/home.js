@@ -35,25 +35,22 @@ navLinks.forEach((link) => {
 
 // Render Card Template
 const renderCard = (item) => {
-  const isFav = false; // We can check this dynamically if we have the user's favorites list
+  const isFav = window.isFavorited ? window.isFavorited(item.id) : false;
   return `
-  <article class="card-item" data-id="${item.id}">
+  <article class="card-item" data-id="${item.id}" style="position:relative;">
     <div class="card-image-wrapper" style="position:relative;">
       <img src="${item.photo || item.photos?.[0]}" alt="${item.title}" />
-      <button class="favorite-btn ${isFav ? "active" : ""}" onclick="event.stopPropagation(); window.toggleFavorite(${item.id})">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="${isFav ? "currentColor" : "none"}" stroke="currentColor" stroke-width="2">
-          <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
-        </svg>
+      <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${item.id}" onclick="event.stopPropagation(); window.toggleFavorite(${item.id})">
+        <span class="IconContainer">
+          <svg viewBox="0 0 384 512" height="0.9em" class="icon"><path d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"></path></svg>
+        </span>
+        <p class="text">Save</p>
       </button>
     </div>
     <div class="card-body">
       <h3>${item.title}</h3>
       <p class="muted">${item.location} • ${item.type}</p>
       <p class="price">${window.formatPrice(item.price, true)}</p>
-      <p class="details-meta">
-        <span class="badge">${item.rooms} BR</span>
-        <span class="badge">${item.status}</span>
-      </p>
       <button class="btn action-btn" data-action="view" data-id="${item.id}">Open</button>
     </div>
   </article>
@@ -66,23 +63,34 @@ const refreshLists = () => {
   // Use a different card renderer for the carousel to match the premium trending look
   const carousel = document.getElementById("carousel");
   if (carousel) {
-    if (listings.length === 0) {
-      carousel.innerHTML = '<p class="muted">No upcoming listings yet.</p>';
-    } else {
+    if (listings.length > 0) {
       carousel.innerHTML = listings
         .map(
-          (item) => `
-        <article class="testimonial-card" style="width:300px; padding:0; overflow:hidden;" onclick="window.location.href='../details/detail.html?id=${item.id}'">
-          <img src="${item.photo || (item.photos && item.photos[0]) || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800"}" style="width:100%; height:180px; object-fit:cover;">
-          <div style="padding:1.5rem;">
-            <h4 style="margin-bottom:0.5rem; color:white;">${item.title}</h4>
-            <p style="color:var(--accent); font-weight:700;">₦${item.price.toLocaleString()}</p>
-            <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">${item.location}</p>
-          </div>
-        </article>
-      `,
+          (item) => {
+            const isFav = window.isFavorited ? window.isFavorited(item.id) : false;
+            return `
+              <article class="testimonial-card trending-card" style="width:300px; padding:0; overflow:hidden; position:relative;" onclick="window.location.href='../details/detail.html?id=${item.id}'">
+                <div style="position:relative; height:180px;">
+                  <img src="${item.photo || (item.photos && item.photos[0]) || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800"}" style="width:100%; height:100%; object-fit:cover;">
+                  <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${item.id}" onclick="event.stopPropagation(); window.toggleFavorite(${item.id})">
+                    <span class="IconContainer">
+                      <svg viewBox="0 0 384 512" height="0.9em" class="icon"><path d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"></path></svg>
+                    </span>
+                    <p class="text">Save</p>
+                  </button>
+                </div>
+                <div style="padding:1.5rem;">
+                  <h4 style="margin-bottom:0.5rem; color:white;">${item.title}</h4>
+                  <p style="color:var(--accent); font-weight:700;">₦${item.price.toLocaleString()}</p>
+                  <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">${item.location}</p>
+                </div>
+              </article>
+            `;
+          }
         )
         .join("");
+    } else if (window.CLOUD_ENGINE_READY) {
+       carousel.innerHTML = '<p class="muted">No upcoming listings yet.</p>';
     }
   }
 
@@ -94,28 +102,32 @@ const refreshLists = () => {
   const reviewsTrack = document.getElementById("reviews-track");
   if (reviewsTrack && window.getReviews) {
     const reviews = window.getReviews();
-    reviewsTrack.innerHTML = reviews
-      .map(
-        (rev) => `
-      <div class="testimonial-card">
-        <div class="testimonial-header">
-          <div class="rating-stars">★★★★★</div>
-          <span class="verified-badge">Verified</span>
-        </div>
-        <p class="testimonial-text">"${rev.text}"</p>
-        <div class="client-profile">
-          <div class="client-img-wrapper">
-             <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--accent); color:black; font-weight:bold; font-size:1.2rem;">${rev.name.charAt(0)}</div>
+    if (reviews.length > 0) {
+      reviewsTrack.innerHTML = reviews
+        .map(
+          (rev) => `
+        <div class="testimonial-card">
+          <div class="testimonial-header">
+            <div class="rating-stars">★★★★★</div>
+            <span class="verified-badge">Verified</span>
           </div>
-          <div class="client-info">
-            <cite>${rev.name}</cite>
-            <span class="client-role">${rev.school || "Verified Student"}</span>
+          <p class="testimonial-text">"${rev.text}"</p>
+          <div class="client-profile">
+            <div class="client-img-wrapper">
+               <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--accent); color:black; font-weight:bold; font-size:1.2rem;">${rev.name.charAt(0)}</div>
+            </div>
+            <div class="client-info">
+              <cite>${rev.name}</cite>
+              <span class="client-role">${rev.school || "Verified Student"}</span>
+            </div>
           </div>
         </div>
-      </div>
-    `,
-      )
-      .join("");
+      `,
+        )
+        .join("");
+    } else if (window.CLOUD_ENGINE_READY) {
+      reviewsTrack.innerHTML = '<p class="muted">No reviews yet.</p>';
+    }
   }
 
   // Render Review Form
@@ -242,7 +254,7 @@ const renderUniversities = () => {
       .map(
         (u) => `
       <div class="uni-logo-item">
-        <div class="uni-logo-placeholder" style="overflow:hidden; background:transparent; border:none; width:100px; height:100px;">
+        <div class="uni-logo-placeholder" style="overflow:hidden; background:transparent; border:none; width:50px; height:50px;">
           <img src="${u.logo_url || "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=200&auto=format&fit=crop"}" 
                style="width:100%; height:100%; object-fit:contain; transform: scale(${u.logo_scale || 1.1}); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); transition: 0.3s ease;">
         </div>
@@ -251,15 +263,15 @@ const renderUniversities = () => {
     `,
       )
       .join("");
+  } else if (window.CLOUD_ENGINE_READY) {
+    uniTrack.innerHTML = '<p class="muted">No partners yet.</p>';
   }
 };
 
 // Initial Call
 document.addEventListener("DOMContentLoaded", () => {
-  setTimeout(() => {
-    refreshLists();
-    renderUniversities();
-  }, 1000); // Give data some time to sync
+  refreshLists();
+  renderUniversities();
 });
 
 // Render Details
@@ -338,10 +350,14 @@ if (listingForm) {
 // Initialize Cloud Engine Connection
 if (window.fetchAllData) {
   window.fetchAllData().then(() => {
+    window.CLOUD_ENGINE_READY = true;
     refreshLists();
+    renderUniversities();
   });
 } else {
+  window.CLOUD_ENGINE_READY = true;
   refreshLists();
+  renderUniversities();
 }
 
 // Link to global cloud trigger

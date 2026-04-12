@@ -31,37 +31,7 @@ const SUPABASE_URL = "https://loapruxjeolxyngmcszf.supabase.co";
 const SUPABASE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYXBydXhqZW9seHluZ21jc3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NDY4MzQsImV4cCI6MjA5MDMyMjgzNH0.t5H3u-L4M8lODuwWre4NHjKtR_qDboZBBwwzmEXXZh8";
 
-const DEFAULT_LISTINGS = [
-  {
-    id: 1,
-    title: "The Elm Street Shared House",
-    location: "Ishieke (EBSU)",
-    school: "Ebonyi State University (EBSU)",
-    type: "Shared",
-    price: 600,
-    rooms: 3,
-    status: "Active",
-    photo:
-      "https://images.unsplash.com/photo-1499084732479-de2c02d45fc4?fit=crop&w=840&q=80",
-    desc: "Shared house with utilities included, 10 min from campus",
-    description: "Shared house with utilities included, 10 min from campus",
-    amenities: ["WiFi", "Laundry", "Parking"],
-  },
-  {
-    id: 2,
-    title: "Lakeside Student Loft",
-    location: "Oakridge",
-    type: "Private",
-    price: 950,
-    rooms: 2,
-    status: "Active",
-    photo:
-      "https://images.unsplash.com/photo-1568605114967-8130f3a36994?fit=crop&w=840&q=80",
-    desc: "Modern loft with lake view and study area",
-    description: "Modern loft with lake view and study area",
-    amenities: ["WiFi", "Study Room", "Parking"],
-  },
-];
+const DEFAULT_LISTINGS = [];
 
 const DEFAULT_REVIEWS = [
   {
@@ -123,22 +93,15 @@ const DEFAULT_UNIVERSITIES = {
     "Ishieke",
     "Front Gate",
   ],
-  "University of Nigeria (UNN)": [
-    "Hilltop",
-    "Odenigwe",
-    "Behind Flat",
-    "Zik's Flat",
-    "Greenview",
-  ],
   "University of Lagos (UNILAG)": ["Akoka", "Yaba", "Bariga", "Onike"],
   "Ahmadu Bello University (ABU)": ["Samaru", "Kongo", "Shika", "Aviation"],
-  "University of Ibadan (UI)": ["Agbowo", "Orogun", "Bodija"],
-  "Obafemi Awolowo University (OAU)": ["Gate", "Ife Town", "Ede Road"],
 };
 
 let CACHED_LISTINGS = [];
 let CACHED_REVIEWS = [...DEFAULT_REVIEWS];
 let CLOUD_UNIVERSITIES = {};
+let CACHED_FAVORITES = [];
+window.hasFetchedHouses = false;
 
 function normalizeListing(listing = {}) {
   const school = listing.school || "";
@@ -239,9 +202,21 @@ const SYSTEM_ADMINS = [
 async function fetchAllData() {
   if (fetchAllData.inFlight) return;
   fetchAllData.inFlight = true;
-  if (!sb_client) return;
+  console.log(
+    "fetchAllData: Starting fetch, sb_client available:",
+    !!sb_client,
+  );
+  if (!sb_client) {
+    console.warn(
+      "fetchAllData: No Supabase client available, cannot load houses.",
+    );
+    fetchAllData.inFlight = false;
+    window.hasFetchedHouses = true;
+    return;
+  }
   try {
-    const [listingsRes, reviewsRes, unisRes] = await Promise.all([
+    const user = getCurrentUser();
+    const calls = [
       sb_client
         .from("houses")
         .select("*")
@@ -251,51 +226,151 @@ async function fetchAllData() {
         .select("*")
         .order("created_at", { ascending: false }),
       sb_client.from("universities").select("*"),
-    ]);
+    ];
 
-    if (listingsRes.error) {
-      console.warn("Cloud Fetch Error (houses):", listingsRes.error);
-      if (window.showToast)
-        window.showToast("DB Error: Unable to load houses.", "error");
-    } else {
-      CACHED_LISTINGS = (listingsRes.data || []).map(normalizeListing);
-      if (
-        listingsRes.data &&
-        listingsRes.data.length === 0 &&
-        window.showToast
-      ) {
-        window.showToast("No houses found in the database.", "error");
-      }
+    if (user) {
+        try {
+            const { data: userData } = await sb_client.auth.getUser();
+            if (userData?.user) {
+                calls.push(sb_client.from("favorites").select("house_id").eq("user_id", userData.user.id));
+            }
+        } catch (authErr) {
+            console.warn("Auth check timed out or failed, proceeding with public fetch.", authErr);
+        }
     }
 
-    if (reviewsRes.error) {
-      console.warn("Cloud Fetch Error (reviews):", reviewsRes.error);
-    } else if (reviewsRes.data && reviewsRes.data.length > 0) {
-      CACHED_REVIEWS = reviewsRes.data;
+    const results = await Promise.allSettled(calls);
+
+    const listingsRes = results[0];
+    const reviewsRes = results[1];
+    const unisRes = results[2];
+    const favsRes = results[3];
+
+    if (listingsRes.status === "fulfilled" && !listingsRes.value.error) {
+      CACHED_LISTINGS = (listingsRes.value.data || []).map(normalizeListing);
+      window.hasFetchedHouses = true;
     }
-    if (unisRes.data && unisRes.data.length > 0) {
-      window.CLOUD_UNIVERSITIES_DATA = unisRes.data;
+
+    if (reviewsRes.status === "fulfilled" && !reviewsRes.value.error && reviewsRes.value.data?.length > 0) {
+      CACHED_REVIEWS = reviewsRes.value.data;
+    }
+    
+    if (unisRes.status === "fulfilled" && !unisRes.value.error && unisRes.value.data?.length > 0) {
+      window.CLOUD_UNIVERSITIES_DATA = unisRes.value.data;
       const transformed = {};
-      unisRes.data.forEach((u) => {
+      unisRes.value.data.forEach((u) => {
         transformed[u.name] = u.locations;
       });
       CLOUD_UNIVERSITIES = transformed;
     }
+
+    if (favsRes && favsRes.status === "fulfilled" && !favsRes.value.error) {
+        const cloudIds = favsRes.value.data.map(f => String(f.house_id));
+        // Merge with existing cached favorites to prevent losing optimistic updates
+        CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...cloudIds])];
+        localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
+    }
   } catch (e) {
-    console.warn("Cloud Fetch Error.");
+    console.warn("Cloud Fetch Error.", e);
   } finally {
+    window.hasFetchedHouses = true;
     fetchAllData.inFlight = false;
   }
 
   // Re-trigger visual updates after every successful fetch
   requestAnimationFrame(() => {
     syncUniversitiesCache();
+    if (window.populateSchoolOptions) window.populateSchoolOptions();
     if (window.renderHome) window.renderHome();
     if (window.renderShopGrid) window.renderShopGrid(getListings());
     if (window.renderDashboard) window.renderDashboard();
     if (window.renderDetailsPage) window.renderDetailsPage();
   });
 }
+
+// FAVORITES PERSISTENCE SYSTEM
+const LOCAL_FAVS_KEY = "studenthome_wishlist";
+
+window.toggleFavorite = async (houseId) => {
+    // 1. Instantly Calculate New State (Zero Latency)
+    const isCurrentlyFav = CACHED_FAVORITES.some(id => String(id) === String(houseId));
+    const newStatus = !isCurrentlyFav;
+
+    // 2. Optimistic UI Update & Cache Mutation
+    if (newStatus) {
+        if (!isCurrentlyFav) CACHED_FAVORITES.push(String(houseId));
+    } else {
+        CACHED_FAVORITES = CACHED_FAVORITES.filter(id => String(id) !== String(houseId));
+    }
+
+    // Update all matching icons on the current page instantly
+    document.querySelectorAll(`.bookmarkBtn[data-house-id="${houseId}"]`).forEach(btn => {
+        btn.classList.toggle("active", newStatus);
+        const ariaLabel = newStatus ? "Remove from variants" : "Save property";
+        btn.setAttribute("aria-label", ariaLabel);
+    });
+
+    // Persist to LocalStorage (Immediate backup)
+    localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
+
+    // 3. BACKGROUND SYNC: Verify user and sync to Supabase without blocking the UI
+    try {
+        const user = await fetchSessionUser();
+        if (user && sb_client) {
+            const { data: userData } = await sb_client.auth.getUser();
+            if (userData?.user) {
+                if (newStatus) {
+                    await sb_client.from("favorites").insert([{ house_id: houseId, user_id: userData.user.id }]);
+                } else {
+                    await sb_client.from("favorites").delete().eq("house_id", houseId).eq("user_id", userData.user.id);
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("Silent background sync failed:", e);
+    }
+
+    // 4. Toast Notification
+    if (window.showToast) {
+        window.showToast(newStatus ? "Added to favorites" : "Removed from favorites", "success");
+    }
+
+    return { success: true };
+};
+
+// Initialize favorites on load
+async function initFavorites() {
+    // Load local storage first
+    try {
+        const local = JSON.parse(localStorage.getItem(LOCAL_FAVS_KEY) || "[]");
+        CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...local.map(String)])];
+    } catch (e) {}
+
+    // Load cloud favorites if logged in
+    const user = await fetchSessionUser();
+    if (user && sb_client) {
+        const { data: { user: authUser } } = await sb_client.auth.getUser();
+        if (authUser) {
+            const { data: favs } = await sb_client
+                .from('favorites')
+                .select('house_id')
+                .eq('user_id', authUser.id);
+            if (favs) {
+                const cloudIds = favs.map(f => String(f.house_id));
+                // Merge cloud into local
+                CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...cloudIds])];
+                localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
+            }
+        }
+    }
+}
+
+window.isFavorited = (houseId) => CACHED_FAVORITES.some(id => String(id) === String(houseId));
+
+window.removeFromFavorites = async (houseId) => {
+    await window.toggleFavorite(houseId);
+    if (window.renderSavedProperties) window.renderSavedProperties();
+};
 
 function initRealtime() {
   if (!sb_client) return;
@@ -314,10 +389,15 @@ function initRealtime() {
     .subscribe();
 }
 
-const getListings = () =>
-  CACHED_LISTINGS && CACHED_LISTINGS.length
-    ? CACHED_LISTINGS.map(normalizeListing)
-    : [];
+const getListings = () => {
+  if (CACHED_LISTINGS && CACHED_LISTINGS.length) {
+    return CACHED_LISTINGS.map(normalizeListing);
+  }
+  if (!window.hasFetchedHouses) {
+    return DEFAULT_LISTINGS.map(normalizeListing);
+  }
+  return [];
+};
 const getReviews = () =>
   CACHED_REVIEWS && CACHED_REVIEWS.length ? CACHED_REVIEWS : DEFAULT_REVIEWS;
 const getUniversities = () =>
@@ -332,13 +412,11 @@ function getUniversityLogo(uniName) {
     );
     if (uni && uni.logo_url) return uni.logo_url;
   }
-  return "https://via.placeholder.com/150/020617/F97316?text=UNI"; // Fallback beautiful logo
+  return "https://via.placeholder.com/150/020617/F97316?text=UNI";
 }
 
 window.updateUniversityLogoScale = async (uniId, scale) => {
   if (!sb_client) return { success: false };
-
-  // Try to update logo_scale, but handle cases where column might be missing in cache
   try {
     const { data, error } = await sb_client
       .from("universities")
@@ -349,15 +427,6 @@ window.updateUniversityLogoScale = async (uniId, scale) => {
       if (window.fetchAllData) window.fetchAllData();
       return { success: true };
     }
-
-    // If column missing error, we just keep it in local state for this session
-    if (error.code === "PGRST204" || error.message.includes("logo_scale")) {
-      // Suppress the loud error log and show a friendly one
-      const uni = window.CLOUD_UNIVERSITIES_DATA?.find((u) => u.id === uniId);
-      if (uni) uni.logo_scale = scale;
-      return { success: true, localOnly: true };
-    }
-
     return { success: false, error };
   } catch (e) {
     return { success: false, error: e };
@@ -369,26 +438,23 @@ window.updateUniversityLogoScale = async (uniId, scale) => {
 ========================================== */
 function getCurrentUser() {
   const u = localStorage.getItem(AUTH_KEY);
-  // Cached user is for UI hints only; do not use role here for authorization.
   return u ? JSON.parse(u) : null;
 }
 
 async function fetchSessionUser() {
   if (!sb_client) return getCurrentUser();
+  
+  // High-Performance Timeout Race
+  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout")), 3500));
+  
   try {
-    const { data, error } = await sb_client.auth.getUser();
+    const { data, error } = await Promise.race([
+      sb_client.auth.getUser(),
+      timeout
+    ]);
+
     if (error || !data?.user) {
-      // If the cloud vault rejected them, destroy the Sticky Note!
-      // (Unless it's one of our offline demo accounts)
-      const local = getCurrentUser();
-      if (
-        local &&
-        !["admin123", "owner123", "student123"].includes(local.password)
-      ) {
-        localStorage.removeItem(AUTH_KEY);
-        return null;
-      }
-      return local;
+      return getCurrentUser();
     }
 
     const { data: profile } = await sb_client
@@ -398,83 +464,71 @@ async function fetchSessionUser() {
       .single();
 
     const meta = data.user.user_metadata || {};
-    const user = {
+    return {
+      id: data.user.id,
       name: profile?.full_name || meta.full_name || "Student",
       email: data.user.email,
       university: profile?.university || meta.university || "Lagos",
-      role: profile?.role || "student",
+      role: profile?.role || meta.role || "student",
+      avatar_url: data.user.user_metadata?.avatar_url || ""
     };
-
-    localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-    return user;
-  } catch (e) {
+  } catch (err) {
+    console.warn("Session Recovery: Using local cache due to latency/error.");
     return getCurrentUser();
   }
 }
 
 async function ensureAdminAccess() {
-  const localUser = getCurrentUser();
-  const localIsAdmin = localUser?.role === "admin";
-
   if (!window.sb_client) {
-    if (localIsAdmin) return true;
-    console.error("Supabase client is not initialized");
+    const localUser = getCurrentUser();
+    if (localUser?.role === "admin") return true;
     window.location.href = "../home/home.html";
     return false;
   }
-
   const { data: userData, error: userError } =
     await window.sb_client.auth.getUser();
   if (userError || !userData?.user) {
-    if (localIsAdmin) return true;
-    console.error("getUser failed:", userError);
     window.location.href = "../home/home.html";
     return false;
   }
-
-  const userId = userData.user.id;
-  console.log("ensureAdminAccess userId:", userId);
-
-  const { data: profile, error: profileError } = await window.sb_client
+  const { data: profile } = await window.sb_client
     .from("profiles")
     .select("role")
-    .eq("id", userId)
+    .eq("id", userData.user.id)
     .single();
 
-  console.log("profileError:", profileError);
-  console.log("profile:", profile);
-  console.log("role:", profile?.role);
-
-  if (profileError) {
+  if (profile?.role !== "admin") {
     window.location.href = "../home/home.html";
     return false;
   }
-
-  const role = profile?.role;
-  console.log("ensureAdminAccess role:", JSON.stringify(role));
-
-  if (role) {
-    const meta = userData.user.user_metadata || {};
-    const cached = getCurrentUser() || {};
-    const syncedUser = {
-      name: cached.name || meta.full_name || "Student",
-      email: userData.user.email || cached.email || "",
-      university: cached.university || meta.university || "Lagos",
-      role,
-    };
-    localStorage.setItem(AUTH_KEY, JSON.stringify(syncedUser));
-  }
-
-  if (role !== "admin") {
-    window.location.href = "../home/home.html";
-    return false;
-  }
-
   return true;
 }
 
 async function loginUser(email, password) {
   const checkEmail = email.toLowerCase().trim();
+  if (sb_client) {
+    const { data, error } = await sb_client.auth.signInWithPassword({
+      email: checkEmail,
+      password,
+    });
+    if (!error && data?.user) {
+      const { data: profile } = await sb_client
+        .from("profiles")
+        .select("role, university, phone, full_name")
+        .eq("id", data.user.id)
+        .single();
+      const meta = data.user.user_metadata || {};
+      const user = {
+        name: profile?.full_name || meta.full_name || "Student",
+        email: data.user.email,
+        phone: profile?.phone || meta.phone || "",
+        university: profile?.university || meta.university || "Lagos",
+        role: profile?.role || "student",
+      };
+      localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+      return { success: true, user };
+    }
+  }
   const admin = SYSTEM_ADMINS.find(
     (u) => u.email.toLowerCase() === checkEmail && u.password === password,
   );
@@ -482,58 +536,12 @@ async function loginUser(email, password) {
     localStorage.setItem(AUTH_KEY, JSON.stringify(admin));
     return { success: true, user: admin };
   }
-  const localUser = getLocalUsers().find(
-    (u) => u.email.toLowerCase() === checkEmail && u.password === password,
-  );
-  if (localUser) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(localUser));
-    return { success: true, user: localUser };
-  }
-  if (!sb_client) return { success: false, message: "Cloud offline." };
-
-  const { data, error } = await sb_client.auth.signInWithPassword({
-    email: checkEmail,
-    password,
-  });
-  if (error) return { success: false, message: error.message };
-
-  // Check the Database profiles table for the role
-  const { data: profile } = await sb_client
-    .from("profiles")
-    .select("role")
-    .eq("id", data.user.id)
-    .single();
-
-  const meta = data.user.user_metadata || {};
-  const user = {
-    name: meta.full_name || "Student",
-    email: data.user.email,
-    university: meta.university || "Lagos",
-    role: profile?.role || "student",
-  };
-  localStorage.setItem(AUTH_KEY, JSON.stringify(user));
-  return { success: true, user };
+  return { success: false, message: "Invalid credentials or cloud offline." };
 }
 
 async function registerUser(data) {
   const email = data.email.toLowerCase().trim();
-  const users = getLocalUsers();
-  if (users.some((u) => u.email.toLowerCase() === email)) {
-    return { success: false, message: "Email already registered." };
-  }
-
-  const localUser = {
-    name: data.name,
-    email,
-    password: data.password,
-    phone: data.phone || "",
-    university: data.university,
-    role: "student",
-  };
-  users.push(localUser);
-  saveLocalUsers(users);
-
-  if (!sb_client) return { success: true, message: "" };
+  if (!sb_client) return { success: false, message: "Cloud offline" };
   const { error } = await sb_client.auth.signUp({
     email,
     password: data.password,
@@ -549,14 +557,8 @@ async function registerUser(data) {
 }
 
 function resetSystemData() {
-  if (
-    confirm(
-      "Nuclear Reset: This will clear your local login and all cached data. The app will reload and fetch fresh data from the cloud. Continue?",
-    )
-  ) {
-    localStorage.removeItem(AUTH_KEY);
-    localStorage.removeItem(USERS_KEY);
-    localStorage.removeItem("studenthome_listings");
+  if (confirm("Nuclear Reset?")) {
+    localStorage.clear();
     window.location.href = "../home/home.html";
   }
 }
@@ -569,81 +571,46 @@ function logoutUser() {
 
 async function resetPasswordForEmail(email) {
   if (!sb_client) return { success: false, message: "Cloud offline." };
-  // Send password reset email, redirecting to the local reset page
   const { error } = await sb_client.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + "/reset-password.html",
+    redirectTo: window.location.origin + "/auth/reset-password.html",
   });
-  return {
-    success: !error,
-    message: error ? error.message : "Password reset link sent to your email!",
-  };
+  return { success: !error, message: error ? error.message : "Sent!" };
 }
 
 async function updateUserPassword(newPassword) {
   if (!sb_client) return { success: false, message: "Cloud offline." };
-  const { data, error } = await sb_client.auth.updateUser({
-    password: newPassword,
-  });
-  return {
-    success: !error,
-    message: error ? error.message : "Password updated successfully!",
-  };
+  const { error } = await sb_client.auth.updateUser({ password: newPassword });
+  return { success: !error, message: error ? error.message : "Updated!" };
 }
 
 /* ==========================================
-   PREMIUM NAVIGATION ENGINE
-   ========================================== */
-const NavState = {
-  get nav() {
-    return document.querySelector(".nav-links");
-  },
-  get toggle() {
-    return document.querySelector(".mobile-menu-toggle");
-  },
-  get overlay() {
-    return document.querySelector(".nav-overlay");
-  },
-};
-
+   NAVIGATION
+========================================== */
 function closeMobileMenu() {
-  const { nav, overlay, toggle } = NavState;
-  document.body.classList.remove("menu-open");
+  document.body.classList.remove("menu-open", "no-scroll");
+  const nav = document.querySelector(".nav-links");
+  const overlay = document.querySelector(".nav-overlay");
   if (nav) nav.classList.remove("menu-active");
   if (overlay) overlay.classList.remove("menu-active");
-  if (toggle) {
-    const txt = toggle.querySelector(".mobile-toggle-text");
-    if (txt) txt.textContent = "MENU";
-  }
-  document.body.style.overflow = "";
 }
 
-window.closeMobileMenu = closeMobileMenu;
-
-function toggleMobileMenu(e) {
-  if (e) e.stopPropagation();
-  const { nav, overlay, toggle } = NavState;
-  console.log("Toggle Mobile Menu Clicked", { nav, overlay, toggle });
-  if (!nav || !overlay) {
-    console.warn("Nav or Overlay not found", { nav, overlay });
-    return;
-  }
-
+function toggleMobileMenu() {
+  const nav = document.querySelector(".nav-links");
+  const overlay = document.querySelector(".nav-overlay");
+  if (!nav) return;
   const isOpen = nav.classList.contains("menu-active");
-  const txt = toggle ? toggle.querySelector(".mobile-toggle-text") : null;
-
   if (!isOpen) {
-    document.body.classList.add("menu-open");
+    document.body.classList.add("menu-open", "no-scroll");
     nav.classList.add("menu-active");
-    overlay.classList.add("menu-active");
-    if (txt) txt.textContent = "CLOSE";
-    document.body.style.overflow = "hidden";
+    if (overlay) overlay.classList.add("menu-active");
   } else {
     closeMobileMenu();
   }
 }
 
 function handleGlobalClick(e) {
-  const { nav, toggle } = NavState;
+  const nav = document.querySelector(".nav-links");
+  const toggle = document.querySelector(".mobile-menu-toggle");
   if (!nav || !nav.classList.contains("menu-active")) return;
   if (nav.contains(e.target) || (toggle && toggle.contains(e.target))) return;
   closeMobileMenu();
@@ -656,243 +623,177 @@ function formatPrice(price, withPeriod = false) {
 }
 
 function showToast(message, type = "info") {
-  const text = String(message || "").trim();
-  if (!text) return;
   let container = document.getElementById("toast-container");
   if (!container) {
     container = document.createElement("div");
     container.id = "toast-container";
     document.body.appendChild(container);
   }
-
   const toast = document.createElement("div");
   toast.className = `toast toast--${type}`;
-  toast.textContent = text;
+  toast.textContent = message;
   container.appendChild(toast);
-
-  requestAnimationFrame(() => toast.classList.add("toast--show"));
-
-  const remove = () => {
+  setTimeout(() => toast.classList.add("toast--show"), 10);
+  setTimeout(() => {
     toast.classList.remove("toast--show");
-    setTimeout(() => toast.remove(), 200);
-  };
-
-  setTimeout(remove, 3200);
-  toast.addEventListener("click", remove);
+    setTimeout(() => toast.remove(), 500);
+  }, 3000);
 }
 
 function getEmptyStateHTML(title, message) {
-  return `
-    <div class="empty-state">
-      <div class="empty-illustration" aria-hidden="true">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M3 10.5 12 3l9 7.5"></path>
-          <path d="M5 9.5V21h14V9.5"></path>
-          <path d="M9 21v-6h6v6"></path>
-        </svg>
-      </div>
-      <h3 class="empty-heading">${title}</h3>
-      <p class="empty-subtext">${message}</p>
-      <button class="btn-clear" type="button" onclick="window.location.href='../shop/shop.html'">Browse all houses</button>
-    </div>
-  `;
+  return `<div class="empty-state"><h3>${title}</h3><p>${message}</p></div>`;
 }
 
-let navRenderToken = 0;
-
 async function renderGlobalNav() {
-  const renderToken = ++navRenderToken;
-
-  const navLinks = document.querySelector(".nav-links");
   const head = document.querySelector(".top-nav");
-  if (!navLinks || !head) return;
-
-  // Immediate binding for the toggle if it exists
-  let mobileToggle = head.querySelector(".mobile-menu-toggle");
-  if (mobileToggle) {
-    mobileToggle.onclick = toggleMobileMenu;
-  }
-
-  const user = await fetchSessionUser(); // ALWAYS check the vault now!
+  if (!head) return;
   const currentPage = window.location.pathname.split("/").pop() || "home.html";
 
-  if (!mobileToggle) {
-    mobileToggle = document.createElement("button");
-    mobileToggle.className = "mobile-menu-toggle";
-    mobileToggle.setAttribute("aria-label", "Toggle menu");
-    mobileToggle.innerHTML = `<span class="mobile-toggle-text">MENU</span><div class="hamburger-box"><div class="hamburger-inner"></div></div>`;
-    head.appendChild(mobileToggle);
-    mobileToggle.onclick = toggleMobileMenu;
+  // Identifiers for DOM elements
+  const toggle = document.querySelector(".mobile-menu-toggle");
+  const overlay = document.querySelector(".nav-overlay");
+  const navLinks = document.querySelector(".nav-list");
+  const rightZone = head.querySelector(".nav-right");
+
+  // 1. FAST BINDING (Zero Delay)
+  if (toggle) {
+    toggle.onclick = (e) => {
+      e.stopPropagation();
+      if (window.toggleMobileMenu) window.toggleMobileMenu();
+    };
+    toggle.classList.add("is-ready");
   }
 
-  let overlay = document.querySelector(".nav-overlay");
-  if (!overlay) {
-    overlay = document.createElement("div");
-    overlay.className = "nav-overlay";
-    document.body.appendChild(overlay);
-  }
-  overlay.onclick = closeMobileMenu;
-
-  // Identity Cluster
-  let idBox = document.getElementById("nav-id-box");
-  if (!idBox) {
-    idBox = document.createElement("div");
-    idBox.id = "nav-id-box";
-    idBox.className = "nav-identity-cluster";
-    head.appendChild(idBox);
+  if (overlay) {
+    overlay.onclick = () => {
+      if (window.closeMobileMenu) window.closeMobileMenu();
+    };
   }
 
-  if (user) {
-    const uniName = String(user.university || "").trim();
-    const logoUrl = getUniversityLogo(uniName);
-    idBox.innerHTML = `
-      <div style="display:flex; flex-direction:column; align-items:center; cursor:pointer;" onclick="window.location.href='../profile/profile.html'">
-         <img src="${logoUrl}" alt="${uniName} Logo" style="width: 38px; height: 38px; border-radius: 50%; object-fit: contain; background: white; margin-bottom: 0.2rem; border: 2px solid var(--accent);">
-         <div style="font-weight:700; font-size:0.8rem; color:white; line-height:1.2;">${user.name}</div>
-         <div style="font-size:0.6rem; color:var(--accent); text-transform:uppercase;">${uniName}</div>
-      </div>`;
-    idBox.style.opacity = "1";
-    idBox.style.pointerEvents = "auto";
-  } else {
-    idBox.style.opacity = "0";
-    idBox.style.pointerEvents = "none";
-  }
-
-  navLinks.innerHTML = `
-    <ul class="nav-list">
-      <li class="nav-mobile-label" style="justify-content: space-between; align-items: center; padding-right: 1.5rem;">
-        <span>Navigation</span>
-        <button onclick="window.closeMobileMenu()" style="background:none; border:none; color:white; font-size:2rem; cursor:pointer; line-height:1; width:40px; height:40px; display:flex; align-items:center; justify-content:center;">×</button>
-      </li>
-      <li><a href="../home/home.html" class="${currentPage === "home.html" ? "active" : ""}">Home</a></li>
-      <li><a href="../shop/shop.html" class="${currentPage === "shop.html" ? "active" : ""}">Browse Houses</a></li>
-      <li><a href="../about/about.html" class="${currentPage === "about.html" ? "active" : ""}">About Us</a></li>
-      <li><a href="../contact/contact.html" class="${currentPage === "contact.html" ? "active" : ""}">Contact</a></li>
-      ${user ? `<li><a href="../profile/profile.html" class="${currentPage === "profile.html" ? "active" : ""}">My Profile</a></li>` : '<li><a href="../auth/auth.html">Login</a></li>'}
-      ${user ? '<li><a href="#" data-logout-btn class="logout-link">Logout</a></li>' : '<li><a href="../auth/auth.html?mode=register" class="hero-btn nav-join-btn">Join Now</a></li>'}
-    </ul>
+  // 2. SYNCHRONOUS PRE-RENDER (No Wait)
+  let baseLinks = `
+    <li><a href="../home/home.html" class="${currentPage === "home.html" ? "active" : ""}">Home</a></li>
+    <li><a href="../shop/shop.html" class="${currentPage === "shop.html" ? "active" : ""}">Browse Houses</a></li>
+    <li><a href="../about/about.html" class="${currentPage === "about.html" ? "active" : ""}">About</a></li>
+    <li><a href="../contact/contact.html" class="${currentPage === "contact.html" ? "active" : ""}">Contact</a></li>
   `;
 
-  const isAdmin = await isAdminUser();
-  if (renderToken !== navRenderToken) return;
-  if (isAdmin) {
-    const list = navLinks.querySelector(".nav-list");
-    if (list) {
-      const li = document.createElement("li");
-      li.innerHTML = `<a href="../admin/admin.html" class="${currentPage.includes("admin") ? "active" : ""}">Dashboard</a>`;
-      const anchor = list.querySelector(".logout-link");
-      list.insertBefore(
-        li,
-        anchor ? anchor.parentElement : list.lastElementChild,
-      );
+  if (navLinks) {
+    // Show Unified Big Skeleton initially
+    navLinks.classList.add("is-loading-total");
+    navLinks.innerHTML = `<div class="full-nav-skeleton"></div>`;
+    
+    const navPanel = document.querySelector(".nav-links");
+    if (navPanel && !navPanel.querySelector(".nav-mobile-header")) {
+      const mobileHeader = document.createElement("div");
+      mobileHeader.className = "nav-mobile-header";
+      mobileHeader.innerHTML = `
+        <span>Menu</span>
+        <button class="mobile-close-btn" onclick="closeMobileMenu()">
+          <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"></path></svg>
+        </button>
+      `;
+      navPanel.insertBefore(mobileHeader, navPanel.firstChild);
     }
   }
 
-  navLinks.onclick = (e) => {
-    const link = e.target.closest("a");
-    if (link) {
-      closeMobileMenu();
-      if (link.hasAttribute("data-logout-btn")) {
-        e.preventDefault();
-        logoutUser();
-        return;
-      }
-      const href = link.getAttribute("href");
-      if (href && href !== "#") {
-        e.preventDefault();
-        window.location.href = href;
-      }
+  // 3. SYNCHRONOUS SKELETON (Identity area)
+  let idBox = document.getElementById("nav-id-box");
+  if (!idBox && rightZone) {
+    idBox = document.createElement("div");
+    idBox.id = "nav-id-box";
+    idBox.className = "nav-identity-cluster skeleton-state";
+    idBox.innerHTML = `
+      <div class="nav-identity-skeleton">
+        <div class="nav-skel-avatar"></div>
+        <div class="nav-skel-lines" style="width: 80px;">
+          <div class="nav-skel-line is-name"></div>
+          <div class="nav-skel-line is-uni"></div>
+        </div>
+      </div>`;
+    rightZone.insertBefore(idBox, toggle);
+  }
+
+  // 4. OPTIMIZED ASYNC AUTH RESOLUTION (Parallel & Single-Call)
+  try {
+    const user = await fetchSessionUser();
+    // Cache the role immediately to avoid a second DB hit
+    const isAdmin = user?.role === "admin";
+
+    // Final identity update
+    if (user && idBox) {
+      idBox.classList.remove("skeleton-state");
+      const uniName = String(user.university || "").trim();
+      const logoUrl = user.avatar_url || (window.getUniversityLogo ? getUniversityLogo(uniName) : "");
+      idBox.innerHTML = `
+        <div class="nav-id-inner" onclick="window.location.href='../profile/profile.html'">
+           <img src="${logoUrl}" alt="${uniName} Logo" style="border-radius: 50%; object-fit: cover;">
+           <div class="nav-id-text">
+             <div class="nav-id-name">${user.name}</div>
+             <div class="nav-id-uni">${uniName}</div>
+           </div>
+        </div>`;
+      idBox.style.opacity = "1";
+      idBox.style.pointerEvents = "auto";
+    } else if (idBox) {
+      idBox.remove();
     }
-  };
+
+    // Final links update (Remove skeleton, show real links)
+    if (navLinks) {
+      let authLinks = "";
+      if (user) {
+        if (isAdmin) {
+          authLinks += `<li><a href="../admin/admin.html" class="${currentPage.includes("admin") ? "active" : ""}">Dashboard</a></li>`;
+        }
+        authLinks += `<li><a href="../profile/profile.html" class="${currentPage === "profile.html" ? "active" : ""}">Profile</a></li>`;
+        authLinks += `<li><a href="#" onclick="logoutUser(); return false;">Logout</a></li>`;
+      } else {
+        authLinks += `<li><a href="../auth/auth.html">Login</a></li>`;
+      }
+      navLinks.classList.remove("is-loading-total");
+      navLinks.innerHTML = baseLinks + authLinks;
+    }
+  } catch (err) {
+    console.error("Navigation load failed:", err);
+    if (navLinks) {
+      navLinks.classList.remove("is-loading-total");
+      navLinks.innerHTML = baseLinks + `<li><a href="../auth/auth.html">Login</a></li>`;
+    }
+    if (idBox) idBox.remove();
+  }
 }
 
 async function isAdminUser() {
-  if (!window.sb_client) return false;
-  const { data: userData, error: userError } =
-    await window.sb_client.auth.getUser();
-  if (userError || !userData?.user) return false;
-  const { data: profile, error: profileError } = await window.sb_client
-    .from("profiles")
-    .select("role")
-    .eq("id", userData.user.id)
-    .single();
-  if (profileError || !profile?.role) return false;
-  return profile.role === "admin";
+  const user = await fetchSessionUser();
+  return user?.role === "admin";
 }
 
 function populateUniversitySelects() {
-  syncUniversitiesCache();
-  const universities = Object.keys(getUniversities() || {});
-  const selects = [
-    document.getElementById("reg-uni"),
-    document.getElementById("add-school"),
-  ].filter(Boolean);
-
-  selects.forEach((select) => {
-    const current = select.value;
-    select.innerHTML =
-      `<option value="">Select University</option>` +
-      universities.map((u) => `<option value="${u}">${u}</option>`).join("");
-    if (current) select.value = current;
+  const universities = Object.keys(getUniversities());
+  const selects = [document.getElementById("reg-uni"), document.getElementById("add-school")].filter(Boolean);
+  selects.forEach(s => {
+    const val = s.value;
+    s.innerHTML = '<option value="">Select University</option>' + universities.map(u => `<option value="${u}">${u}</option>`).join("");
+    if (val) s.value = val;
   });
-
-  const schoolSelect = document.getElementById("add-school");
-  const areaSelect = document.getElementById("add-area");
-  if (schoolSelect && areaSelect) {
-    const updateAreas = () => {
-      const areas = getUniversities()[schoolSelect.value] || [];
-      areaSelect.innerHTML = areas
-        .map((a) => `<option value="${a}">${a}</option>`)
-        .join("");
-    };
-    schoolSelect.addEventListener("change", updateAreas);
-    updateAreas();
-  }
 }
 
-/* ==========================================
-   LIFECYCLE
-========================================== */
-document.addEventListener("DOMContentLoaded", async () => {
-  ensureDefaultUsers();
-  renderGlobalNav();
-  syncUniversitiesCache();
-  populateUniversitySelects();
-  initRealtime();
-  const fetchPromise = fetchAllData();
-
-  // URL Shortcut Reset: another way instead of F12
-  if (new URLSearchParams(window.location.search).has("reset")) {
-    resetSystemData();
-  }
-
-  document.addEventListener("click", handleGlobalClick);
-
-  // GLASS NAV EFFECT
-  window.addEventListener("scroll", () => {
-    const h = document.querySelector(".top-nav");
-    if (!h) return;
-    if (window.scrollY > 40) {
-      h.style.background = "rgba(10, 12, 16, 0.94)";
-      h.style.backdropFilter = "blur(18px)";
-      h.style.webkitBackdropFilter = "blur(18px)";
-      h.style.padding = "0.7rem 2.5rem";
-      h.style.borderBottom = "1px solid rgba(217, 108, 66, 0.15)";
-    } else {
-      h.style.background = "rgba(10, 12, 16, 0.85)";
-      h.style.backdropFilter = "blur(12px)";
-      h.style.webkitBackdropFilter = "blur(12px)";
-      h.style.padding = "1rem 2.5rem";
-      h.style.borderBottom = "1px solid rgba(255,255,255,0.05)";
+// INITIALIZATION
+document.addEventListener("DOMContentLoaded", () => {
+    if (!document.querySelector('link[href*="font-awesome"]')) {
+      const fa = document.createElement("link");
+      fa.rel = "stylesheet";
+      fa.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css";
+      document.head.appendChild(fa);
     }
-  });
-
-  if (fetchPromise && typeof fetchPromise.then === "function") {
-    fetchPromise.finally(() => {
-      populateUniversitySelects();
-      if (window.renderHome) window.renderHome();
-    });
-  }
+    
+    renderGlobalNav();
+    populateUniversitySelects();
+    initFavorites();
+    initRealtime();
+    fetchAllData();
+    document.addEventListener("click", handleGlobalClick);
 });
 
 /* ==========================================
@@ -900,8 +801,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 ========================================= */
 window.getListings = getListings;
 window.getReviews = getReviews;
-window.getListingById = (id) =>
-  CACHED_LISTINGS.find((h) => String(h.id) === String(id));
+window.getListingById = (id) => CACHED_LISTINGS.find((h) => String(h.id) === String(id));
 window.DEFAULT_LISTINGS = DEFAULT_LISTINGS;
 window.getCurrentUser = getCurrentUser;
 window.loginUser = loginUser;
@@ -912,164 +812,59 @@ window.updateUserPassword = updateUserPassword;
 window.getUniversities = getUniversities;
 window.NIGERIA_UNIVERSITIES = getUniversities();
 window.resetSystemData = resetSystemData;
-window.HOUSE_TYPES = [
-  "1 Bedroom",
-  "2 Bedroom",
-  "3 Bedroom",
-  "Self-contain",
-  "Studio",
-];
-
+window.HOUSE_TYPES = ["1 Bedroom", "2 Bedroom", "3 Bedroom", "Self-contain", "Studio"];
 window.uploadPhotoToStorage = async (file) => {
   if (!sb_client) return null;
-  // Create a unique file name
-  const fileExt = file.name.split(".").pop();
-  const fileName = `house_${Math.random().toString(36).slice(2)}_${Date.now()}.${fileExt}`;
-  const filePath = `public/${fileName}`;
-
-  const { data, error } = await sb_client.storage
-    .from("house-photos")
-    .upload(filePath, file);
-
-  if (error) {
-    console.warn("Storage Error:", error);
-    return null;
-  }
-
-  const { data: publicUrlData } = sb_client.storage
-    .from("house-photos")
-    .getPublicUrl(filePath);
-
-  return publicUrlData.publicUrl;
+  const fileName = `house_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+  const { error } = await sb_client.storage.from("house-photos").upload(`public/${fileName}`, file);
+  if (error) return null;
+  const { data } = sb_client.storage.from("house-photos").getPublicUrl(`public/${fileName}`);
+  return data.publicUrl;
 };
-
 window.addListing = async (h) => {
-  if (!sb_client)
-    return { success: false, error: { message: "Cloud offline" } };
-  const payload = normalizeListing(h);
-  const { error } = await sb_client.from("houses").insert([payload]);
-  if (!error) await fetchAllData();
-  return { success: !error, error };
+  if (!sb_client) return { success: false };
+  const { error } = await sb_client.from("houses").insert([normalizeListing(h)]);
+  if (!error) fetchAllData();
+  return { success: !error };
 };
 window.deleteListing = async (id) => {
   if (!sb_client) return { success: false };
   const { error } = await sb_client.from("houses").delete().eq("id", id);
-  if (!error) await fetchAllData();
-  return { success: !error };
-};
-window.addReview = async (r) => {
-  if (!sb_client)
-    return { success: false, error: { message: "Cloud offline" } };
-  const { error } = await sb_client.from("reviews").insert([r]);
-  if (!error) await fetchAllData();
-  return { success: !error, error };
-};
-window.addUniversity = async (n) => {
-  if (!sb_client) return { success: false };
-  const { error } = await sb_client
-    .from("universities")
-    .insert([{ name: n, locations: [] }]);
-  if (!error) await fetchAllData();
-  return { success: !error };
-};
-window.addAreaToUniversity = async (n, a) => {
-  if (!sb_client) return { success: false };
-  const { data: u } = await sb_client
-    .from("universities")
-    .select("id, locations")
-    .eq("name", n)
-    .single();
-  if (!u) return { success: false };
-  const locs = [...u.locations, a];
-  const { error } = await sb_client
-    .from("universities")
-    .update({ locations: locs })
-    .eq("id", u.id);
-  if (!error) await fetchAllData();
+  if (!error) fetchAllData();
   return { success: !error };
 };
 
-window.toggleFavorite = async (houseId) => {
-  const user = await fetchSessionUser();
-  if (!user) {
-    alert("Please login or create an account to save favorites!");
-    window.location.href = "../auth/auth.html";
-    return { success: false, error: "login_required" };
-  }
-
+window.createInquiry = async (inquiry) => {
   if (!sb_client) return { success: false };
-  // Simplified logic: Check if exists, then insert or delete
-  const { data } = await sb_client
-    .from("favorites")
-    .select("id")
-    .eq("house_id", houseId)
-    .single();
-  if (data) return sb_client.from("favorites").delete().eq("id", data.id);
-
-  const { data: userData } = await sb_client.auth.getUser();
-  return sb_client.from("favorites").insert([
-    {
-      house_id: houseId,
-      user_id: userData.user.id,
-    },
-  ]);
+  return sb_client.from("inquiries").insert([inquiry]);
 };
-
-window.createLead = async (lead) => {
-  if (!sb_client) return { success: false };
-  return sb_client.from("leads").insert([lead]);
-};
-
 window.incrementViews = async (id) => {
-  if (!sb_client) return;
-  return sb_client.rpc("increment_house_views", { house_id_input: id });
+  if (sb_client) sb_client.rpc("increment_house_views", { house_id_input: id });
 };
-
 window.fetchSessionUser = fetchSessionUser;
 window.fetchAllData = fetchAllData;
 window.formatPrice = formatPrice;
 window.getEmptyStateHTML = getEmptyStateHTML;
 window.showToast = showToast;
-window.DEFAULT_TEST_LOGINS = {
-  student: { email: "student@studenthome.com", password: "student123" },
-  admin: { email: "admin@studenthome.com", password: "admin123" },
-  owner: { email: "owner@studenthome.com", password: "owner123" },
-};
-
-window.initReveal = () => {
-  const observer = new IntersectionObserver(
-    (entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("active");
-        }
-      });
-    },
-    { threshold: 0.1 },
-  );
-
-  document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
-};
 window.updateListing = async (h) => {
-  if (!sb_client)
-    return { success: false, error: { message: "Cloud offline" } };
+  if (!sb_client) return { success: false };
   const payload = normalizeListing(h);
   const { id, ...updates } = payload;
-  const { data, error } = await sb_client
-    .from("houses")
-    .update(updates)
-    .eq("id", id)
-    .select("id");
-  const success = !error && Array.isArray(data) && data.length > 0;
-  if (success) await fetchAllData();
-  if (!success && !error) {
-    return {
-      success: false,
-      error: {
-        message:
-          "No rows updated. Ensure you are logged in as an admin and your profile role is admin.",
-      },
-    };
-  }
-  return { success, error };
+  const { error } = await sb_client.from("houses").update(updates).eq("id", id);
+  if (!error) fetchAllData();
+  return { success: !error };
 };
+window.addReview = async (r) => {
+  if (!sb_client) return { success: false };
+  const { error } = await sb_client.from("reviews").insert([r]);
+  if (!error) fetchAllData();
+  return { success: !error };
+};
+window.initReveal = () => {
+  const obs = new IntersectionObserver(es => {
+    es.forEach(e => { if (e.isIntersecting) e.target.classList.add("active"); });
+  }, { threshold: 0.1 });
+  document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
+};
+window.toggleMobileMenu = toggleMobileMenu;
+window.closeMobileMenu = closeMobileMenu;

@@ -28,7 +28,7 @@ body {
 }
 
 /* Navbar & Logo are now handled by home.css to ensure global consistency */
-.navbar, .logo, .nav-links, .mobile-menu, .mobile-menu-toggle {
+.navbar, .logo, .nav-links, .mobile-menu {
     display: inherit;
 }
 

@@ -11,18 +11,32 @@
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo">
-        <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo" onclick="window.location.href='../home/home.html'">
+      <div class="nav-left">
+        <div class="logo">
+          <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo" onclick="window.location.href='../home/home.html'">
+        </div>
       </div>
-      <nav class="nav-links">
-        <!-- Rendered by data.js -->
-      </nav>
+      <div class="nav-center">
+        <nav class="nav-links">
+          <ul class="nav-list is-loading">
+            <li></li><li></li><li></li><li></li><li></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+          <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+          </span>
+        </button>
+      </div>
     </header>
+    <div class="nav-overlay"></div>
 
     <main class="profile-main">
       <section class="profile-header text-center">
         <div class="container">
-          <div class="profile-avatar">
+          <div class="profile-avatar" id="header-avatar" style="overflow:hidden;">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="60" height="60"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           </div>
           <h1 id="user-name">Loading...</h1>
@@ -30,8 +44,48 @@
           <div class="profile-badge">
             <span id="user-uni"></span>
           </div>
+          <div style="margin-top: 1.5rem;">
+            <button class="hero-btn" onclick="openEditModal()" style="padding: 0.6rem 1.5rem; font-size: 0.9rem;">Edit Profile</button>
+          </div>
         </div>
       </section>
+
+      <!-- Edit Modal -->
+      <div id="edit-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.8); z-index:10000; align-items:center; justify-content:center;">
+        <div class="modal-content" style="background:var(--bg-panel); padding:2rem; border-radius:20px; width:90%; max-width:450px; border:1px solid var(--card-border);">
+          <h2 style="margin-bottom:1.5rem;">Edit Profile</h2>
+          
+          <div style="display:flex; flex-direction:column; align-items:center; margin-bottom:1.5rem;">
+             <div id="edit-avatar-preview" style="width:80px; height:80px; border-radius:50%; background:var(--bg-dark); border:2px solid var(--accent); display:flex; align-items:center; justify-content:center; overflow:hidden; margin-bottom:0.8rem;">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+             </div>
+             <input type="file" id="edit-avatar-input" accept="image/*" style="display:none;" onchange="previewAvatar(event)">
+             <button class="hero-btn" onclick="document.getElementById('edit-avatar-input').click()" style="padding:0.4rem 1rem; font-size:0.8rem; background:rgba(255,255,255,0.1);">Change Photo</button>
+          </div>
+
+          <div style="margin-bottom:1.2rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-muted); font-size:0.9rem;">Full Name</label>
+            <input type="text" id="edit-name" style="width:100%; padding:0.8rem; border-radius:10px; background:var(--bg-dark); color:white; border:1px solid rgba(255,255,255,0.1);">
+          </div>
+
+          <div style="margin-bottom:1.2rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-muted); font-size:0.9rem;">University</label>
+            <select id="edit-uni" style="width:100%; padding:0.8rem; border-radius:10px; background:var(--bg-dark); color:white; border:1px solid rgba(255,255,255,0.1); appearance:none;">
+              <option value="">Select University</option>
+            </select>
+          </div>
+
+          <div style="margin-bottom:2rem;">
+            <label style="display:block; margin-bottom:0.5rem; color:var(--text-muted); font-size:0.9rem;">Phone Number</label>
+            <input type="text" id="edit-phone" style="width:100%; padding:0.8rem; border-radius:10px; background:var(--bg-dark); color:white; border:1px solid rgba(255,255,255,0.1);">
+          </div>
+
+          <div style="display:flex; gap:1rem;">
+             <button class="hero-btn" onclick="saveProfile()" style="flex:1;">Save Changes</button>
+             <button class="hero-btn" onclick="closeEditModal()" style="flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);">Cancel</button>
+          </div>
+        </div>
+      </div>
 
       <section class="profile-content container">
         <div class="profile-tabs">

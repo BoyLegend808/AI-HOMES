@@ -1,47 +1,49 @@
 let listing = null;
 
+window.renderDetailsPage = () => {
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+
+  const all = window.getListings ? window.getListings() : [];
+
+  if (!id) {
+    if (all.length > 0) listing = all[0];
+  } else {
+    listing = window.getListingById(id);
+  }
+
+  if (!listing) {
+    // Only show "not found" if we actually have data but no matching ID
+    if (all.length > 0) {
+      document.getElementById("app").innerHTML =
+        '<div style="padding:4rem;text-align:center;color:white;font-weight:600;">Listing not found. <br><br> <a href="../shop/shop.html" style="color:var(--accent);">← Go back to Shop</a></div>';
+    }
+    return;
+  }
+
+  renderDetails();
+  window.incrementViews(id);
+
+  // Store recently viewed using a safe local cache array (Maximum 4 items)
+  try {
+    let recent = JSON.parse(localStorage.getItem("studenthome_recent") || "[]");
+    recent = recent.filter((r) => String(r) !== String(id));
+    recent.unshift(id);
+    if (recent.length > 4) recent.pop();
+    localStorage.setItem("studenthome_recent", JSON.stringify(recent));
+  } catch (e) {}
+};
+
 document.addEventListener("DOMContentLoaded", () => {
   // Show logo text on inner pages
   const lt = document.querySelector(".logo-text");
   if (lt && window.innerWidth > 480) lt.style.display = "inline-block";
 
-  window.renderDetailsPage = () => {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get("id");
-
-    const all = window.getListings ? window.getListings() : [];
-
-    if (!id) {
-      if (all.length > 0) listing = all[0];
-    } else {
-      listing = window.getListingById(id);
-    }
-
-    if (!listing) {
-      document.getElementById("app").innerHTML =
-        '<div style="padding:4rem;text-align:center;color:white;font-weight:600;">Listing not found. <br><br> <a href="../shop/shop.html" style="color:var(--accent);">← Go back to Shop</a></div>';
-      return;
-    }
-
-    renderDetails();
-    window.incrementViews(id);
-
-    // Store recently viewed using a safe local cache array (Maximum 4 items)
-    try {
-      let recent = JSON.parse(
-        localStorage.getItem("studenthome_recent") || "[]",
-      );
-      recent = recent.filter((r) => String(r) !== String(id));
-      recent.unshift(id);
-      if (recent.length > 4) recent.pop();
-      localStorage.setItem("studenthome_recent", JSON.stringify(recent));
-    } catch (e) {}
-  };
-
   const currentListings = window.getListings ? window.getListings() : [];
   if (currentListings.length > 0) {
     window.renderDetailsPage();
   } else {
+    // Show skeleton while loading
     document.getElementById("app").innerHTML = `
       <div class="details-grid" style="padding: 2rem;">
         <div class="left-col">
@@ -72,7 +74,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
   }
-}
+});
 
 function renderDetails() {
   const app = document.getElementById("app");
@@ -97,6 +99,10 @@ function renderDetails() {
 
   app.innerHTML = `
     <div class="details-grid">
+      <div class="left-col">
+        <div class="hero-image" id="main-hero" style="background-image: url('${mainPhoto}'); cursor: pointer;" onclick="openLightbox(currentPhotoIndex)">
+          <div class="expand-hint">🔍 Expand</div>
+          <button class="back-btn" onclick="event.stopPropagation(); window.location.href='../shop/shop.html'">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><polyline points="15 18 9 12 15 6"></polyline></svg>
           </button>
         </div>
@@ -108,10 +114,6 @@ function renderDetails() {
         <h3 class="section-title">Description</h3>
         <p class="desc">${listing.description || "Verified property listing connected to StudentHome."}</p>
 
-        <div class="share-buttons">
-          <button class="btn-share whatsapp" onclick="shareToWhatsApp()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg> Share to WhatsApp</button>
-        </div>
-        
         <h3 class="section-title">Reviews & Ratings</h3>
         <div id="reviews-container" style="margin-bottom: 2rem;"></div>
         
@@ -123,7 +125,18 @@ function renderDetails() {
       </div>
 
       <div class="right-col">
-        <h1 class="details-title">${listing.title}</h1>
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
+          <h1 class="details-title" style="flex:1;">${listing.title}</h1>
+          <button class="bookmarkBtn ${window.isFavorited(listing.id) ? "active" : ""}" 
+            data-house-id="${listing.id}"
+            style="position:relative; top:0; right:0;"
+            onclick="event.stopPropagation(); window.toggleFavorite(${listing.id})">
+              <span class="IconContainer">
+                <svg viewBox="0 0 384 512" height="0.9em" class="icon"><path d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"></path></svg>
+              </span>
+              <p class="text">Save</p>
+          </button>
+        </div>
         <div style="font-weight: 700; color: var(--accent); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
             ${listing.exactLocation || "Street Details Not Provided"}
@@ -198,14 +211,6 @@ function handleCheckout() {
     return;
   }
 
-  // Record the lead in the database
-  window.createLead({
-    house_id: listing.id,
-    student_name: user.name,
-    student_phone: user.phone,
-    university: user.university,
-  });
-
   document.getElementById("call-text").textContent =
     "Call " + (listing.contact?.phone || "Unavailable");
   document.getElementById("contact-call").href =
@@ -215,6 +220,41 @@ function handleCheckout() {
   document.getElementById("contact-wa").href =
     "https://wa.me/" + (listing.contact?.whatsapp || "");
   document.getElementById("contact-modal").style.display = "flex";
+}
+
+async function sendInquiry() {
+  const msg = document.getElementById("inquiry-message").value.trim();
+  if (!msg) return alert("Please enter a message.");
+
+  const user = await window.fetchSessionUser();
+  if (!user) {
+    alert("You must be logged in to send a message.");
+    window.location.href = "../auth/auth.html";
+    return;
+  }
+
+  const btn = document.getElementById("btn-send-inquiry");
+  btn.textContent = "Sending...";
+  btn.disabled = true;
+
+  const { data: userData } = await window.sb_client.auth.getUser();
+
+  const res = await window.createInquiry({
+    house_id: listing.id,
+    user_id: userData.user.id,
+    message: msg,
+    status: 'Pending'
+  });
+
+  if (res && !res.error) {
+    window.showToast("Message sent to Manager!", "success");
+    document.getElementById("inquiry-message").value = "";
+    closeModal();
+  } else {
+    alert("Failed to send message. Please try again.");
+  }
+  btn.textContent = "Send Message";
+  btn.disabled = false;
 }
 
 function closeModal() {

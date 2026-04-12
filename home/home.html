@@ -5,28 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>StudentHome - Find Your Pad</title>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../js/nav.css">
   <link rel="stylesheet" href="home.css">
 </head>
 <body>
   <div class="app-container">
     <header class="top-nav">
-      <div class="logo" onclick="window.location.href='../home/home.html'">
-        <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+      <div class="nav-left">
+        <div class="logo" onclick="window.location.href='../home/home.html'">
+          <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+        </div>
       </div>
-      <nav class="nav-links">
-        <ul class="nav-list">
-          <li><a href="../home/home.html" class="active">Home</a></li>
-          <li><a href="../about/about.html">About</a></li>
-          <li><a href="../shop/shop.html">Browse Houses</a></li>
-          <li><a href="../shop/shop.html">Hot Deals</a></li>
-          <li><a href="../contact/contact.html">Contact</a></li>
-        </ul>
-      </nav>
-      <button class="mobile-menu-toggle" aria-label="Toggle menu">
-        <span class="hamburger-box">
-          <span class="hamburger-inner"></span>
-        </span>
-      </button>
+      <div class="nav-center">
+        <nav class="nav-links">
+          <ul class="nav-list is-loading">
+            <li></li><li></li><li></li><li></li><li></li>
+          </ul>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="mobile-menu-toggle" aria-label="Toggle menu">
+          <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+          </span>
+        </button>
+      </div>
     </header>
     <div class="nav-overlay"></div>
 
@@ -46,27 +49,13 @@
         <div class="section-header" style="justify-content: center; margin-bottom: 2rem;">
           <h2 style="font-size: 1.2rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.1em;">Trusted By Students From</h2>
         </div>
-        <div class="uni-logo-track">
-          <div class="uni-logo-item">
-            <div class="uni-logo-placeholder">UNILAG</div>
-            <span>UNILAG</span>
-          </div>
-          <div class="uni-logo-item">
-            <div class="uni-logo-placeholder">UNN</div>
-            <span>UNN</span>
-          </div>
-          <div class="uni-logo-item">
-            <div class="uni-logo-placeholder">OAU</div>
-            <span>OAU</span>
-          </div>
-          <div class="uni-logo-item">
-            <div class="uni-logo-placeholder">ABU</div>
-            <span>ABU</span>
-          </div>
-          <div class="uni-logo-item">
-            <div class="uni-logo-placeholder">UI</div>
-            <span>UI</span>
-          </div>
+        <div class="uni-logo-track" id="uni-track">
+          <!-- Loading Skeletons -->
+          <div class="uni-logo-item"><div class="uni-logo-placeholder skeleton-shimmer" style="border-radius:50%; width:50px; height:50px;"></div></div>
+          <div class="uni-logo-item"><div class="uni-logo-placeholder skeleton-shimmer" style="border-radius:50%; width:50px; height:50px;"></div></div>
+          <div class="uni-logo-item"><div class="uni-logo-placeholder skeleton-shimmer" style="border-radius:50%; width:50px; height:50px;"></div></div>
+          <div class="uni-logo-item"><div class="uni-logo-placeholder skeleton-shimmer" style="border-radius:50%; width:50px; height:50px;"></div></div>
+          <div class="uni-logo-item"><div class="uni-logo-placeholder skeleton-shimmer" style="border-radius:50%; width:50px; height:50px;"></div></div>
         </div>
       </section>
 
@@ -85,7 +74,22 @@
         </div>
         
         <div class="carousel" id="carousel">
-          <!-- populated by js -->
+          <!-- Loading Skeletons -->
+          <div class="trending-skeleton-card">
+            <div class="skeleton-image skeleton-shimmer"></div>
+            <div class="skeleton-text-h skeleton-shimmer"></div>
+            <div class="skeleton-text-p skeleton-shimmer"></div>
+          </div>
+          <div class="trending-skeleton-card">
+            <div class="skeleton-image skeleton-shimmer"></div>
+            <div class="skeleton-text-h skeleton-shimmer"></div>
+            <div class="skeleton-text-p skeleton-shimmer"></div>
+          </div>
+          <div class="trending-skeleton-card">
+            <div class="skeleton-image skeleton-shimmer"></div>
+            <div class="skeleton-text-h skeleton-shimmer"></div>
+            <div class="skeleton-text-p skeleton-shimmer"></div>
+          </div>
         </div>
       </section>
 
@@ -145,7 +149,40 @@
         
         <div class="testimonial-scroller" id="reviews-carousel">
           <div class="testimonial-track" id="reviews-track">
-            <!-- Rendered by JS -->
+            <!-- Loading Skeletons -->
+            <div class="skeleton-testimonial">
+              <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+                <div class="skeleton-meta skeleton-shimmer"></div>
+                <div class="skeleton-meta skeleton-shimmer"></div>
+              </div>
+              <div class="skeleton-shimmer" style="height:14px; width:100%; margin-bottom:8px; border-radius:4px;"></div>
+              <div class="skeleton-shimmer" style="height:14px; width:90%; margin-bottom:8px; border-radius:4px;"></div>
+              <div class="skeleton-shimmer" style="height:14px; width:60%; margin-bottom:24px; border-radius:4px;"></div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="skeleton-circle skeleton-shimmer"></div>
+                <div style="flex:1;">
+                  <div class="skeleton-shimmer" style="height:14px; width:40%; margin-bottom:6px; border-radius:4px;"></div>
+                  <div class="skeleton-shimmer" style="height:10px; width:30%; border-radius:4px;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="skeleton-testimonial">
+               <!-- duplicate -->
+               <div style="display:flex; justify-content:space-between; margin-bottom:1rem;">
+                <div class="skeleton-meta skeleton-shimmer"></div>
+                <div class="skeleton-meta skeleton-shimmer"></div>
+              </div>
+              <div class="skeleton-shimmer" style="height:14px; width:100%; margin-bottom:8px; border-radius:4px;"></div>
+              <div class="skeleton-shimmer" style="height:14px; width:90%; margin-bottom:8px; border-radius:4px;"></div>
+              <div class="skeleton-shimmer" style="height:14px; width:60%; margin-bottom:24px; border-radius:4px;"></div>
+              <div style="display:flex; align-items:center; gap:12px;">
+                <div class="skeleton-circle skeleton-shimmer"></div>
+                <div style="flex:1;">
+                  <div class="skeleton-shimmer" style="height:14px; width:40%; margin-bottom:6px; border-radius:4px;"></div>
+                  <div class="skeleton-shimmer" style="height:10px; width:30%; border-radius:4px;"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -223,8 +260,8 @@
         <div class="footer-bottom-content">
           <p>&copy; 2026 StudentHome Nigeria Limited. All Rights Reserved.</p>
           <div class="footer-bottom-links">
-            <a href="#">Privacy Policy</a>
-            <a href="#">Terms of Service</a>
+            <a href="../privacy/privacy.html">Privacy Policy</a>
+            <a href="../terms/terms.html">Terms of Service</a>
           </div>
         </div>
       </div>
