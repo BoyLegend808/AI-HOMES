@@ -15,6 +15,7 @@ begin;
 -- PROFILES (must exist first — other tables reference auth.users)
 create table if not exists public.profiles (
   id           uuid references auth.users on delete cascade primary key,
+  email        text unique,
   full_name    text,
   university   text,
   phone        text,
@@ -22,12 +23,15 @@ create table if not exists public.profiles (
   avatar_url   text,
   created_at   timestamptz default now()
 );
+alter table public.profiles add column if not exists email        text unique;
 alter table public.profiles add column if not exists full_name  text;
 alter table public.profiles add column if not exists university text;
 alter table public.profiles add column if not exists phone      text;
 alter table public.profiles add column if not exists avatar_url text;
 alter table public.profiles add column if not exists role       text default 'student';
 alter table public.profiles add column if not exists created_at timestamptz default now();
+alter table public.profiles add column if not exists resetToken  text;
+alter table public.profiles add column if not exists resetExpiry bigint;
 
 -- UNIVERSITIES
 create table if not exists public.universities (

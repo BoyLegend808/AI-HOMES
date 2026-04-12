@@ -17,7 +17,10 @@
     const setState = (show) => {
       input.type = show ? "text" : "password";
       button.setAttribute("aria-pressed", String(show));
-      button.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      button.setAttribute(
+        "aria-label",
+        show ? "Hide password" : "Show password",
+      );
       button.title = show ? "Hide password" : "Show password";
       button.innerHTML = show ? eyeOffIcon : eyeIcon;
     };
@@ -61,20 +64,41 @@
 
       btn.disabled = true;
       btn.textContent = "Updating...";
-      
-      const res = await window.updateUserPassword(pwd);
-      
+
+      // Get token from URL (as per the guide)
+      const urlParams = new URLSearchParams(window.location.search);
+      const token = urlParams.get("token");
+
+      if (!token) {
+        setHint("Invalid reset link. No token found.", "error");
+        btn.disabled = false;
+        btn.textContent = "Update Password";
+        return;
+      }
+
+      // Call the API endpoint
+      try {
+        const response = await fetch("/api/auth/reset-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token, newPassword: pwd }),
+        });
+        const data = await response.json();
+
+        if (response.ok) {
+          setHint(data.message + " Redirecting to login...", "success");
+          setTimeout(() => {
+            window.location.href = "../auth/auth.html";
+          }, 2000);
+        } else {
+          setHint(data.error || "Error updating password.", "error");
+        }
+      } catch (error) {
+        setHint("Network error. Please try again.", "error");
+      }
+
       btn.disabled = false;
       btn.textContent = "Update Password";
-      
-      if (res && res.success) {
-        setHint(res.message + " Redirecting to login...", "success");
-        setTimeout(() => {
-          window.location.href = "../auth/auth.html";
-        }, 2000);
-      } else {
-        setHint(res ? res.message : "Error updating password.", "error");
-      }
     });
   }
 

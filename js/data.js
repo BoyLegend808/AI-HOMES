@@ -229,14 +229,22 @@ async function fetchAllData() {
     ];
 
     if (user) {
-        try {
-            const { data: userData } = await sb_client.auth.getUser();
-            if (userData?.user) {
-                calls.push(sb_client.from("favorites").select("house_id").eq("user_id", userData.user.id));
-            }
-        } catch (authErr) {
-            console.warn("Auth check timed out or failed, proceeding with public fetch.", authErr);
+      try {
+        const { data: userData } = await sb_client.auth.getUser();
+        if (userData?.user) {
+          calls.push(
+            sb_client
+              .from("favorites")
+              .select("house_id")
+              .eq("user_id", userData.user.id),
+          );
         }
+      } catch (authErr) {
+        console.warn(
+          "Auth check timed out or failed, proceeding with public fetch.",
+          authErr,
+        );
+      }
     }
 
     const results = await Promise.allSettled(calls);
@@ -251,11 +259,19 @@ async function fetchAllData() {
       window.hasFetchedHouses = true;
     }
 
-    if (reviewsRes.status === "fulfilled" && !reviewsRes.value.error && reviewsRes.value.data?.length > 0) {
+    if (
+      reviewsRes.status === "fulfilled" &&
+      !reviewsRes.value.error &&
+      reviewsRes.value.data?.length > 0
+    ) {
       CACHED_REVIEWS = reviewsRes.value.data;
     }
-    
-    if (unisRes.status === "fulfilled" && !unisRes.value.error && unisRes.value.data?.length > 0) {
+
+    if (
+      unisRes.status === "fulfilled" &&
+      !unisRes.value.error &&
+      unisRes.value.data?.length > 0
+    ) {
       window.CLOUD_UNIVERSITIES_DATA = unisRes.value.data;
       const transformed = {};
       unisRes.value.data.forEach((u) => {
@@ -265,10 +281,12 @@ async function fetchAllData() {
     }
 
     if (favsRes && favsRes.status === "fulfilled" && !favsRes.value.error) {
-        const cloudIds = favsRes.value.data.map(f => String(f.house_id));
-        // Merge with existing cached favorites to prevent losing optimistic updates
-        CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...cloudIds])];
-        localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
+      const cloudIds = favsRes.value.data.map((f) => String(f.house_id));
+      // Merge with existing cached favorites to prevent losing optimistic updates
+      CACHED_FAVORITES = [
+        ...new Set([...CACHED_FAVORITES.map(String), ...cloudIds]),
+      ];
+      localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
     }
   } catch (e) {
     console.warn("Cloud Fetch Error.", e);
@@ -292,84 +310,106 @@ async function fetchAllData() {
 const LOCAL_FAVS_KEY = "studenthome_wishlist";
 
 window.toggleFavorite = async (houseId) => {
-    // 1. Instantly Calculate New State (Zero Latency)
-    const isCurrentlyFav = CACHED_FAVORITES.some(id => String(id) === String(houseId));
-    const newStatus = !isCurrentlyFav;
+  // 1. Instantly Calculate New State (Zero Latency)
+  const isCurrentlyFav = CACHED_FAVORITES.some(
+    (id) => String(id) === String(houseId),
+  );
+  const newStatus = !isCurrentlyFav;
 
-    // 2. Optimistic UI Update & Cache Mutation
-    if (newStatus) {
-        if (!isCurrentlyFav) CACHED_FAVORITES.push(String(houseId));
-    } else {
-        CACHED_FAVORITES = CACHED_FAVORITES.filter(id => String(id) !== String(houseId));
-    }
+  // 2. Optimistic UI Update & Cache Mutation
+  if (newStatus) {
+    if (!isCurrentlyFav) CACHED_FAVORITES.push(String(houseId));
+  } else {
+    CACHED_FAVORITES = CACHED_FAVORITES.filter(
+      (id) => String(id) !== String(houseId),
+    );
+  }
 
-    // Update all matching icons on the current page instantly
-    document.querySelectorAll(`.bookmarkBtn[data-house-id="${houseId}"]`).forEach(btn => {
-        btn.classList.toggle("active", newStatus);
-        const ariaLabel = newStatus ? "Remove from variants" : "Save property";
-        btn.setAttribute("aria-label", ariaLabel);
+  // Update all matching icons on the current page instantly
+  document
+    .querySelectorAll(`.bookmarkBtn[data-house-id="${houseId}"]`)
+    .forEach((btn) => {
+      btn.classList.toggle("active", newStatus);
+      const ariaLabel = newStatus ? "Remove from variants" : "Save property";
+      btn.setAttribute("aria-label", ariaLabel);
     });
 
-    // Persist to LocalStorage (Immediate backup)
-    localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
+  // Persist to LocalStorage (Immediate backup)
+  localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
 
-    // 3. BACKGROUND SYNC: Verify user and sync to Supabase without blocking the UI
-    try {
-        const user = await fetchSessionUser();
-        if (user && sb_client) {
-            const { data: userData } = await sb_client.auth.getUser();
-            if (userData?.user) {
-                if (newStatus) {
-                    await sb_client.from("favorites").insert([{ house_id: houseId, user_id: userData.user.id }]);
-                } else {
-                    await sb_client.from("favorites").delete().eq("house_id", houseId).eq("user_id", userData.user.id);
-                }
-            }
+  // 3. BACKGROUND SYNC: Verify user and sync to Supabase without blocking the UI
+  try {
+    const user = await fetchSessionUser();
+    if (user && sb_client) {
+      const { data: userData } = await sb_client.auth.getUser();
+      if (userData?.user) {
+        if (newStatus) {
+          await sb_client
+            .from("favorites")
+            .insert([{ house_id: houseId, user_id: userData.user.id }]);
+        } else {
+          await sb_client
+            .from("favorites")
+            .delete()
+            .eq("house_id", houseId)
+            .eq("user_id", userData.user.id);
         }
-    } catch (e) {
-        console.warn("Silent background sync failed:", e);
+      }
     }
+  } catch (e) {
+    console.warn("Silent background sync failed:", e);
+  }
 
-    // 4. Toast Notification
-    if (window.showToast) {
-        window.showToast(newStatus ? "Added to favorites" : "Removed from favorites", "success");
-    }
+  // 4. Toast Notification
+  if (window.showToast) {
+    window.showToast(
+      newStatus ? "Added to favorites" : "Removed from favorites",
+      "success",
+    );
+  }
 
-    return { success: true };
+  return { success: true };
 };
 
 // Initialize favorites on load
 async function initFavorites() {
-    // Load local storage first
-    try {
-        const local = JSON.parse(localStorage.getItem(LOCAL_FAVS_KEY) || "[]");
-        CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...local.map(String)])];
-    } catch (e) {}
+  // Load local storage first
+  try {
+    const local = JSON.parse(localStorage.getItem(LOCAL_FAVS_KEY) || "[]");
+    CACHED_FAVORITES = [
+      ...new Set([...CACHED_FAVORITES.map(String), ...local.map(String)]),
+    ];
+  } catch (e) {}
 
-    // Load cloud favorites if logged in
-    const user = await fetchSessionUser();
-    if (user && sb_client) {
-        const { data: { user: authUser } } = await sb_client.auth.getUser();
-        if (authUser) {
-            const { data: favs } = await sb_client
-                .from('favorites')
-                .select('house_id')
-                .eq('user_id', authUser.id);
-            if (favs) {
-                const cloudIds = favs.map(f => String(f.house_id));
-                // Merge cloud into local
-                CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...cloudIds])];
-                localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
-            }
-        }
+  // Load cloud favorites if logged in
+  const user = await fetchSessionUser();
+  if (user && sb_client) {
+    const {
+      data: { user: authUser },
+    } = await sb_client.auth.getUser();
+    if (authUser) {
+      const { data: favs } = await sb_client
+        .from("favorites")
+        .select("house_id")
+        .eq("user_id", authUser.id);
+      if (favs) {
+        const cloudIds = favs.map((f) => String(f.house_id));
+        // Merge cloud into local
+        CACHED_FAVORITES = [
+          ...new Set([...CACHED_FAVORITES.map(String), ...cloudIds]),
+        ];
+        localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
+      }
     }
+  }
 }
 
-window.isFavorited = (houseId) => CACHED_FAVORITES.some(id => String(id) === String(houseId));
+window.isFavorited = (houseId) =>
+  CACHED_FAVORITES.some((id) => String(id) === String(houseId));
 
 window.removeFromFavorites = async (houseId) => {
-    await window.toggleFavorite(houseId);
-    if (window.renderSavedProperties) window.renderSavedProperties();
+  await window.toggleFavorite(houseId);
+  if (window.renderSavedProperties) window.renderSavedProperties();
 };
 
 function initRealtime() {
@@ -443,14 +483,16 @@ function getCurrentUser() {
 
 async function fetchSessionUser() {
   if (!sb_client) return getCurrentUser();
-  
+
   // High-Performance Timeout Race
-  const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error("Timeout")), 3500));
-  
+  const timeout = new Promise((_, rej) =>
+    setTimeout(() => rej(new Error("Timeout")), 3500),
+  );
+
   try {
     const { data, error } = await Promise.race([
       sb_client.auth.getUser(),
-      timeout
+      timeout,
     ]);
 
     if (error || !data?.user) {
@@ -470,7 +512,7 @@ async function fetchSessionUser() {
       email: data.user.email,
       university: profile?.university || meta.university || "Lagos",
       role: profile?.role || meta.role || "student",
-      avatar_url: data.user.user_metadata?.avatar_url || ""
+      avatar_url: data.user.user_metadata?.avatar_url || "",
     };
   } catch (err) {
     console.warn("Session Recovery: Using local cache due to latency/error.");
@@ -570,11 +612,17 @@ function logoutUser() {
 }
 
 async function resetPasswordForEmail(email) {
-  if (!sb_client) return { success: false, message: "Cloud offline." };
-  const { error } = await sb_client.auth.resetPasswordForEmail(email, {
-    redirectTo: window.location.origin + "/auth/reset-password.html",
-  });
-  return { success: !error, message: error ? error.message : "Sent!" };
+  try {
+    const response = await fetch("/api/auth/forgot-password", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    const data = await response.json();
+    return { success: response.ok, message: data.message || data.error };
+  } catch (error) {
+    return { success: false, message: "Network error" };
+  }
 }
 
 async function updateUserPassword(newPassword) {
@@ -682,7 +730,7 @@ async function renderGlobalNav() {
     // Show Unified Big Skeleton initially
     navLinks.classList.add("is-loading-total");
     navLinks.innerHTML = `<div class="full-nav-skeleton"></div>`;
-    
+
     const navPanel = document.querySelector(".nav-links");
     if (navPanel && !navPanel.querySelector(".nav-mobile-header")) {
       const mobileHeader = document.createElement("div");
@@ -724,7 +772,9 @@ async function renderGlobalNav() {
     if (user && idBox) {
       idBox.classList.remove("skeleton-state");
       const uniName = String(user.university || "").trim();
-      const logoUrl = user.avatar_url || (window.getUniversityLogo ? getUniversityLogo(uniName) : "");
+      const logoUrl =
+        user.avatar_url ||
+        (window.getUniversityLogo ? getUniversityLogo(uniName) : "");
       idBox.innerHTML = `
         <div class="nav-id-inner" onclick="window.location.href='../profile/profile.html'">
            <img src="${logoUrl}" alt="${uniName} Logo" style="border-radius: 50%; object-fit: cover;">
@@ -758,7 +808,8 @@ async function renderGlobalNav() {
     console.error("Navigation load failed:", err);
     if (navLinks) {
       navLinks.classList.remove("is-loading-total");
-      navLinks.innerHTML = baseLinks + `<li><a href="../auth/auth.html">Login</a></li>`;
+      navLinks.innerHTML =
+        baseLinks + `<li><a href="../auth/auth.html">Login</a></li>`;
     }
     if (idBox) idBox.remove();
   }
@@ -771,29 +822,35 @@ async function isAdminUser() {
 
 function populateUniversitySelects() {
   const universities = Object.keys(getUniversities());
-  const selects = [document.getElementById("reg-uni"), document.getElementById("add-school")].filter(Boolean);
-  selects.forEach(s => {
+  const selects = [
+    document.getElementById("reg-uni"),
+    document.getElementById("add-school"),
+  ].filter(Boolean);
+  selects.forEach((s) => {
     const val = s.value;
-    s.innerHTML = '<option value="">Select University</option>' + universities.map(u => `<option value="${u}">${u}</option>`).join("");
+    s.innerHTML =
+      '<option value="">Select University</option>' +
+      universities.map((u) => `<option value="${u}">${u}</option>`).join("");
     if (val) s.value = val;
   });
 }
 
 // INITIALIZATION
 document.addEventListener("DOMContentLoaded", () => {
-    if (!document.querySelector('link[href*="font-awesome"]')) {
-      const fa = document.createElement("link");
-      fa.rel = "stylesheet";
-      fa.href = "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css";
-      document.head.appendChild(fa);
-    }
-    
-    renderGlobalNav();
-    populateUniversitySelects();
-    initFavorites();
-    initRealtime();
-    fetchAllData();
-    document.addEventListener("click", handleGlobalClick);
+  if (!document.querySelector('link[href*="font-awesome"]')) {
+    const fa = document.createElement("link");
+    fa.rel = "stylesheet";
+    fa.href =
+      "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css";
+    document.head.appendChild(fa);
+  }
+
+  renderGlobalNav();
+  populateUniversitySelects();
+  initFavorites();
+  initRealtime();
+  fetchAllData();
+  document.addEventListener("click", handleGlobalClick);
 });
 
 /* ==========================================
@@ -801,7 +858,8 @@ document.addEventListener("DOMContentLoaded", () => {
 ========================================= */
 window.getListings = getListings;
 window.getReviews = getReviews;
-window.getListingById = (id) => CACHED_LISTINGS.find((h) => String(h.id) === String(id));
+window.getListingById = (id) =>
+  CACHED_LISTINGS.find((h) => String(h.id) === String(id));
 window.DEFAULT_LISTINGS = DEFAULT_LISTINGS;
 window.getCurrentUser = getCurrentUser;
 window.loginUser = loginUser;
@@ -812,18 +870,30 @@ window.updateUserPassword = updateUserPassword;
 window.getUniversities = getUniversities;
 window.NIGERIA_UNIVERSITIES = getUniversities();
 window.resetSystemData = resetSystemData;
-window.HOUSE_TYPES = ["1 Bedroom", "2 Bedroom", "3 Bedroom", "Self-contain", "Studio"];
+window.HOUSE_TYPES = [
+  "1 Bedroom",
+  "2 Bedroom",
+  "3 Bedroom",
+  "Self-contain",
+  "Studio",
+];
 window.uploadPhotoToStorage = async (file) => {
   if (!sb_client) return null;
   const fileName = `house_${Math.random().toString(36).slice(2)}_${Date.now()}`;
-  const { error } = await sb_client.storage.from("house-photos").upload(`public/${fileName}`, file);
+  const { error } = await sb_client.storage
+    .from("house-photos")
+    .upload(`public/${fileName}`, file);
   if (error) return null;
-  const { data } = sb_client.storage.from("house-photos").getPublicUrl(`public/${fileName}`);
+  const { data } = sb_client.storage
+    .from("house-photos")
+    .getPublicUrl(`public/${fileName}`);
   return data.publicUrl;
 };
 window.addListing = async (h) => {
   if (!sb_client) return { success: false };
-  const { error } = await sb_client.from("houses").insert([normalizeListing(h)]);
+  const { error } = await sb_client
+    .from("houses")
+    .insert([normalizeListing(h)]);
   if (!error) fetchAllData();
   return { success: !error };
 };
@@ -861,10 +931,15 @@ window.addReview = async (r) => {
   return { success: !error };
 };
 window.initReveal = () => {
-  const obs = new IntersectionObserver(es => {
-    es.forEach(e => { if (e.isIntersecting) e.target.classList.add("active"); });
-  }, { threshold: 0.1 });
-  document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
+  const obs = new IntersectionObserver(
+    (es) => {
+      es.forEach((e) => {
+        if (e.isIntersecting) e.target.classList.add("active");
+      });
+    },
+    { threshold: 0.1 },
+  );
+  document.querySelectorAll(".reveal").forEach((el) => obs.observe(el));
 };
 window.toggleMobileMenu = toggleMobileMenu;
 window.closeMobileMenu = closeMobileMenu;
