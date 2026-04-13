@@ -42,7 +42,42 @@
   };
 
   const init = async () => {
-    setHint("Please enter your new password below.", "info");
+    // Get token from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get("token");
+
+    if (!token) {
+      setHint("No reset token found. Please check your email link.", "error");
+      btn.disabled = true;
+      return;
+    }
+
+    // Verify token is valid
+    try {
+      const response = await fetch("/api/auth/verify-reset-token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+      const data = await response.json();
+
+      if (response.ok) {
+        setHint(
+          `Please enter your new password below. Reset link for: ${data.email}`,
+          "info",
+        );
+      } else {
+        setHint(
+          data.error ||
+            "Reset link is invalid or expired. Please request a new one.",
+          "error",
+        );
+        btn.disabled = true;
+      }
+    } catch (error) {
+      console.error("Token verification failed:", error);
+      setHint("Network error. Please try again.", "error");
+    }
   };
 
   if (btn) {

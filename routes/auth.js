@@ -6,10 +6,16 @@ const nodemailer = require("nodemailer");
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
-// Initialize Supabase client
+// Initialize Supabase client (anon key for regular operations)
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_ANON_KEY,
+);
+
+// Initialize Supabase admin client (service role key for password updates)
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
 );
 
 // Email sender setup
@@ -82,10 +88,17 @@ router.post("/reset-password", async (req, res) => {
   try {
     const { token, newPassword } = req.body;
 
+    // Validate password format
+    if (!newPassword || newPassword.length < 6) {
+      return res.status(400).json({
+        error: "Password must be at least 6 characters long.",
+      });
+    }
+
     // Find user with valid token
     const { data: user, error } = await supabase
       .from("profiles")
-      .select("id, resetToken, resetExpiry")
+      .select("id, email, resetToken, resetExpiry")
       .eq("resetToken", token)
       .gt("resetExpiry", Date.now())
       .single();
@@ -96,21 +109,70 @@ router.post("/reset-password", async (req, res) => {
         .json({ error: "Token is invalid or has expired." });
     }
 
-    // For Supabase, we can't directly update auth.users password from client
-    // In a real implementation, you'd use the service role key or RPC function
-    // For this demo, we'll clear the token and return success
-    // The password update would need to be handled differently
+    // Update password in Supabase auth using admin client
+    const { error: updateError } =
+      await supabaseAdmin.auth.admin.updateUserById(user.id, {
+        password: newPassword,
+      });
 
-    // Clear the token
-    await supabase
+    if (updateError) {
+      console.error("Password update error:", updateError);
+      return res.status(500).json({ error: "Failed to update password." });
+    }
+
+    // Clear the reset token after successful password update
+    const { error: clearTokenError } = await supabase
       .from("profiles")
-      .update({ resetToken: null, resetExpiry: null })
+      .update({
+        resetToken: null,
+        resetExpiry: null,
+        updatedAt: new Date().toISOString(),
+      })
       .eq("id", user.id);
 
-    res.json({ message: "Password reset successful. You can now log in." });
+    if (clearTokenError) {
+      console.error("Clear token error:", clearTokenError);
+      // Don't fail here - password was updated successfully
+    }
+
+    res.json({
+      message:
+        "Password reset successful. You can now log in with your new password.",
+    });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Server error" });
+    console.error("Reset password error:", err);
+    res.status(500).json({ error: "Server error. Please try again." });
+  }
+});
+
+// POST /api/auth/verify-reset-token
+// Optional endpoint to validate reset token before showing form
+router.post("/verify-reset-token", async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(400).json({ error: "Token is required." });
+    }
+
+    // Check if token is valid and not expired
+    const { data: user, error } = await supabase
+      .from("profiles")
+      .select("id, email")
+      .eq("resetToken", token)
+      .gt("resetExpiry", Date.now())
+      .single();
+
+    if (error || !user) {
+      return res
+        .status(400)
+        .json({ error: "Token is invalid or has expired." });
+    }
+
+    res.json({ valid: true, email: user.email });
+  } catch (err) {
+    console.error("Token verification error:", err);
+    res.status(500).json({ error: "Server error. Please try again." });
   }
 });
 
