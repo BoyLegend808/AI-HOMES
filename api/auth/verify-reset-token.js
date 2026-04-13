@@ -14,6 +14,12 @@ export default async function handler(req, res) {
   try {
     const { token } = req.body;
 
+    // Validate environment variables
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      console.error("Missing Supabase configuration");
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+
     if (!token) {
       return res.status(400).json({ error: "Token is required." });
     }

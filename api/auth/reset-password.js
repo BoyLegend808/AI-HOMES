@@ -19,6 +19,16 @@ export default async function handler(req, res) {
   try {
     const { token, newPassword } = req.body;
 
+    // Validate environment variables
+    if (
+      !process.env.SUPABASE_URL ||
+      !process.env.SUPABASE_ANON_KEY ||
+      !process.env.SUPABASE_SERVICE_ROLE_KEY
+    ) {
+      console.error("Missing Supabase configuration");
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+
     // Validate password format
     if (!newPassword || newPassword.length < 6) {
       return res.status(400).json({
@@ -68,6 +78,13 @@ export default async function handler(req, res) {
 
     res.json({
       message:
+        "Password reset successful. You can now log in with your new password.",
+    });
+  } catch (err) {
+    console.error("Reset password error:", err);
+    res.status(500).json({ error: "Server error. Please try again." });
+  }
+}
         "Password reset successful. You can now log in with your new password.",
     });
   } catch (err) {

@@ -28,6 +28,17 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Email is required" });
     }
 
+    // Validate environment variables
+    if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+      console.error("Missing Supabase configuration");
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      console.error("Missing email configuration");
+      return res.status(500).json({ error: "Server configuration error" });
+    }
+
     // Find user by email in profiles
     const { data: user, error } = await supabase
       .from("profiles")
@@ -61,22 +72,33 @@ export default async function handler(req, res) {
     const clientUrl = process.env.CLIENT_URL || "https://ai-homes.vercel.app";
     const resetLink = `${clientUrl}/reset-password/reset-password.html?token=${token}`;
 
-    await transporter.sendMail({
-      from: `"StudentHome" <${process.env.EMAIL_USER}>`,
-      to: user.email,
-      subject: "Reset Your StudentHome Password",
-      html: `
-        <h2>Password Reset</h2>
-        <p>Click the button below to reset your password:</p>
-        <a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
-        <p>This link expires in 1 hour.</p>
-        <p>If you did not request this, ignore this email.</p>
-      `,
-    });
+    try {
+      await transporter.sendMail({
+        from: `"StudentHome" <${process.env.EMAIL_USER}>`,
+        to: user.email,
+        subject: "Reset Your StudentHome Password",
+        html: `
+          <h2>Password Reset</h2>
+          <p>Click the button below to reset your password:</p>
+          <a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
+          <p>This link expires in 1 hour.</p>
+          <p>If you did not request this, ignore this email.</p>
+        `,
+      });
+    } catch (emailError) {
+      console.error("Email sending error:", emailError);
+      // Don't fail the request - token is still stored
+      console.warn(
+        "Password reset token stored but email failed to send. Token:",
+        token,
+      );
+    }
 
     res.json({ message: "If this email is registered, you'll get a link." });
   } catch (err) {
     console.error("Forgot password error:", err);
     res.status(500).json({ error: "Server error" });
+  }
+}
   }
 }
