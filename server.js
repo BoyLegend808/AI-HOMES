@@ -14,7 +14,7 @@ app.use(express.static(__dirname));
 app.use("/api/auth", require("./routes/auth"));
 
 // Handle all other routes by serving the appropriate HTML files
-app.get("*", (req, res) => {
+app.use((req, res) => {
   let urlPath = req.path;
 
   // Redirect root to onboarding page
