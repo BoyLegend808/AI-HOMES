@@ -1,4 +1,6 @@
 {
+  "buildCommand": "echo 'Static site with serverless functions'",
+  "outputDirectory": ".",
   "redirects": [
     {
       "source": "/",
