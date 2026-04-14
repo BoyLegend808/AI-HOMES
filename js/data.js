@@ -1,4 +1,4 @@
-https://ai-homes.vercel.app/home/home.html// StudentHome Global Cloud Engine (v3.0 - Production Balanced)
+runing it from therhttps://ai-homes.vercel.app/home/home.html// StudentHome Global Cloud Engine (v3.0 - Production Balanced)
 const AUTH_KEY = "studenthome_auth";
 const USERS_KEY = "studenthome_users";
 const DEFAULT_LOCAL_USERS = [
@@ -202,18 +202,32 @@ const SYSTEM_ADMINS = [
 async function fetchAllData() {
   if (fetchAllData.inFlight) return;
   fetchAllData.inFlight = true;
-  console.log(
-    "fetchAllData: Starting fetch, sb_client available:",
-    !!sb_client,
-  );
-  if (!sb_client) {
-    console.warn(
-      "fetchAllData: No Supabase client available, cannot load houses.",
-    );
+  
+  // LAZY INIT CONFIG + CLIENT
+  if (!SUPABASE_CONFIG) {
+    try {
+      const res = await Promise.race([
+        fetch('/api/config'),
+        new Promise((_,r)=>setTimeout(()=>r('timeout'),5000))
+      ]);
+      SUPABASE_CONFIG = await res.json();
+      sb_client = window.supabase?.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
+      if (sb_client) window.sb_client = sb_client;
+    } catch(e) {
+      console.warn('Config fetch failed:', e);
+    }
+  }
+  
+if (!sb_client) {
+    console.warn('Using fallback data - no Supabase');
+    useFallbackData();
     fetchAllData.inFlight = false;
     window.hasFetchedHouses = true;
+    refreshAllPages();
     return;
   }
+  
+  console.log('Cloud fetch START');
   try {
     const user = getCurrentUser();
     const calls = [
@@ -247,64 +261,77 @@ async function fetchAllData() {
       }
     }
 
-    const results = await Promise.allSettled(calls);
+    // TIMEOUT-RACED PARALLEL CALLS (5s max each)
+    const TIMEOUT = 5000;
+    const safeCall = (p) => Promise.race([
+      p, 
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')), TIMEOUT))
+    ]);
+    
+    const results = await Promise.allSettled([
+      safeCall(sb_client.from("houses").select("*").order("created_at", { ascending: false })),
+      safeCall(sb_client.from("reviews").select("*").order("created_at", { ascending: false })),
+      safeCall(sb_client.from("universities").select("*")),
+      ...(window.CACHED_FAVORITES?.length ? [safeCall(sb_client.from("favorites").select("house_id").eq("user_id", getCurrentUser()?.id))] : [])
+    ]);
 
-    const listingsRes = results[0];
-    const reviewsRes = results[1];
-    const unisRes = results[2];
-    const favsRes = results[3];
-
-    if (listingsRes.status === "fulfilled" && !listingsRes.value.error) {
-      CACHED_LISTINGS = (listingsRes.value.data || []).map(normalizeListing);
-      window.hasFetchedHouses = true;
+    // ROBUST PROCESSING WITH FALLBACKS
+    const [listingsRes, reviewsRes, unisRes, favsRes] = results;
+    
+    // HOUSES: Fallback to DEFAULT if empty/failed
+    if (listingsRes.status === "fulfilled" && listingsRes.value.data?.length > 0) {
+      CACHED_LISTINGS = listingsRes.value.data.map(normalizeListing);
+    } else {
+      console.warn('Houses fetch failed → DEFAULT_LISTINGS');
+      CACHED_LISTINGS = DEFAULT_LISTINGS.map(normalizeListing);
     }
+    window.hasFetchedHouses = true;
 
-    if (
-      reviewsRes.status === "fulfilled" &&
-      !reviewsRes.value.error &&
-      reviewsRes.value.data?.length > 0
-    ) {
+    // REVIEWS: Keep existing if new fetch fails
+    if (reviewsRes.status === "fulfilled" && reviewsRes.value.data?.length > 0) {
       CACHED_REVIEWS = reviewsRes.value.data;
     }
 
-    if (
-      unisRes.status === "fulfilled" &&
-      !unisRes.value.error &&
-      unisRes.value.data?.length > 0
-    ) {
+    // UNIS: Fallback to DEFAULT_UNIVERSITIES
+    if (unisRes.status === "fulfilled" && unisRes.value.data?.length > 0) {
       window.CLOUD_UNIVERSITIES_DATA = unisRes.value.data;
       const transformed = {};
-      unisRes.value.data.forEach((u) => {
-        transformed[u.name] = u.locations;
-      });
+      unisRes.value.data.forEach((u) => transformed[u.name] = u.locations);
       CLOUD_UNIVERSITIES = transformed;
     }
 
-    if (favsRes && favsRes.status === "fulfilled" && !favsRes.value.error) {
-      const cloudIds = favsRes.value.data.map((f) => String(f.house_id));
-      // Merge with existing cached favorites to prevent losing optimistic updates
-      CACHED_FAVORITES = [
-        ...new Set([...CACHED_FAVORITES.map(String), ...cloudIds]),
-      ];
+    // FAVORITES: Merge safely
+    if (favsRes?.status === "fulfilled" && favsRes.value.data) {
+      const cloudIds = favsRes.value.data.map(f => String(f.house_id));
+      CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...cloudIds])];
       localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
     }
   } catch (e) {
-    console.warn("Cloud Fetch Error.", e);
-  } finally {
+    console.error('Cloud batch failed:', e);
+    useFallbackData();
+} finally {
     window.hasFetchedHouses = true;
     fetchAllData.inFlight = false;
+    refreshAllPages();
   }
+}
 
-  // Re-trigger visual updates after every successful fetch
+function useFallbackData() {
+  CACHED_LISTINGS = DEFAULT_LISTINGS.map(normalizeListing);
+  CACHED_REVIEWS = DEFAULT_REVIEWS;
+  CLOUD_UNIVERSITIES = DEFAULT_UNIVERSITIES;
+  syncUniversitiesCache();
+}
+
+function refreshAllPages() {
   requestAnimationFrame(() => {
     syncUniversitiesCache();
-    if (window.populateSchoolOptions) window.populateSchoolOptions();
-    if (window.renderHome) window.renderHome();
-    if (window.renderShopGrid) window.renderShopGrid(getListings());
-    if (window.renderDashboard) window.renderDashboard();
-    if (window.renderDetailsPage) window.renderDetailsPage();
+    ['populateSchoolOptions','renderHome','renderShopGrid','renderDashboard','renderDetailsPage'].forEach(fn => {
+      if (window[fn]) window[fn]();
+    });
   });
 }
+
 
 // FAVORITES PERSISTENCE SYSTEM
 const LOCAL_FAVS_KEY = "studenthome_wishlist";
@@ -611,21 +638,36 @@ function logoutUser() {
   window.location.href = "../home/home.html";
 }
 
-// DISABLED: resetPasswordForEmail - was causing spam 500 errors on every page load
-// async function resetPasswordForEmail(email) {
-//   try {
-//     const response = await fetch("/api/auth/forgot-password", {
-//       method: "POST",
-//       headers: { "Content-Type": "application/json" },
-//       body: JSON.stringify({ email }),
-//     });
-//     const data = await response.json();
-//     return { success: response.ok, message: data.message || data.error };
-//   } catch (error) {
-//     return { success: false, message: "Network error" };
-//   }
-// }
-window.resetPasswordForEmail = async (email) => ({ success: false, message: "Function disabled - use forgot-password form in auth.html" });
+// RE-ENABLED Forgot Password with DEBOUNCE (1 call/min)
+const resetDebounce = { lastCall: 0, pending: null };
+window.resetPasswordForEmail = async (email) => {
+  const now = Date.now();
+  if (now - resetDebounce.lastCall < 60000) {
+    return { success: false, message: "Please wait 1 minute between requests" };
+  }
+  
+  if (resetDebounce.pending) clearTimeout(resetDebounce.pending);
+  
+  return new Promise((resolve) => {
+    resetDebounce.pending = setTimeout(async () => {
+      try {
+        const response = await Promise.race([
+          fetch("/api/auth/forgot-password", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email.toLowerCase().trim() }),
+          }),
+          new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 10000))
+        ]);
+        const data = await response.json();
+        resetDebounce.lastCall = Date.now();
+        resolve({ success: response.ok, message: data.message || data.error });
+      } catch(e) {
+        resolve({ success: false, message: "Network error" });
+      }
+    }, 500);
+  });
+};
 
 
 async function updateUserPassword(newPassword) {

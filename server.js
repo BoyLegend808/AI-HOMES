@@ -12,6 +12,8 @@ app.use(express.static(__dirname));
 
 // API Routes
 app.use("/api/auth", require("./routes/auth"));
+app.use("/api/config", require("./routes/config"));
+
 
 // Handle all other routes by serving the appropriate HTML files
 app.use((req, res) => {

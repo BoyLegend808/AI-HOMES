@@ -1,8 +1,5 @@
-const express = require("express");
-const router = express.Router();
-const crypto = require("crypto");
-const bcrypt = require("bcryptjs");
-const nodemailer = require("nodemailer");
+
+
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 

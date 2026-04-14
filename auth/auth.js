@@ -140,28 +140,10 @@ document.addEventListener("DOMContentLoaded", () => {
     alert("Registration Error: " + res.message);
   });
 
-  if (forgotButton) {
-    forgotButton.addEventListener("click", async () => {
+
       const emailInput = document.getElementById("forgot-email");
       const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
-      if (!email) {
-        alert("Please enter your email.");
-        return;
-      }
       
-      forgotButton.disabled = true;
-      forgotButton.textContent = "Sending...";
-      const res = await window.resetPasswordForEmail(email);
-      forgotButton.disabled = false;
-      // In auth.html the button original text is "Send Reset Link", we'll revert to that.
-      forgotButton.textContent = "Send Reset Link";
-      
-      if (res && res.success) {
-        alert(res.message);
-        showLoginView();
-      } else {
-        alert("Error: " + (res ? res.message : "Unknown error"));
-      }
-    });
-  }
-});
+      // VALIDATE EMAIL
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!email
