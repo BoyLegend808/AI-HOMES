@@ -1,4 +1,4 @@
-// StudentHome Global Cloud Engine (v3.0 - Production Balanced)
+https://ai-homes.vercel.app/home/home.html// StudentHome Global Cloud Engine (v3.0 - Production Balanced)
 const AUTH_KEY = "studenthome_auth";
 const USERS_KEY = "studenthome_users";
 const DEFAULT_LOCAL_USERS = [
@@ -611,19 +611,22 @@ function logoutUser() {
   window.location.href = "../home/home.html";
 }
 
-async function resetPasswordForEmail(email) {
-  try {
-    const response = await fetch("/api/auth/forgot-password", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    const data = await response.json();
-    return { success: response.ok, message: data.message || data.error };
-  } catch (error) {
-    return { success: false, message: "Network error" };
-  }
-}
+// DISABLED: resetPasswordForEmail - was causing spam 500 errors on every page load
+// async function resetPasswordForEmail(email) {
+//   try {
+//     const response = await fetch("/api/auth/forgot-password", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({ email }),
+//     });
+//     const data = await response.json();
+//     return { success: response.ok, message: data.message || data.error };
+//   } catch (error) {
+//     return { success: false, message: "Network error" };
+//   }
+// }
+window.resetPasswordForEmail = async (email) => ({ success: false, message: "Function disabled - use forgot-password form in auth.html" });
+
 
 async function updateUserPassword(newPassword) {
   if (!sb_client) return { success: false, message: "Cloud offline." };

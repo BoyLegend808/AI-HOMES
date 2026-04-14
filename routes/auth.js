@@ -6,6 +6,10 @@ const nodemailer = require("nodemailer");
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
+console.log("Auth routes loaded. EMAIL_USER:", !!process.env.EMAIL_USER);
+console.log("Supabase anon:", !!process.env.SUPABASE_ANON_KEY);
+console.log("Supabase service:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+
 // Initialize Supabase client (anon key for regular operations)
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -27,17 +31,30 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Test transporter on startup
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("Email transporter ERROR:", error);
+  } else {
+    console.log("Email transporter ready");
+  }
+});
+
 // POST /api/auth/forgot-password
 router.post("/forgot-password", async (req, res) => {
   try {
+    console.log("Forgot password called with email:", req.body.email);
     const { email } = req.body;
 
     // Find user by email in profiles
+    console.log("Querying profiles for email:", email.toLowerCase());
     const { data: user, error } = await supabase
       .from("profiles")
       .select("id, email")
       .eq("email", email.toLowerCase())
       .single();
+
+    console.log("User query result:", !!user, error?.message);
 
     // Always send the same message for security
     if (error || !user) {
@@ -49,6 +66,7 @@ router.post("/forgot-password", async (req, res) => {
     // Generate token and expiry
     const token = crypto.randomBytes(32).toString("hex");
     const expiry = Date.now() + 3600000; // 1 hour
+    console.log("Generated token, expiry:", expiry);
 
     // Store token in database
     const { error: updateError } = await supabase
@@ -57,13 +75,17 @@ router.post("/forgot-password", async (req, res) => {
       .eq("id", user.id);
 
     if (updateError) {
-      console.error("Update error:", updateError);
+      console.error("DB UPDATE ERROR:", updateError);
       return res.status(500).json({ error: "Server error" });
     }
 
+    console.log("Token stored successfully, sending email to:", user.email);
+
     // Send reset email
-    const resetLink = `${process.env.CLIENT_URL}/reset-password.html?token=${token}`;
-    await transporter.sendMail({
+    const resetLink = `${process.env.CLIENT_URL}/reset-password/reset-password.html?token=${token}`;
+    console.log("Reset link:", resetLink);
+
+    const mailOptions = {
       from: `"StudentHome" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: "Reset Your StudentHome Password",
@@ -74,11 +96,15 @@ router.post("/forgot-password", async (req, res) => {
         <p>This link expires in 1 hour.</p>
         <p>If you did not request this, ignore this email.</p>
       `,
-    });
+    };
+
+    console.log("About to send email...");
+    await transporter.sendMail(mailOptions);
+    console.log("Email sent successfully!");
 
     res.json({ message: "If this email is registered, you'll get a link." });
   } catch (err) {
-    console.error(err);
+    console.error("FORGOT-PASSWORD FULL ERROR:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -86,6 +112,7 @@ router.post("/forgot-password", async (req, res) => {
 // POST /api/auth/reset-password
 router.post("/reset-password", async (req, res) => {
   try {
+    console.log("Reset password called with token length:", req.body.token?.length);
     const { token, newPassword } = req.body;
 
     // Validate password format
@@ -103,6 +130,8 @@ router.post("/reset-password", async (req, res) => {
       .gt("resetExpiry", Date.now())
       .single();
 
+    console.log("Token validation:", !!user, error?.message);
+
     if (error || !user) {
       return res
         .status(400)
@@ -110,13 +139,14 @@ router.post("/reset-password", async (req, res) => {
     }
 
     // Update password in Supabase auth using admin client
+    console.log("Updating password for user.id:", user.id);
     const { error: updateError } =
       await supabaseAdmin.auth.admin.updateUserById(user.id, {
         password: newPassword,
       });
 
     if (updateError) {
-      console.error("Password update error:", updateError);
+      console.error("PASSWORD UPDATE ERROR:", updateError);
       return res.status(500).json({ error: "Failed to update password." });
     }
 
@@ -135,12 +165,13 @@ router.post("/reset-password", async (req, res) => {
       // Don't fail here - password was updated successfully
     }
 
+    console.log("Password reset successful for:", user.email);
     res.json({
       message:
         "Password reset successful. You can now log in with your new password.",
     });
   } catch (err) {
-    console.error("Reset password error:", err);
+    console.error("RESET-PASSWORD FULL ERROR:", err);
     res.status(500).json({ error: "Server error. Please try again." });
   }
 });
@@ -177,3 +208,4 @@ router.post("/verify-reset-token", async (req, res) => {
 });
 
 module.exports = router;
+
