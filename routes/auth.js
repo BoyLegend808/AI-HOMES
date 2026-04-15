@@ -5,26 +5,34 @@ const nodemailer = require("nodemailer");
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
-console.log("Auth routes loaded. EMAIL_USER:", !!process.env.EMAIL_USER);
-console.log("Supabase anon:", !!process.env.SUPABASE_ANON_KEY);
-console.log("Supabase service:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
+console.log("------------------------------------------");
+console.log("AUTH SERVICE INITIALIZATION:");
+console.log("- EMAIL_USER:", process.env.EMAIL_USER || "MISSING");
+console.log("- SUPABASE_URL:", process.env.SUPABASE_URL ? "SET (ends with " + process.env.SUPABASE_URL.slice(-5) + ")" : "MISSING");
+console.log("- SUPABASE_ANON:", process.env.SUPABASE_ANON_KEY ? "SET" : "MISSING");
+console.log("- SUPABASE_SERVICE:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "MISSING");
+console.log("------------------------------------------");
 
 // Initialize Supabase client safely
 const getSupabase = () => {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
-    console.error("CRITICAL: SUPABASE_URL or SUPABASE_ANON_KEY is missing from environment variables.");
+  const url = process.env.SUPABASE_URL?.trim();
+  const anon = process.env.SUPABASE_ANON_KEY?.trim();
+  if (!url || !anon) {
+    console.error("CRITICAL: SUPABASE_URL or SUPABASE_ANON_KEY is missing.");
     return null;
   }
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  return createClient(url, anon);
 };
 
 // Initialize Supabase admin client safely
 const getSupabaseAdmin = () => {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  const url = process.env.SUPABASE_URL?.trim();
+  const service = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!url || !service) {
     console.error("CRITICAL: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.");
     return null;
   }
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  return createClient(url, service);
 };
 
 const supabase = getSupabase();
@@ -58,73 +66,98 @@ try {
 // POST /api/auth/forgot-password
 router.post("/forgot-password", async (req, res) => {
   try {
-    if (!supabase) return res.status(500).json({ error: "Supabase client not initialized. Check ENV variables." });
-    if (!transporter) return res.status(500).json({ error: "Email service not configured. Check ENV variables." });
+    // Re-verify client initialization on each request to be safe
+    const activeSupabase = getSupabase() || supabase;
+    const activeTransporter = transporter;
 
-    console.log("Forgot password called with email:", req.body.email);
+    if (!activeSupabase) {
+      console.error("FORGOT-PASSWORD: Supabase client missing");
+      return res.status(500).json({ error: "Database connection not initialized" });
+    }
+    if (!activeTransporter) {
+      console.error("FORGOT-PASSWORD: Email transporter missing");
+      return res.status(500).json({ error: "Email service not configured on server" });
+    }
+
     const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email is required" });
+    console.log("Forgot password request for:", email);
 
-    // Find user by email in profiles
-    console.log("Querying profiles for email:", email.toLowerCase());
-    const { data: user, error } = await supabase
+    if (!email) {
+      return res.status(400).json({ error: "Email is required" });
+    }
+
+    // Find user by email in profiles (Use Admin client to bypass RLS)
+    const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
+    if (!activeAdmin) {
+       console.error("FORGOT-PASSWORD: Admin client missing");
+       return res.status(500).json({ error: "Server admin configuration missing" });
+    }
+
+    const { data: user, error: queryError } = await activeAdmin
       .from("profiles")
       .select("id, email")
-      .eq("email", email.toLowerCase())
+      .eq("email", email.toLowerCase().trim())
       .single();
 
-    console.log("User query result:", !!user, error?.message);
+    if (queryError) {
+      console.warn("User lookup error (likely not found):", queryError.message);
+      // For security, return success even if user not found
+      return res.json({ message: "If this email is registered, you'll get a link shortly." });
+    }
 
-    // Always send the same message for security
-    if (error || !user) {
-      return res.json({
-        message: "If this email is registered, you'll get a link.",
-      });
+    if (!user) {
+      return res.json({ message: "If this email is registered, you'll get a link shortly." });
     }
 
     // Generate token and expiry
     const token = crypto.randomBytes(32).toString("hex");
     const expiry = Date.now() + 3600000; // 1 hour
-    console.log("Generated token, expiry:", expiry);
 
     // Store token in database
-    const { error: updateError } = await supabase
+    const { error: updateError } = await activeSupabase
       .from("profiles")
       .update({ resetToken: token, resetExpiry: expiry })
       .eq("id", user.id);
 
     if (updateError) {
-      console.error("DB UPDATE ERROR:", updateError);
-      return res.status(500).json({ error: "Server error" });
+      console.error("FORGOT-PASSWORD: DB UPDATE ERROR:", updateError);
+      return res.status(500).json({ error: "Failed to generate reset token" });
     }
 
-    console.log("Token stored successfully, sending email to:", user.email);
-
     // Send reset email
-    const resetLink = `${process.env.CLIENT_URL}/reset-password/reset-password.html?token=${token}`;
-    console.log("Reset link:", resetLink);
-
+    const clientUrl = process.env.CLIENT_URL || req.headers.origin || "https://ai-homes.vercel.app";
+    const resetLink = `${clientUrl}/reset-password/reset-password.html?token=${token}`;
+    
     const mailOptions = {
-      from: `"StudentHome" <${process.env.EMAIL_USER}>`,
+      from: `"StudentHome Support" <${process.env.EMAIL_USER}>`,
       to: user.email,
       subject: "Reset Your StudentHome Password",
       html: `
-        <h2>Password Reset</h2>
-        <p>Click the button below to reset your password:</p>
-        <a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Reset Password</a>
-        <p>This link expires in 1 hour.</p>
-        <p>If you did not request this, ignore this email.</p>
+        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #4CAF50;">Password Reset Request</h2>
+          <p>Hello,</p>
+          <p>We received a request to reset your password for StudentHome. Click the button below to proceed:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+          </div>
+          <p>This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+          <p style="font-size: 12px; color: #777;">StudentHome Platform - Secure Student Housing</p>
+        </div>
       `,
     };
 
-    console.log("About to send email...");
-    await transporter.sendMail(mailOptions);
-    console.log("Email sent successfully!");
+    console.log("Sending reset email to:", user.email);
+    await activeTransporter.sendMail(mailOptions);
+    console.log("Reset email sent successfully");
 
-    res.json({ message: "If this email is registered, you'll get a link." });
+    res.json({ message: "If this email is registered, you'll get a link shortly." });
   } catch (err) {
-    console.error("FORGOT-PASSWORD FULL ERROR:", err);
-    res.status(500).json({ error: "Server error" });
+    console.error("FORGOT-PASSWORD CRITICAL ERROR:", err);
+    res.status(500).json({ 
+      error: "Internal server error occurred.",
+      message: err.message
+    });
   }
 });
 

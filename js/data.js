@@ -208,18 +208,41 @@ async function fetchAllData() {
   // LAZY INIT CONFIG + CLIENT
   if (!SUPABASE_CONFIG) {
     try {
+      console.log('Fetching configuration from /api/config...');
       const res = await Promise.race([
         fetch('/api/config'),
-        new Promise((_,r)=>setTimeout(()=>r('timeout'),5000))
+        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')), 5000))
       ]);
+      
       if (!res.ok) {
-        throw new Error(`Config fetch HTTP error! status: ${res.status}`);
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
       }
-      SUPABASE_CONFIG = await res.json();
-      sb_client = window.supabase?.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
-      if (sb_client) window.sb_client = sb_client;
+      
+      const config = await res.json();
+      if (config && config.url && config.key) {
+        SUPABASE_CONFIG = config;
+        // Only re-initialize if different or not already initialized
+        if (!sb_client || sb_client.supabaseUrl !== config.url) {
+          sb_client = window.supabase?.createClient(config.url, config.key);
+          if (sb_client) window.sb_client = sb_client;
+          console.log('Supabase client initialized from server config.');
+        }
+      } else {
+        throw new Error('Server config returned empty URL or Key');
+      }
     } catch(e) {
-      console.warn('Config fetch failed:', e);
+      console.warn('Config fetch failed, using internal defaults:', e.message);
+      // Fallback: If we don't have an sb_client yet, use the hardcoded defaults
+      if (!sb_client && SUPABASE_URL && SUPABASE_KEY) {
+        console.log('Initializing Supabase with hardcoded fallback keys...');
+        try {
+          sb_client = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
+          if (sb_client) window.sb_client = sb_client;
+        } catch (initErr) {
+          console.error('Hardcoded fallback init failed:', initErr);
+        }
+      }
     }
   }
   
