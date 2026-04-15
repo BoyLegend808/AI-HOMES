@@ -212,6 +212,9 @@ async function fetchAllData() {
         fetch('/api/config'),
         new Promise((_,r)=>setTimeout(()=>r('timeout'),5000))
       ]);
+      if (!res.ok) {
+        throw new Error(`Config fetch HTTP error! status: ${res.status}`);
+      }
       SUPABASE_CONFIG = await res.json();
       sb_client = window.supabase?.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.key);
       if (sb_client) window.sb_client = sb_client;

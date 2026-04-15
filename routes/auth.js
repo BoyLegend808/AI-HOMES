@@ -9,41 +9,61 @@ console.log("Auth routes loaded. EMAIL_USER:", !!process.env.EMAIL_USER);
 console.log("Supabase anon:", !!process.env.SUPABASE_ANON_KEY);
 console.log("Supabase service:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-// Initialize Supabase client (anon key for regular operations)
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY || "",
-);
-
-// Initialize Supabase admin client (service role key for password updates)
-const supabaseAdmin = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY,
-);
-
-// Email sender setup
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-// Test transporter on startup
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Email transporter ERROR:", error);
-  } else {
-    console.log("Email transporter ready");
+// Initialize Supabase client safely
+const getSupabase = () => {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+    console.error("CRITICAL: SUPABASE_URL or SUPABASE_ANON_KEY is missing from environment variables.");
+    return null;
   }
-});
+  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+};
+
+// Initialize Supabase admin client safely
+const getSupabaseAdmin = () => {
+  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    console.error("CRITICAL: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.");
+    return null;
+  }
+  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+};
+
+const supabase = getSupabase();
+const supabaseAdmin = getSupabaseAdmin();
+
+// Email sender setup safely
+let transporter = null;
+try {
+  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+    transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+
+    /* 
+    transporter.verify((error) => {
+      if (error) console.error("Email transporter ERROR:", error);
+      else console.log("Email transporter ready");
+    });
+    */
+  } else {
+    console.warn("EMAIL_USER or EMAIL_PASS missing. Email features will fail.");
+  }
+} catch (e) {
+  console.error("Failed to initialize email transporter:", e);
+}
 
 // POST /api/auth/forgot-password
 router.post("/forgot-password", async (req, res) => {
   try {
+    if (!supabase) return res.status(500).json({ error: "Supabase client not initialized. Check ENV variables." });
+    if (!transporter) return res.status(500).json({ error: "Email service not configured. Check ENV variables." });
+
     console.log("Forgot password called with email:", req.body.email);
     const { email } = req.body;
+    if (!email) return res.status(400).json({ error: "Email is required" });
 
     // Find user by email in profiles
     console.log("Querying profiles for email:", email.toLowerCase());
@@ -111,6 +131,9 @@ router.post("/forgot-password", async (req, res) => {
 // POST /api/auth/reset-password
 router.post("/reset-password", async (req, res) => {
   try {
+    if (!supabase) return res.status(500).json({ error: "Supabase client not initialized." });
+    if (!supabaseAdmin) return res.status(500).json({ error: "Supabase admin client not initialized." });
+
     console.log("Reset password called with token length:", req.body.token?.length);
     const { token, newPassword } = req.body;
 
@@ -179,6 +202,7 @@ router.post("/reset-password", async (req, res) => {
 // Optional endpoint to validate reset token before showing form
 router.post("/verify-reset-token", async (req, res) => {
   try {
+    if (!supabase) return res.status(500).json({ error: "Supabase client not initialized." });
     const { token } = req.body;
 
     if (!token) {

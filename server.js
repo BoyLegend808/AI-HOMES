@@ -14,6 +14,7 @@ app.use('/js', express.static(path.join(__dirname, 'js')));
 
 
 // API Routes
+app.get("/api/health", (req, res) => res.json({ status: "ok", time: new Date().toISOString() }));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/config", require("./routes/config"));
 
@@ -28,7 +29,9 @@ app.use((req, res) => {
   }
 
   // DO NOT handle /api routes here - they are handled by previous routes
-  if (urlPath.startsWith('/api/')) return;
+  if (urlPath.startsWith('/api/')) {
+    return res.status(404).json({ error: "API route not found: " + urlPath });
+  }
 
   // Try to find the file
   let filePath = path.join(__dirname, urlPath);
@@ -65,6 +68,16 @@ app.use((req, res) => {
   } else {
     res.status(404).send("File Not Found: " + urlPath);
   }
+});
+
+// Global Error Handler
+app.use((err, req, res, next) => {
+  console.error("GLOBAL ERROR:", err);
+  res.status(500).json({ 
+    error: "Global server error", 
+    message: err.message,
+    path: req.path
+  });
 });
 
 if (process.env.NODE_ENV !== 'production') {
