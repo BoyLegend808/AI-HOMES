@@ -8,7 +8,10 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(express.static(__dirname));
+// Serve static assets from specific directories only
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use('/js', express.static(path.join(__dirname, 'js')));
+
 
 // API Routes
 app.use("/api/auth", require("./routes/auth"));
@@ -23,6 +26,9 @@ app.use((req, res) => {
   if (urlPath === "/" || urlPath === "/index.html") {
     return res.redirect("/onboarding/onboarding.html");
   }
+
+  // DO NOT handle /api routes here - they are handled by previous routes
+  if (urlPath.startsWith('/api/')) return;
 
   // Try to find the file
   let filePath = path.join(__dirname, urlPath);

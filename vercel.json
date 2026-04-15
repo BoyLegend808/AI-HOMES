@@ -1,17 +1,13 @@
 {
-  "buildCommand": "echo 'Static site with serverless functions'",
-  "outputDirectory": ".",
-  "redirects": [
-    {
-      "source": "/",
-      "destination": "/home/home.html",
-      "permanent": true
-    }
-  ],
+  "version": 2,
   "rewrites": [
     {
       "source": "/api/(.*)",
       "destination": "/api/index.js"
+    },
+    {
+      "source": "/",
+      "destination": "/home/home.html"
     }
   ]
 }
