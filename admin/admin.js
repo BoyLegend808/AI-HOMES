@@ -149,15 +149,31 @@ window.triggerUniLogoUpload = (uniId) => {
   input.onchange = async (e) => {
     const file = e.target.files[0];
     if (file && window.uploadPhotoToStorage && window.updateUniversityLogo) {
-      const url = await window.uploadPhotoToStorage(file);
-      if (url) {
-        await window.updateUniversityLogo(uniId, url);
-        if (window.fetchAllData) await window.fetchAllData();
+      if (window.showToast) window.showToast("Uploading logo...", "info");
+      
+      try {
+        const url = await window.uploadPhotoToStorage(file);
+        if (url) {
+          const res = await window.updateUniversityLogo(uniId, url);
+          if (res.success) {
+            if (window.showToast) window.showToast("Logo updated!", "success");
+            if (window.fetchAllData) await window.fetchAllData();
+          } else {
+            throw new Error(res.error?.message || "DB update failed");
+          }
+        } else {
+          throw new Error("Upload failed (storage error)");
+        }
+      } catch (err) {
+        console.error("Logo Upload Error:", err);
+        if (window.showToast) window.showToast("Upload failed: " + err.message, "error");
+        else alert("Logo upload failed: " + err.message);
       }
     }
   };
   input.click();
 };
+
 
 window.removeUniversity = async (uniId) => {
   if (

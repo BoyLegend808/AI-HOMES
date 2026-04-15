@@ -322,12 +322,17 @@ if (!sb_client) {
     }
 
     // UNIS: Fallback to DEFAULT_UNIVERSITIES
-    if (unisRes.status === "fulfilled" && unisRes.value.data?.length > 0) {
+    if (unisRes.status === "fulfilled" && unisRes.value.data) {
       window.CLOUD_UNIVERSITIES_DATA = unisRes.value.data;
       const transformed = {};
       unisRes.value.data.forEach((u) => transformed[u.name] = u.locations);
-      CLOUD_UNIVERSITIES = transformed;
+      if (Object.keys(transformed).length > 0) {
+        CLOUD_UNIVERSITIES = transformed;
+      }
+    } else {
+      console.warn('Unis fetch failed or zero results');
     }
+
 
     // FAVORITES: Merge safely
     if (favsRes?.status === "fulfilled" && favsRes.value.data) {
@@ -514,13 +519,13 @@ function getUniversityLogo(uniName) {
 window.updateUniversityLogoScale = async (uniId, scale) => {
   if (!sb_client) return { success: false };
   try {
-    const { data, error } = await sb_client
+    const { error } = await sb_client
       .from("universities")
       .update({ logo_scale: parseFloat(scale) })
       .eq("id", uniId);
 
     if (!error) {
-      if (window.fetchAllData) window.fetchAllData();
+      if (window.fetchAllData) await window.fetchAllData();
       return { success: true };
     }
     return { success: false, error };
@@ -528,6 +533,72 @@ window.updateUniversityLogoScale = async (uniId, scale) => {
     return { success: false, error: e };
   }
 };
+
+window.updateUniversityLogo = async (uniId, url) => {
+  if (!sb_client) return { success: false };
+  try {
+    const { error } = await sb_client
+      .from("universities")
+      .update({ logo_url: url })
+      .eq("id", uniId);
+
+    if (!error) {
+      if (window.fetchAllData) await window.fetchAllData();
+      return { success: true };
+    }
+    return { success: false, error };
+  } catch (e) {
+    return { success: false, error: e };
+  }
+};
+
+window.addUniversity = async (name) => {
+  if (!sb_client) return { success: false };
+  try {
+    const { error } = await sb_client
+      .from("universities")
+      .insert([{ name, locations: [], logo_url: "", logo_scale: 1.1 }]);
+    if (!error) {
+      if (window.fetchAllData) await window.fetchAllData();
+      return { success: true };
+    }
+    return { success: false, error };
+  } catch (e) {
+    return { success: false, error: e };
+  }
+};
+
+window.addAreaToUniversity = async (schoolName, areaName) => {
+  if (!sb_client) return { success: false };
+  try {
+    // First get current areas
+    const { data } = await sb_client
+      .from("universities")
+      .select("id, locations")
+      .eq("name", schoolName)
+      .single();
+    
+    if (!data) return { success: false, error: { message: "University not found" } };
+    
+    const currentAreas = data.locations || [];
+    if (currentAreas.includes(areaName)) return { success: true }; // Already exists
+    
+    const { error } = await sb_client
+      .from("universities")
+      .update({ locations: [...currentAreas, areaName] })
+      .eq("id", data.id);
+      
+    if (!error) {
+      if (window.fetchAllData) await window.fetchAllData();
+      return { success: true };
+    }
+    return { success: false, error };
+  } catch (e) {
+    return { success: false, error: e };
+  }
+};
+
+
 
 /* ==========================================
    PRODUCTION AUTH
