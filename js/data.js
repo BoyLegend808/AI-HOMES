@@ -210,7 +210,7 @@ async function fetchAllData() {
     try {
       console.log('Fetching configuration from /api/config...');
       const res = await Promise.race([
-        fetch('/api/config'),
+        fetch(`/api/config?t=${Date.now()}`),
         new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')), 5000))
       ]);
       
