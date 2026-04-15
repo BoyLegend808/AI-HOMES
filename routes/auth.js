@@ -147,16 +147,18 @@ router.post("/forgot-password", async (req, res) => {
       `,
     };
 
-    console.log("Sending reset email to:", user.email);
-    await activeTransporter.sendMail(mailOptions);
-    console.log("Reset email sent successfully");
+    console.log("Attempting to send email via Gmail...");
+    const info = await activeTransporter.sendMail(mailOptions);
+    console.log("Reset email sent successfully. SMTP Response:", info.response);
+    if (info.messageId) console.log("Message ID:", info.messageId);
 
     res.json({ message: "If this email is registered, you'll get a link shortly." });
   } catch (err) {
     console.error("FORGOT-PASSWORD CRITICAL ERROR:", err);
     res.status(500).json({ 
       error: "Internal server error occurred.",
-      message: err.message
+      message: err.message,
+      code: err.code || 'UNKNOWN'
     });
   }
 });

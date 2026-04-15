@@ -8,6 +8,7 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
+console.log("SERVER STATUS:", process.env.VERCEL ? "Production (Vercel)" : "Local Development");
 // Serve static assets from specific directories only
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
 app.use('/js', express.static(path.join(__dirname, 'js')));
