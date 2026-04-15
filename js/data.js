@@ -216,7 +216,8 @@ async function fetchAllData() {
       
       if (!res.ok) {
         const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP error! status: ${res.status}`);
+        console.error('Config Error Details:', errorData);
+        throw new Error(errorData.details || errorData.error || `HTTP error! status: ${res.status}`);
       }
       
       const config = await res.json();

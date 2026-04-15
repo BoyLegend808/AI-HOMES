@@ -17,6 +17,7 @@ app.use('/js', express.static(path.join(__dirname, 'js')));
 app.get("/api/health", (req, res) => res.json({ status: "ok", time: new Date().toISOString() }));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/config", require("./routes/config"));
+app.use("/api/diag", require("./routes/diag"));
 
 
 // Handle all other routes by serving the appropriate HTML files
