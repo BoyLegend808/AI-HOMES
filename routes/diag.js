@@ -13,7 +13,22 @@ router.get('/', (req, res) => {
     supabase_url: process.env.SUPABASE_URL ? `Present (length ${process.env.SUPABASE_URL.length})` : 'MISSING',
     supabase_anon: process.env.SUPABASE_ANON_KEY ? 'Present' : 'MISSING',
     email_user: process.env.EMAIL_USER ? 'Present' : 'MISSING',
+    database_check: null,
   };
+
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const db = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    const { count, error } = await db.from('houses').select('*', { count: 'exact', head: true });
+    
+    if (error) {
+      info.database_check = `Error: ${error.message}`;
+    } else {
+      info.database_check = `Success: Found ${count} houses`;
+    }
+  } catch (e) {
+    info.database_check = `Crash: ${e.message}`;
+  }
 
   res.json(info);
 });
