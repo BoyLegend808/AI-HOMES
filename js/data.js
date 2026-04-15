@@ -1,4 +1,5 @@
-runing it from therhttps://ai-homes.vercel.app/home/home.html// StudentHome Global Cloud Engine (v3.0 - Production Balanced)
+// runing it from ther https://ai-homes.vercel.app/home/home.html
+// StudentHome Global Cloud Engine (v3.0 - Production Balanced)
 const AUTH_KEY = "studenthome_auth";
 const USERS_KEY = "studenthome_users";
 const DEFAULT_LOCAL_USERS = [
@@ -30,6 +31,7 @@ const DEFAULT_LOCAL_USERS = [
 const SUPABASE_URL = "https://loapruxjeolxyngmcszf.supabase.co";
 const SUPABASE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYXBydXhqZW9seHluZ21jc3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NDY4MzQsImV4cCI6MjA5MDMyMjgzNH0.t5H3u-L4M8lODuwWre4NHjKtR_qDboZBBwwzmEXXZh8";
+let SUPABASE_CONFIG = null;
 
 const DEFAULT_LISTINGS = [];
 

@@ -140,10 +140,31 @@ document.addEventListener("DOMContentLoaded", () => {
     alert("Registration Error: " + res.message);
   });
 
-
+  if (forgotButton) {
+    forgotButton.addEventListener("click", async () => {
       const emailInput = document.getElementById("forgot-email");
       const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
       
-      // VALIDATE EMAIL
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!email
+      if (!email || !emailRegex.test(email)) {
+        alert("Please enter a valid email address");
+        return;
+      }
+
+      forgotButton.disabled = true;
+      forgotButton.textContent = "Sending...";
+
+      const res = await window.resetPasswordForEmail(email);
+      
+      if (res.success) {
+        alert(res.message || "Check your email for the reset link.");
+        showLoginView();
+      } else {
+        alert(res.message || "Error sending reset email. Please try again later.");
+      }
+
+      forgotButton.disabled = false;
+      forgotButton.textContent = "Send Reset Link";
+    });
+  }
+});

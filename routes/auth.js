@@ -1,5 +1,7 @@
-
-
+const express = require("express");
+const router = express.Router();
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 const { createClient } = require("@supabase/supabase-js");
 require("dotenv").config();
 
@@ -10,7 +12,7 @@ console.log("Supabase service:", !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 // Initialize Supabase client (anon key for regular operations)
 const supabase = createClient(
   process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY,
+  process.env.SUPABASE_ANON_KEY || "",
 );
 
 // Initialize Supabase admin client (service role key for password updates)
