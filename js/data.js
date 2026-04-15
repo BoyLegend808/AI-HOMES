@@ -770,12 +770,6 @@ window.resetPasswordForEmail = async (email) => {
 };
 
 
-async function updateUserPassword(newPassword) {
-  if (!sb_client) return { success: false, message: "Cloud offline." };
-  const { error } = await sb_client.auth.updateUser({ password: newPassword });
-  return { success: !error, message: error ? error.message : "Updated!" };
-}
-
 /* ==========================================
    NAVIGATION
 ========================================== */
@@ -1011,7 +1005,6 @@ window.loginUser = loginUser;
 window.registerUser = registerUser;
 window.logoutUser = logoutUser;
 window.resetPasswordForEmail = resetPasswordForEmail;
-window.updateUserPassword = updateUserPassword;
 window.getUniversities = getUniversities;
 window.NIGERIA_UNIVERSITIES = getUniversities();
 window.resetSystemData = resetSystemData;

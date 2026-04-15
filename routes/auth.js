@@ -67,11 +67,11 @@ try {
 router.post("/forgot-password", async (req, res) => {
   try {
     // Re-verify client initialization on each request to be safe
-    const activeSupabase = getSupabase() || supabase;
+    const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
     const activeTransporter = transporter;
 
-    if (!activeSupabase) {
-      console.error("FORGOT-PASSWORD: Supabase client missing");
+    if (!activeAdmin) {
+      console.error("FORGOT-PASSWORD: Supabase admin client missing");
       return res.status(500).json({ error: "Database connection not initialized" });
     }
     if (!activeTransporter) {
@@ -87,12 +87,6 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     // Find user by email in profiles (Use Admin client to bypass RLS)
-    const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
-    if (!activeAdmin) {
-       console.error("FORGOT-PASSWORD: Admin client missing");
-       return res.status(500).json({ error: "Server admin configuration missing" });
-    }
-
     const { data: user, error: queryError } = await activeAdmin
       .from("profiles")
       .select("id, email")
@@ -113,8 +107,8 @@ router.post("/forgot-password", async (req, res) => {
     const token = crypto.randomBytes(32).toString("hex");
     const expiry = Date.now() + 3600000; // 1 hour
 
-    // Store token in database
-    const { error: updateError } = await activeSupabase
+    // Store token in database using admin client (bypass RLS)
+    const { error: updateError } = await activeAdmin
       .from("profiles")
       .update({ resetToken: token, resetExpiry: expiry })
       .eq("id", user.id);
@@ -179,8 +173,8 @@ router.post("/reset-password", async (req, res) => {
       });
     }
 
-    // Find user with valid token
-    const { data: user, error } = await supabase
+    // Find user with valid token using admin client (bypass RLS)
+    const { data: user, error } = await supabaseAdmin
       .from("profiles")
       .select("id, email, resetToken, resetExpiry")
       .eq("resetToken", token)
@@ -208,7 +202,7 @@ router.post("/reset-password", async (req, res) => {
     }
 
     // Clear the reset token after successful password update
-    const { error: clearTokenError } = await supabase
+    const { error: clearTokenError } = await supabaseAdmin
       .from("profiles")
       .update({
         resetToken: null,
@@ -237,7 +231,7 @@ router.post("/reset-password", async (req, res) => {
 // Optional endpoint to validate reset token before showing form
 router.post("/verify-reset-token", async (req, res) => {
   try {
-    if (!supabase) return res.status(500).json({ error: "Supabase client not initialized." });
+    if (!supabaseAdmin) return res.status(500).json({ error: "Supabase admin client not initialized." });
     const { token } = req.body;
 
     if (!token) {
@@ -245,7 +239,7 @@ router.post("/verify-reset-token", async (req, res) => {
     }
 
     // Check if token is valid and not expired
-    const { data: user, error } = await supabase
+    const { data: user, error } = await supabaseAdmin
       .from("profiles")
       .select("id, email")
       .eq("resetToken", token)
