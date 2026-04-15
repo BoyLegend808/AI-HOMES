@@ -86,21 +86,63 @@ router.post("/forgot-password", async (req, res) => {
       return res.status(400).json({ error: "Email is required" });
     }
 
-    // Find user by email in profiles (Use Admin client to bypass RLS)
-    const { data: user, error: queryError } = await activeAdmin
+    const normalizedEmail = String(email).toLowerCase().trim();
+
+    // First try lookup in profiles by email.
+    const { data: profileUser, error: queryError } = await activeAdmin
       .from("profiles")
       .select("id, email")
-      .eq("email", email.toLowerCase().trim())
-      .single();
+      .eq("email", normalizedEmail)
+      .maybeSingle();
 
     if (queryError) {
-      console.warn("User lookup error (likely not found):", queryError.message);
-      // For security, return success even if user not found
+      console.warn("Profile lookup error:", queryError.message);
+    }
+
+    let userId = profileUser?.id || null;
+    let userEmail = profileUser?.email || normalizedEmail;
+
+    // Fallback: find user in Supabase Auth (covers accounts where profiles.email is empty/missing).
+    if (!userId) {
+      let page = 1;
+      const perPage = 200;
+
+      while (page <= 10 && !userId) {
+        const { data: usersPage, error: usersError } =
+          await activeAdmin.auth.admin.listUsers({ page, perPage });
+
+        if (usersError) {
+          console.error("FORGOT-PASSWORD: Auth user lookup failed:", usersError.message);
+          break;
+        }
+
+        const users = usersPage?.users || [];
+        const authUser = users.find(
+          (u) => String(u.email || "").toLowerCase().trim() === normalizedEmail,
+        );
+
+        if (authUser) {
+          userId = authUser.id;
+          userEmail = authUser.email || normalizedEmail;
+          break;
+        }
+
+        if (users.length < perPage) break;
+        page += 1;
+      }
+    }
+
+    if (!userId) {
       return res.json({ message: "If this email is registered, you'll get a link shortly." });
     }
 
-    if (!user) {
-      return res.json({ message: "If this email is registered, you'll get a link shortly." });
+    // Ensure profile row has email populated for future fast lookups.
+    const { error: profileUpsertError } = await activeAdmin.from("profiles").upsert(
+      { id: userId, email: userEmail },
+      { onConflict: "id" },
+    );
+    if (profileUpsertError) {
+      console.warn("FORGOT-PASSWORD: profile email sync warning:", profileUpsertError.message);
     }
 
     // Generate token and expiry
@@ -111,7 +153,7 @@ router.post("/forgot-password", async (req, res) => {
     const { error: updateError } = await activeAdmin
       .from("profiles")
       .update({ resetToken: token, resetExpiry: expiry })
-      .eq("id", user.id);
+      .eq("id", userId);
 
     if (updateError) {
       console.error("FORGOT-PASSWORD: DB UPDATE ERROR:", updateError);
@@ -124,7 +166,7 @@ router.post("/forgot-password", async (req, res) => {
     
     const mailOptions = {
       from: `"StudentHome Support" <${process.env.EMAIL_USER}>`,
-      to: user.email,
+      to: userEmail,
       subject: "Reset Your StudentHome Password",
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
