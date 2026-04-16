@@ -105,6 +105,46 @@ let CLOUD_UNIVERSITIES = {};
 let CACHED_FAVORITES = [];
 window.hasFetchedHouses = false;
 
+// Lightweight client-side cache to reduce perceived load time on DB-driven pages.
+const CACHE_KEY = "studenthome_cache_v1";
+function loadCachedDataFromStorage() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return false;
+    const parsed = JSON.parse(raw);
+    const listings = Array.isArray(parsed?.listings) ? parsed.listings : null;
+    const reviews = Array.isArray(parsed?.reviews) ? parsed.reviews : null;
+    const unis = parsed?.universities && typeof parsed.universities === "object" ? parsed.universities : null;
+
+    if (listings && listings.length) CACHED_LISTINGS = listings.map(normalizeListing);
+    if (reviews && reviews.length) CACHED_REVIEWS = reviews;
+    if (unis && Object.keys(unis).length) CLOUD_UNIVERSITIES = unis;
+
+    if (CACHED_LISTINGS.length) window.hasFetchedHouses = true;
+    syncUniversitiesCache();
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function saveCachedDataToStorage() {
+  try {
+    const payload = {
+      updatedAt: Date.now(),
+      listings: CACHED_LISTINGS,
+      reviews: CACHED_REVIEWS,
+      universities: CLOUD_UNIVERSITIES,
+    };
+    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
+  } catch (e) {
+    // ignore storage quota / privacy errors
+  }
+}
+
+// Load cached data ASAP (then refresh from cloud in background)
+loadCachedDataFromStorage();
+
 function normalizeListing(listing = {}) {
   const school = listing.school || "";
   const area = listing.area || "";
@@ -202,8 +242,9 @@ const SYSTEM_ADMINS = [
    DATA ENGINE
 ========================================== */
 async function fetchAllData() {
-  if (fetchAllData.inFlight) return;
+  if (fetchAllData.inFlight) return fetchAllData.inFlightPromise;
   fetchAllData.inFlight = true;
+  fetchAllData.inFlightPromise = (async () => {
   
   // LAZY INIT CONFIG + CLIENT
   if (!SUPABASE_CONFIG) {
@@ -250,7 +291,6 @@ async function fetchAllData() {
 if (!sb_client) {
     console.warn('Using fallback data - no Supabase');
     useFallbackData();
-    fetchAllData.inFlight = false;
     window.hasFetchedHouses = true;
     refreshAllPages();
     return;
@@ -258,38 +298,6 @@ if (!sb_client) {
   
   console.log('Cloud fetch START');
   try {
-    const user = getCurrentUser();
-    const calls = [
-      sb_client
-        .from("houses")
-        .select("*")
-        .order("created_at", { ascending: false }),
-      sb_client
-        .from("reviews")
-        .select("*")
-        .order("created_at", { ascending: false }),
-      sb_client.from("universities").select("*"),
-    ];
-
-    if (user) {
-      try {
-        const { data: userData } = await sb_client.auth.getUser();
-        if (userData?.user) {
-          calls.push(
-            sb_client
-              .from("favorites")
-              .select("house_id")
-              .eq("user_id", userData.user.id),
-          );
-        }
-      } catch (authErr) {
-        console.warn(
-          "Auth check timed out or failed, proceeding with public fetch.",
-          authErr,
-        );
-      }
-    }
-
     // TIMEOUT-RACED PARALLEL CALLS (5s max each)
     const TIMEOUT = 5000;
     const safeCall = (p) => Promise.race([
@@ -340,14 +348,20 @@ if (!sb_client) {
       CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...cloudIds])];
       localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
     }
+
+    // Persist for fast startup next time
+    saveCachedDataToStorage();
   } catch (e) {
     console.error('Cloud batch failed:', e);
     useFallbackData();
 } finally {
     window.hasFetchedHouses = true;
     fetchAllData.inFlight = false;
+    fetchAllData.inFlightPromise = null;
     refreshAllPages();
   }
+  })();
+  return fetchAllData.inFlightPromise;
 }
 
 function useFallbackData() {
