@@ -30,8 +30,7 @@ body {
   z-index: 2;
   padding: 1rem;
   border-radius: 24px;
-  background: rgba(2, 6, 23, 0.25);
-  backdrop-filter: blur(2px);
+  background: transparent;
 }
 
 .hero-logo {
