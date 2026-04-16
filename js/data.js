@@ -854,6 +854,24 @@ function getEmptyStateHTML(title, message) {
   return `<div class="empty-state"><h3>${title}</h3><p>${message}</p></div>`;
 }
 
+function ensureGlobalFavicon() {
+  const faviconHref = "/assets/logo.png";
+  const existing =
+    document.querySelector("link[rel='icon']") ||
+    document.querySelector("link[rel='shortcut icon']");
+
+  if (existing) {
+    existing.setAttribute("href", faviconHref);
+    return;
+  }
+
+  const link = document.createElement("link");
+  link.rel = "icon";
+  link.type = "image/png";
+  link.href = faviconHref;
+  document.head.appendChild(link);
+}
+
 async function renderGlobalNav() {
   const head = document.querySelector(".top-nav");
   if (!head) return;
@@ -999,6 +1017,8 @@ function populateUniversitySelects() {
 
 // INITIALIZATION
 document.addEventListener("DOMContentLoaded", () => {
+  ensureGlobalFavicon();
+
   if (!document.querySelector('link[href*="font-awesome"]')) {
     const fa = document.createElement("link");
     fa.rel = "stylesheet";
