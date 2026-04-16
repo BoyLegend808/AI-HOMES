@@ -34,16 +34,16 @@
 
     <main class="admin-dashboard">
       <div class="container">
-        <div class="dashboard-header">
+           <div class="dashboard-header">
            <div class="header-content">
-              <h1 id="form-title">House Creator</h1>
-              <p>Add full property details and upload gallery photos.</p>
+              <h1 id="form-title">Property Creator</h1>
+              <p>Create full property details and upload gallery photos.</p>
            </div>
-           <a href="../admin/admin.html" class="btn btn-secondary">← Back to Dashboard</a>
+           <a href="../admin/admin.html" class="btn btn-secondary" id="back-link">← Back to Dashboard</a>
         </div>
 
         <section class="listings-section" style="padding: 2.5rem;">
-           <div id="form-skeleton" class="admin-form-skeleton" style="display:none;">
+           <div id="form-skeleton" class="admin-form-skeleton" style="display:grid;">
               <div class="skeleton-short"></div>
               <div class="skeleton-block"></div>
               <div class="skeleton-block"></div>
@@ -65,7 +65,7 @@
               <div class="skeleton-button"></div>
            </div>
 
-           <div id="form-body" style="max-width: 800px; margin: 0 auto;">
+           <div id="form-body" style="max-width: 800px; margin: 0 auto; display:none;">
               <div class="stats-grid" style="grid-template-columns: 1fr; gap: 1.5rem;">
                  
                  <div class="form-group">

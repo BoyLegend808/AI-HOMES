@@ -46,6 +46,7 @@
             <p>Welcome back! Here's what's happening today.</p>
           </div>
           <a href="../admin-form/admin-form.html" class="btn btn-primary">+ Add New Property</a>
+          <a href="../admin/properties.html" class="btn btn-secondary" style="margin-left: 0.75rem;">Manage Properties</a>
         </div>
 
       <button class="back-link-btn" onclick="window.location.href='../home/home.html'">
@@ -82,10 +83,18 @@
             <h2>Property Management</h2>
             <div class="search-wrapper">
               <input type="text" id="admin-search" placeholder="Search by name, school or area...">
+              <select id="admin-status-filter">
+                <option value="all">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Hidden">Hidden</option>
+              </select>
+              <select id="admin-uni-filter" style="min-width: 200px;">
+                <option value="all">All Universities</option>
+              </select>
             </div>
           </div>
 
-          <div id="admin-loading" class="admin-loading" style="display:none;">
+          <div id="admin-loading" class="admin-loading" style="display:flex;">
             <!-- Modern Table Row Skeletons -->
             <div class="skeleton-row-box">
               <div class="skel-col prop-info">
@@ -106,7 +115,7 @@
           </div>
 
           <!-- Desktop Table (Hidden on small screens via CSS) -->
-          <div class="listings-table-container">
+          <div class="listings-table-container" style="display:none;">
             <table>
               <thead>
                 <tr>
@@ -123,7 +132,7 @@
           </div>
 
           <!-- Mobile Cards (Visible only on small screens via CSS) -->
-          <div class="listings-cards" id="listings-cards">
+          <div class="listings-cards" id="listings-cards" style="display:none;">
             <!-- Rendered by JS -->
           </div>
         </section>
@@ -158,8 +167,14 @@
           </div>
           <p style="color:var(--text-muted); margin-bottom:1.5rem;">Upload the official University logos here. They will
             appear powerfully on student navigation bars.</p>
+          <div id="uni-loading" class="uni-loading" style="display:flex;">
+            <div class="uni-skel-card"></div>
+            <div class="uni-skel-card"></div>
+            <div class="uni-skel-card"></div>
+            <div class="uni-skel-card"></div>
+          </div>
           <div id="uni-cards"
-            style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
+            style="display:none; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
             <!-- Rendered by JS -->
           </div>
         </section>

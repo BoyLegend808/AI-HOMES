@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>StudentHome - Property Management</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../js/nav.css" />
+    <link rel="stylesheet" href="admin.css" />
+  </head>
+
+  <body>
+    <div class="app-container">
+      <header class="top-nav">
+        <div class="nav-left">
+          <div
+            class="logo"
+            onclick="window.location.href='../home/home.html'"
+          >
+            <img
+              src="../assets/logo.png"
+              alt="StudentHomes"
+              class="brand-logo"
+            />
+          </div>
+        </div>
+        <div class="nav-center">
+          <nav class="nav-links">
+            <ul class="nav-list is-loading">
+              <li></li><li></li><li></li><li></li><li></li>
+            </ul>
+          </nav>
+        </div>
+        <div class="nav-right">
+          <button
+            class="mobile-menu-toggle"
+            aria-label="Toggle menu"
+          >
+            <span class="hamburger-box">
+              <span class="hamburger-inner"></span>
+            </span>
+          </button>
+        </div>
+      </header>
+
+      <div class="nav-overlay"></div>
+
+      <main class="admin-dashboard">
+        <div class="container">
+          <div class="dashboard-header">
+            <div class="header-content">
+              <h1>Property Management</h1>
+              <p>Edit listings, filter results, and keep everything updated.</p>
+            </div>
+            <a
+              href="../admin/admin.html"
+              class="btn btn-secondary"
+            >
+              <- Back to Dashboard
+            </a>
+          </div>
+
+          <div class="stats-grid" style="margin-bottom: 1.25rem;">
+            <div class="stat-card">
+              <div class="stat-icon">HOUSING</div>
+              <div class="stat-content">
+                <h3 id="prop-count">0</h3>
+                <p>Total Houses</p>
+              </div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-icon">ACTIVE</div>
+              <div class="stat-content">
+                <h3 id="active-count">0</h3>
+                <p>Active Listings</p>
+              </div>
+            </div>
+          </div>
+
+          <section class="listings-section">
+            <div class="section-header">
+              <h2>Property Management</h2>
+              <div class="search-wrapper">
+                <input
+                  type="text"
+                  id="admin-search"
+                  placeholder="Search by name, school or area..."
+                />
+                <select id="admin-status-filter">
+                  <option value="all">All Statuses</option>
+                  <option value="Active">Active</option>
+                  <option value="Hidden">Hidden</option>
+                </select>
+                <select id="admin-uni-filter" style="min-width: 200px;">
+                  <option value="all">All Universities</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="admin-loading" class="admin-loading" style="display:flex;">
+              <div class="skeleton-row-box">
+                <div class="skel-col prop-info">
+                  <div class="skel-img"></div>
+                  <div class="skel-lines">
+                    <div class="skel-line title"></div>
+                    <div class="skel-line sub"></div>
+                  </div>
+                </div>
+                <div class="skel-col price"></div>
+                <div class="skel-col status"></div>
+                <div class="skel-col actions"></div>
+              </div>
+              <div class="skeleton-row-box"></div>
+              <div class="skeleton-row-box"></div>
+              <div class="skeleton-row-box"></div>
+              <div class="skeleton-row-box"></div>
+            </div>
+
+            <div class="listings-table-container" style="display:none;">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Property</th>
+                    <th>Price</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="listings-body"></tbody>
+              </table>
+            </div>
+
+            <div class="listings-cards" id="listings-cards" style="display:none;"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script
+      src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
+    <script src="../js/data.js"></script>
+    <script src="properties.js"></script>
+  </body>
+</html>
+

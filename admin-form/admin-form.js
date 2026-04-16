@@ -1,4 +1,5 @@
 let editingId = null;
+let backPage = "admin";
 let uploadedPhotos = []; // Holds the final URLs 
 let pendingFiles = []; // Holds actual files waiting to be uploaded to Bucket
 
@@ -207,7 +208,9 @@ const submitHouse = async () => {
     if (!res.success) alert("Listing Error: " + res.error?.message);
     else alert("Property Listed Successfully!");
   }
-  window.location.href = "../admin/admin.html";
+  const target =
+    backPage === "properties" ? "../admin/properties.html" : "../admin/admin.html";
+  window.location.href = target;
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -246,48 +249,79 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const urlParams = new URLSearchParams(window.location.search);
   editingId = urlParams.get("edit");
+  backPage = urlParams.get("back") || "admin";
+
+  const backLinkEl = document.getElementById("back-link");
+  if (backLinkEl) {
+    backLinkEl.href =
+      backPage === "properties" ? "../admin/properties.html" : "../admin/admin.html";
+  }
+
+  const formTitleEl = document.getElementById("form-title");
+  const formSubTextEl = formTitleEl?.closest(".header-content")?.querySelector("p");
+  const submitBtnEl = document.getElementById("btn-submit");
 
   if (editingId) {
     toggleSkeleton(true);
+    if (formTitleEl) formTitleEl.textContent = "Edit Property";
+    if (formSubTextEl)
+      formSubTextEl.textContent = "Update listing details and gallery photos.";
+    if (submitBtnEl) submitBtnEl.textContent = "Save Changes";
+
+    // Ensure cached houses exist (best case)
     if (window.fetchAllData) {
       await window.fetchAllData();
     }
-    const listing = window.getListingById(editingId);
-    if (listing) {
-      document.getElementById("form-title").textContent = "Update Listing";
-      document.getElementById("add-title").value = listing.title;
-      document.getElementById("add-location").value =
-        listing.exactLocation || "";
-      document.getElementById("add-price").value = listing.price;
-      document.getElementById("add-rooms").value = listing.rooms || 1;
-      document.getElementById("add-type").value = listing.type;
-      document.getElementById("add-phone").value = listing.contact?.phone || "";
-      document.getElementById("add-wa").value = listing.contact?.whatsapp || "";
-      document.getElementById("add-desc").value =
-        listing.description || listing.desc || "";
 
-      document.getElementById("add-school").value = listing.school;
-      populateAreas(listing.school);
-      document.getElementById("add-area").value = listing.area;
-
-      if (listing.photos && listing.photos.length > 0) {
-        uploadedPhotos = listing.photos;
-        const container = document.getElementById("preview-container");
-        const label = document.getElementById("upload-label");
-        if (label) label.style.display = "none";
-        listing.photos.forEach((img) => {
-          const div = document.createElement("div");
-          div.style =
-            "width:100px; height:80px; position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--accent);";
-          div.innerHTML = `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">`;
-          container.appendChild(div);
-        });
-      }
-    } else {
-      notify("Listing not found in the database.", "error");
+    // Prefer cache, but fall back to DB fetch if cache isn't ready.
+    let listing = window.getListingById(editingId);
+    if (!listing && window.getListingByIdFromDb) {
+      listing = await window.getListingByIdFromDb(editingId);
     }
+
+    if (!listing) {
+      notify("Property not found. It may have been deleted.", "error");
+      toggleSkeleton(false);
+      return;
+    }
+
+    document.getElementById("add-title").value = listing.title;
+    document.getElementById("add-location").value =
+      listing.exactLocation || "";
+    document.getElementById("add-price").value = listing.price;
+    document.getElementById("add-rooms").value = listing.rooms || 1;
+    document.getElementById("add-type").value = listing.type;
+    document.getElementById("add-phone").value = listing.contact?.phone || "";
+    document.getElementById("add-wa").value = listing.contact?.whatsapp || "";
+    document.getElementById("add-desc").value =
+      listing.description || listing.desc || "";
+
+    document.getElementById("add-school").value = listing.school;
+    populateAreas(listing.school);
+    document.getElementById("add-area").value = listing.area;
+
+    // Photos
+    if (listing.photos && listing.photos.length > 0) {
+      uploadedPhotos = listing.photos;
+      const container = document.getElementById("preview-container");
+      const label = document.getElementById("upload-label");
+      if (label) label.style.display = "none";
+
+      listing.photos.forEach((img) => {
+        const div = document.createElement("div");
+        div.style =
+          "width:100px; height:80px; position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--accent);";
+        div.innerHTML = `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">`;
+        container.appendChild(div);
+      });
+    }
+
     toggleSkeleton(false);
   } else {
+    if (formTitleEl) formTitleEl.textContent = "Property Creator";
+    if (formSubTextEl)
+      formSubTextEl.textContent = "Create full property details and upload gallery photos.";
+    if (submitBtnEl) submitBtnEl.textContent = "Publish Property";
     toggleSkeleton(false);
   }
 });

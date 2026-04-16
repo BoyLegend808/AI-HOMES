@@ -144,6 +144,21 @@ body {
   border-color: var(--accent);
 }
 
+.search-wrapper select {
+  padding: 0.75rem 1rem;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 0.95rem;
+  min-width: 180px;
+}
+
+.search-wrapper select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
 .search-btn {
   padding: 0.75rem 1rem;
   background: var(--accent);
@@ -468,6 +483,38 @@ td {
   flex-direction: column;
   gap: 1rem;
   padding: 1rem;
+}
+
+/* University Management Skeleton */
+.uni-loading {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+
+.uni-skel-card {
+  width: 220px;
+  height: 190px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  position: relative;
+  overflow: hidden;
+}
+
+.uni-skel-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  transform: translateX(-100%);
+  animation: admin-shimmer 1.5s infinite;
 }
 
 .skeleton-row-box {

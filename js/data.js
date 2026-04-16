@@ -732,10 +732,19 @@ function resetSystemData() {
   }
 }
 
-function logoutUser() {
-  if (sb_client) sb_client.auth.signOut();
-  localStorage.removeItem(AUTH_KEY);
-  window.location.href = "../home/home.html";
+let __isLoggingOut = false;
+async function logoutUser() {
+  if (__isLoggingOut) return false;
+  __isLoggingOut = true;
+  try {
+    if (sb_client) await sb_client.auth.signOut();
+  } catch (e) {
+    console.warn("Logout failed (continuing):", e);
+  } finally {
+    localStorage.removeItem(AUTH_KEY);
+    __isLoggingOut = false;
+    window.location.href = "../home/home.html";
+  }
 }
 
 // RE-ENABLED Forgot Password with DEBOUNCE (1 call/min)
@@ -999,6 +1008,20 @@ window.getListings = getListings;
 window.getReviews = getReviews;
 window.getListingById = (id) =>
   CACHED_LISTINGS.find((h) => String(h.id) === String(id));
+window.getListingByIdFromDb = async (id) => {
+  if (!sb_client) return null;
+  try {
+    const { data, error } = await sb_client
+      .from("houses")
+      .select("*")
+      .eq("id", id)
+      .single();
+    if (error || !data) return null;
+    return normalizeListing(data);
+  } catch (e) {
+    return null;
+  }
+};
 window.DEFAULT_LISTINGS = DEFAULT_LISTINGS;
 window.getCurrentUser = getCurrentUser;
 window.loginUser = loginUser;

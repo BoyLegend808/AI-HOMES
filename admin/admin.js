@@ -5,17 +5,43 @@ function setAdminLoading(isLoading) {
   const loadingEl = document.getElementById("admin-loading");
   const tableWrap = document.querySelector(".listings-table-container");
   const cardsWrap = document.getElementById("listings-cards");
-  if (loadingEl) loadingEl.style.display = isLoading ? "grid" : "none";
+  const uniLoadingEl = document.getElementById("uni-loading");
+  const uniCardsEl = document.getElementById("uni-cards");
+
+  if (loadingEl) loadingEl.style.display = isLoading ? "flex" : "none";
   if (tableWrap) tableWrap.style.display = isLoading ? "none" : "";
   if (cardsWrap) cardsWrap.style.display = isLoading ? "none" : "";
+
+  if (uniLoadingEl) uniLoadingEl.style.display = isLoading ? "flex" : "none";
+  if (uniCardsEl)
+    uniCardsEl.style.display = isLoading ? "none" : "grid";
 }
 
 function renderDashboard(filter = "") {
   const allListings = window.getListings();
+  const searchText = String(filter || "").toLowerCase();
+  const statusFilter =
+    document.getElementById("admin-status-filter")?.value || "all";
+  const uniFilter =
+    document.getElementById("admin-uni-filter")?.value || "all";
+
   const listings = allListings.filter(
     (l) =>
-      l.title.toLowerCase().includes(filter.toLowerCase()) ||
-      l.location.toLowerCase().includes(filter.toLowerCase()),
+      // Search
+      (!searchText ||
+        String(l.title || "")
+          .toLowerCase()
+          .includes(searchText) ||
+        String(l.location || "")
+          .toLowerCase()
+          .includes(searchText) ||
+        String(l.school || "")
+          .toLowerCase()
+          .includes(searchText)) &&
+      // Status filter
+      (statusFilter === "all" || String(l.status || "") === statusFilter) &&
+      // University filter
+      (uniFilter === "all" || String(l.school || "") === uniFilter),
   );
 
   document.getElementById("prop-count").textContent = allListings.length;
@@ -437,15 +463,45 @@ async function renderInquiries() {
   `).join('');
 }
 
-document.getElementById("admin-search").addEventListener("input", (e) => {
-  renderDashboard(e.target.value);
-});
+const adminSearchEl = document.getElementById("admin-search");
+if (adminSearchEl) {
+  adminSearchEl.addEventListener("input", (e) => {
+    renderDashboard(e.target.value);
+  });
+}
+
+const statusFilterEl = document.getElementById("admin-status-filter");
+if (statusFilterEl) {
+  statusFilterEl.addEventListener("change", () => {
+    renderDashboard(adminSearchEl?.value || "");
+  });
+}
+
+const uniFilterEl = document.getElementById("admin-uni-filter");
+if (uniFilterEl) {
+  uniFilterEl.addEventListener("change", () => {
+    renderDashboard(adminSearchEl?.value || "");
+  });
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   const isAdmin = await window.ensureAdminAccess();
   if (!isAdmin) return;
   setAdminLoading(true);
   if (window.fetchAllData) await window.fetchAllData();
+
+  // Populate the university dropdown filter (Property Management)
+  const uniSelect = document.getElementById("admin-uni-filter");
+  if (uniSelect) {
+    const savedVal = uniSelect.value;
+    const uniNames = Object.keys(window.getUniversities ? window.getUniversities() : {});
+    uniSelect.innerHTML =
+      '<option value="all">All Universities</option>' +
+      uniNames.map((u) => `<option value="${u}">${u}</option>`).join("");
+    if (uniNames.includes(savedVal)) uniSelect.value = savedVal;
+    else uniSelect.value = "all";
+  }
+
   setAdminLoading(false);
   renderDashboard();
   renderInquiries();
