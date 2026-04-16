@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "npx browser-sync start --server --files '*.html, *.css, *.js'"
+    "dev": "npx browser-sync start --server --host 0.0.0.0 --files '*.html, *.css, *.js'",
+    "dev:lan": "node server.js"
   },
   "keywords": [],
   "author": "",

@@ -53,26 +53,24 @@
           <div class="dashboard-header">
             <div class="header-content">
               <h1>Property Management</h1>
-              <p>Edit listings, filter results, and keep everything updated.</p>
+              <p>Search, filter, and quickly edit your listings.</p>
             </div>
-            <a
-              href="../admin/admin.html"
-              class="btn btn-secondary"
-            >
-              <- Back to Dashboard
-            </a>
+            <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+              <a href="../admin-form/admin-form.html?back=properties" class="btn btn-primary">+ Add New Property</a>
+              <a href="../admin/admin.html" class="btn btn-secondary">← Back to Dashboard</a>
+            </div>
           </div>
 
           <div class="stats-grid" style="margin-bottom: 1.25rem;">
             <div class="stat-card">
-              <div class="stat-icon">HOUSING</div>
+              <div class="stat-icon">🏠</div>
               <div class="stat-content">
                 <h3 id="prop-count">0</h3>
                 <p>Total Houses</p>
               </div>
             </div>
             <div class="stat-card">
-              <div class="stat-icon">ACTIVE</div>
+              <div class="stat-icon">✅</div>
               <div class="stat-content">
                 <h3 id="active-count">0</h3>
                 <p>Active Listings</p>
@@ -83,21 +81,21 @@
           <section class="listings-section">
             <div class="section-header">
               <h2>Property Management</h2>
-              <div class="search-wrapper">
-                <input
-                  type="text"
-                  id="admin-search"
-                  placeholder="Search by name, school or area..."
-                />
-                <select id="admin-status-filter">
-                  <option value="all">All Statuses</option>
-                  <option value="Active">Active</option>
-                  <option value="Hidden">Hidden</option>
-                </select>
-                <select id="admin-uni-filter" style="min-width: 200px;">
-                  <option value="all">All Universities</option>
-                </select>
-              </div>
+            </div>
+            <div class="property-filters">
+              <input
+                type="text"
+                id="admin-search"
+                placeholder="Search by title, school, area..."
+              />
+              <select id="admin-status-filter">
+                <option value="all">All Statuses</option>
+                <option value="Active">Active</option>
+                <option value="Hidden">Hidden</option>
+              </select>
+              <select id="admin-uni-filter">
+                <option value="all">All Universities</option>
+              </select>
             </div>
 
             <div id="admin-loading" class="admin-loading" style="display:flex;">

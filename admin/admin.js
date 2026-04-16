@@ -17,6 +17,19 @@ function setAdminLoading(isLoading) {
     uniCardsEl.style.display = isLoading ? "none" : "grid";
 }
 
+async function waitForHousesReady({ timeoutMs = 8000 } = {}) {
+  if (window.hasFetchedHouses) return true;
+  const start = Date.now();
+  return await new Promise((resolve) => {
+    const tick = () => {
+      if (window.hasFetchedHouses) return resolve(true);
+      if (Date.now() - start >= timeoutMs) return resolve(false);
+      setTimeout(tick, 120);
+    };
+    tick();
+  });
+}
+
 function renderDashboard(filter = "") {
   const allListings = window.getListings();
   const searchText = String(filter || "").toLowerCase();
@@ -489,6 +502,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (!isAdmin) return;
   setAdminLoading(true);
   if (window.fetchAllData) await window.fetchAllData();
+  await waitForHousesReady();
 
   // Populate the university dropdown filter (Property Management)
   const uniSelect = document.getElementById("admin-uni-filter");

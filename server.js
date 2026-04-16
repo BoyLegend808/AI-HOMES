@@ -1,10 +1,24 @@
 const express = require("express");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || "0.0.0.0";
+
+function getLocalIpAddress() {
+  const nets = os.networkInterfaces();
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name] || []) {
+      if (net.family === "IPv4" && !net.internal) {
+        return net.address;
+      }
+    }
+  }
+  return "localhost";
+}
 
 // Middleware
 app.use(express.json());
@@ -83,9 +97,11 @@ app.use((err, req, res, next) => {
 });
 
 if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () =>
-    console.log(`Server running at http://localhost:${PORT}/`),
-  );
+  app.listen(PORT, HOST, () => {
+    const localIp = getLocalIpAddress();
+    console.log(`Server running at http://localhost:${PORT}/`);
+    console.log(`LAN access available at http://${localIp}:${PORT}/`);
+  });
 }
 
 module.exports = app;

@@ -10,6 +10,20 @@ function setPropertiesLoading(isLoading) {
   if (cardsWrap) cardsWrap.style.display = isLoading ? "none" : "";
 }
 
+async function waitForHousesReady({ timeoutMs = 8000 } = {}) {
+  // `fetchAllData()` is not awaitable when in-flight, so we wait for the flag it sets.
+  if (window.hasFetchedHouses) return true;
+  const start = Date.now();
+  return await new Promise((resolve) => {
+    const tick = () => {
+      if (window.hasFetchedHouses) return resolve(true);
+      if (Date.now() - start >= timeoutMs) return resolve(false);
+      setTimeout(tick, 120);
+    };
+    tick();
+  });
+}
+
 function populateUniFilter() {
   const uniSelect = document.getElementById("admin-uni-filter");
   if (!uniSelect || !window.getUniversities) return;
@@ -144,6 +158,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   setPropertiesLoading(true);
   if (window.fetchAllData) await window.fetchAllData();
+  await waitForHousesReady();
 
   populateUniFilter();
   setPropertiesLoading(false);
