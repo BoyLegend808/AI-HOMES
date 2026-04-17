@@ -154,11 +154,12 @@ const submitHouse = async () => {
 
   // 1. Upload files to our 'Photo Album' (Storage Bucket) FIRST
   try {
-    for (const file of pendingFiles) {
-      const url = await window.uploadPhotoToStorage(file);
-      if (url) {
-        uploadedPhotos.push(url);
-      }
+    if (pendingFiles.length > 0) {
+      const uploadPromises = pendingFiles.map((file) => window.uploadPhotoToStorage(file));
+      const urls = await Promise.all(uploadPromises);
+      urls.forEach((url) => {
+        if (url) uploadedPhotos.push(url);
+      });
     }
   } catch (err) {
     alert("Could not upload photos. Check your internet or bucket permissions.");
@@ -200,7 +201,7 @@ const submitHouse = async () => {
     const res = await window.updateListing(house);
     if (!res.success) alert("Update Error: " + res.error?.message);
     else {
-      if (window.fetchAllData) await window.fetchAllData();
+      if (window.fetchAllData) window.fetchAllData();
       alert("Property Updated Successfully!");
     }
   } else {

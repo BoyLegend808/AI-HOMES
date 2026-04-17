@@ -138,7 +138,6 @@ async function toggleStatus(id, currentStatus) {
     const newStatus = currentStatus === "Active" ? "Hidden" : "Active";
     const res = await window.updateListing({ id, status: newStatus });
     if (!res.success) alert("Error toggling: " + res.error?.message);
-    if (window.fetchAllData) await window.fetchAllData();
     renderDashboard(document.getElementById("admin-search").value);
   }
 }
@@ -147,7 +146,6 @@ async function handleDelete(id) {
   if (confirm("Delete this listing permanently?")) {
     const res = await window.deleteListing(id);
     if (!res.success) alert("Delete Error: " + res.error?.message);
-    if (window.fetchAllData) await window.fetchAllData();
     renderDashboard(document.getElementById("admin-search").value);
   }
 }
@@ -227,7 +225,17 @@ window.removeUniversity = async (uniId) => {
       .delete()
       .eq("id", uniId);
     if (!error) {
-      if (window.fetchAllData) await window.fetchAllData();
+      if (window.CLOUD_UNIVERSITIES_DATA) {
+        const idx = window.CLOUD_UNIVERSITIES_DATA.findIndex(x => x.id === uniId);
+        if (idx !== -1) {
+          const name = window.CLOUD_UNIVERSITIES_DATA[idx].name;
+          window.CLOUD_UNIVERSITIES_DATA.splice(idx, 1);
+          if (typeof CLOUD_UNIVERSITIES !== 'undefined') delete CLOUD_UNIVERSITIES[name];
+          if (window.NIGERIA_UNIVERSITIES) delete window.NIGERIA_UNIVERSITIES[name];
+        }
+      }
+      if (window.renderUniversities) window.renderUniversities();
+      if (window.fetchAllData) window.fetchAllData();
     } else {
       alert("Error removing university: " + error.message);
     }
@@ -259,7 +267,16 @@ window.addAreaToUni = async (uniId) => {
       .eq("id", uniId);
 
     if (!error) {
-      if (window.fetchAllData) await window.fetchAllData();
+      if (window.CLOUD_UNIVERSITIES_DATA) {
+        const u = window.CLOUD_UNIVERSITIES_DATA.find(x => x.id === uniId);
+        if (u) {
+            u.locations = [...currentAreas, area];
+            if (typeof CLOUD_UNIVERSITIES !== 'undefined') CLOUD_UNIVERSITIES[u.name] = u.locations;
+            if (window.NIGERIA_UNIVERSITIES) window.NIGERIA_UNIVERSITIES[u.name] = u.locations;
+        }
+      }
+      if (window.renderUniversities) window.renderUniversities();
+      if (window.fetchAllData) window.fetchAllData();
     }
   }
 };
@@ -283,7 +300,16 @@ window.removeAreaFromUni = async (uniId, areaName) => {
       .eq("id", uniId);
 
     if (!error) {
-      if (window.fetchAllData) await window.fetchAllData();
+      if (window.CLOUD_UNIVERSITIES_DATA) {
+        const u = window.CLOUD_UNIVERSITIES_DATA.find(x => x.id === uniId);
+        if (u) {
+            u.locations = updatedAreas;
+            if (typeof CLOUD_UNIVERSITIES !== 'undefined') CLOUD_UNIVERSITIES[u.name] = u.locations;
+            if (window.NIGERIA_UNIVERSITIES) window.NIGERIA_UNIVERSITIES[u.name] = u.locations;
+        }
+      }
+      if (window.renderUniversities) window.renderUniversities();
+      if (window.fetchAllData) window.fetchAllData();
     }
   }
 };
@@ -303,7 +329,10 @@ window.addNewUniversity = async () => {
     ]);
 
     if (!error) {
-      if (window.fetchAllData) await window.fetchAllData();
+      if (typeof CLOUD_UNIVERSITIES !== 'undefined') CLOUD_UNIVERSITIES[name] = [];
+      if (window.NIGERIA_UNIVERSITIES) window.NIGERIA_UNIVERSITIES[name] = [];
+      if (window.renderUniversities) window.renderUniversities();
+      if (window.fetchAllData) window.fetchAllData();
     } else {
       alert("Error adding university: " + error.message);
     }
@@ -324,7 +353,10 @@ window.addUniversityByName = async (name) => {
   ]);
 
   if (!error) {
-    if (window.fetchAllData) await window.fetchAllData();
+    if (typeof CLOUD_UNIVERSITIES !== 'undefined') CLOUD_UNIVERSITIES[trimmed] = [];
+    if (window.NIGERIA_UNIVERSITIES) window.NIGERIA_UNIVERSITIES[trimmed] = [];
+    if (window.renderUniversities) window.renderUniversities();
+    if (window.fetchAllData) window.fetchAllData();
   } else {
     alert("Error adding university: " + error.message);
   }

@@ -573,7 +573,9 @@ window.addUniversity = async (name) => {
       .from("universities")
       .insert([{ name, locations: [], logo_url: "", logo_scale: 1.1 }]);
     if (!error) {
-      if (window.fetchAllData) await window.fetchAllData();
+      if (typeof CLOUD_UNIVERSITIES !== 'undefined') CLOUD_UNIVERSITIES[name] = [];
+      if (window.NIGERIA_UNIVERSITIES) window.NIGERIA_UNIVERSITIES[name] = [];
+      if (window.fetchAllData) window.fetchAllData();
       return { success: true };
     }
     return { success: false, error };
@@ -603,7 +605,14 @@ window.addAreaToUniversity = async (schoolName, areaName) => {
       .eq("id", data.id);
       
     if (!error) {
-      if (window.fetchAllData) await window.fetchAllData();
+      const newLocations = [...currentAreas, areaName];
+      if (typeof CLOUD_UNIVERSITIES !== 'undefined' && CLOUD_UNIVERSITIES[schoolName]) {
+        CLOUD_UNIVERSITIES[schoolName] = newLocations;
+      }
+      if (window.NIGERIA_UNIVERSITIES && window.NIGERIA_UNIVERSITIES[schoolName]) {
+        window.NIGERIA_UNIVERSITIES[schoolName] = newLocations;
+      }
+      if (window.fetchAllData) window.fetchAllData();
       return { success: true };
     }
     return { success: false, error };
@@ -1086,14 +1095,21 @@ window.uploadPhotoToStorage = async (file) => {
 };
 window.addListing = async (h) => {
   if (!sb_client) return { success: false };
+  const payload = normalizeListing(h);
+  if (typeof CACHED_LISTINGS !== 'undefined') {
+    CACHED_LISTINGS.unshift({ ...payload, id: Date.now() });
+  }
   const { error } = await sb_client
     .from("houses")
-    .insert([normalizeListing(h)]);
+    .insert([payload]);
   if (!error) fetchAllData();
   return { success: !error };
 };
 window.deleteListing = async (id) => {
   if (!sb_client) return { success: false };
+  if (typeof CACHED_LISTINGS !== 'undefined') {
+    CACHED_LISTINGS = CACHED_LISTINGS.filter(l => String(l.id) !== String(id));
+  }
   const { error } = await sb_client.from("houses").delete().eq("id", id);
   if (!error) fetchAllData();
   return { success: !error };
@@ -1115,6 +1131,12 @@ window.updateListing = async (h) => {
   if (!sb_client) return { success: false };
   const payload = normalizeListing(h);
   const { id, ...updates } = payload;
+  if (typeof CACHED_LISTINGS !== 'undefined') {
+    const idx = CACHED_LISTINGS.findIndex(l => String(l.id) === String(id));
+    if (idx !== -1) {
+      CACHED_LISTINGS[idx] = { ...CACHED_LISTINGS[idx], ...updates };
+    }
+  }
   const { error } = await sb_client.from("houses").update(updates).eq("id", id);
   if (!error) fetchAllData();
   return { success: !error };
