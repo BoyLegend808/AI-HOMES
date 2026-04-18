@@ -1053,13 +1053,41 @@ window.HOUSE_TYPES = [
   "Self-contain",
   "Studio",
 ];
+window.compressImage = (file, maxWidth = 1024) => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target.result;
+      img.onload = () => {
+        const canvas = document.createElement("canvas");
+        const ratio = maxWidth / img.width;
+        canvas.width = Math.min(img.width, maxWidth);
+        canvas.height = canvas.width !== img.width ? img.height * ratio : img.height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: "image/jpeg" })), "image/jpeg", 0.8);
+      };
+    };
+  });
+};
+
 window.uploadPhotoToStorage = async (file) => {
   if (!sb_client) return null;
-  const fileName = `house_${Math.random().toString(36).slice(2)}_${Date.now()}`;
+  // Compress massively large phone photos natively via Canvas before network transit!
+  let uploadFile = file;
+  if (file.type.startsWith("image/")) {
+     uploadFile = await window.compressImage(file, 1080);
+  }
+  const fileName = `house_${Math.random().toString(36).slice(2)}_${Date.now()}.jpg`;
   const { error } = await sb_client.storage
     .from("house-photos")
-    .upload(`public/${fileName}`, file);
-  if (error) return null;
+    .upload(`public/${fileName}`, uploadFile, { contentType: "image/jpeg" });
+  if (error) {
+     console.error("Storage upload error:", error);
+     return null;
+  }
   const { data } = sb_client.storage
     .from("house-photos")
     .getPublicUrl(`public/${fileName}`);
