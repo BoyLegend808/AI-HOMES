@@ -11,8 +11,101 @@
   --accent: #F97316;
   --accent-light: #FFEDD5;
   --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
+  /* #13 fix: boosted from #94A3B8 (3.0:1) to #B8C5D6 (4.7:1) on dark bg */
+  --text-muted: #B8C5D6;
   --card-border: rgba(255, 255, 255, 0.08);
+  /* #14: global focus ring token */
+  --focus-ring: 0 0 0 3px rgba(249, 115, 22, 0.6);
+}
+
+/* ==========================================================================
+   #11 — SKIP-TO-CONTENT LINK (accessibility)
+   Visually hidden until focused by keyboard users
+   ========================================================================== */
+.skip-to-content {
+  position: absolute;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background: var(--accent);
+  color: #fff;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0 0 10px 10px;
+  font-weight: 700;
+  font-size: 0.95rem;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: top 0.2s ease;
+}
+
+.skip-to-content:focus {
+  top: 0;
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* ==========================================================================
+   #14 — KEYBOARD FOCUS STYLES (global)
+   Visible focus ring for all interactive elements
+   ========================================================================== */
+
+/* Remove default outline and replace with custom ring */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Buttons and links: use box-shadow so border-radius is respected */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 4px;
+}
+
+/* Nav links specifically */
+.nav-list a:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 4px;
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* Hero / CTA buttons */
+.hero-btn:focus-visible,
+.nav-join-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring), 0 4px 14px rgba(249, 115, 22, 0.3);
+}
+
+/* Back link button */
+.back-link-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-color: var(--accent);
+}
+
+/* Mobile close button */
+.mobile-close-btn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+}
+
+/* Bookmark button */
+.bookmarkBtn:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
 }
 
 * {

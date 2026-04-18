@@ -12,11 +12,12 @@
 </head>
 
 <body>
+  <a class="skip-to-content" href="#main-content">Skip to main content</a>
   <div class="app-container">
     <header class="top-nav">
       <div class="nav-left">
         <div class="logo" onclick="window.location.href='../home/home.html'">
-          <img src="../assets/logo.png" alt="StudentHomes" class="brand-logo">
+          <img src="../assets/logo.png" alt="StudentHomes — go to homepage" class="brand-logo">
         </div>
       </div>
       <div class="nav-center">
@@ -40,7 +41,7 @@
     </header>
     <div class="nav-overlay"></div>
 
-    <main id="app">
+    <main id="main-content">
       <!-- UI will be rendered by JS -->
     </main>
   </div>
@@ -83,7 +84,7 @@
   <div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
     <button class="lightbox-close" onclick="closeLightbox(); event.stopPropagation();">×</button>
     <button class="lightbox-btn lightbox-prev" onclick="prevLightboxImage(event)">❮</button>
-    <img id="lightbox-img" src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1200" alt="Enlarged property photo" onclick="event.stopPropagation()">
+    <img id="lightbox-img" src="https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=1200" alt="Enlarged view of selected property photo" onclick="event.stopPropagation()">
     <button class="lightbox-btn lightbox-next" onclick="nextLightboxImage(event)">❯</button>
   </div>
 

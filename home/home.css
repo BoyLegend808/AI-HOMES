@@ -2,28 +2,7 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
-:root {
-  --bg-primary: #0F172A;
-  /* Slate 900 */
-  --bg-dark: #020617;
-  /* Slate 950 */
-  --bg-panel: #1E293B;
-  /* Slate 800 */
-  --bg-panel-hover: #334155;
-  /* Slate 700 */
-
-  --accent: #F97316;
-  /* Orange 500 */
-  --accent-light: #FFEDD5;
-  /* Orange 100 */
-
-  --text-main: #F8FAFC;
-  /* Slate 50 */
-  --text-muted: #94A3B8;
-  /* Slate 400 */
-
-  --card-border: rgba(255, 255, 255, 0.08);
-}
+/* :root variables defined in nav.css — no duplicate needed */
 
 @view-transition {
   navigation: auto;
