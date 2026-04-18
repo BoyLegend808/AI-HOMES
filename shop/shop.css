@@ -176,11 +176,12 @@
     .mobile-sticky-action-bar {
            display: none;
            position: fixed;
-           bottom: 70px;  /* Increased from 20px to avoid footer overlap */
+           bottom: 120px;  /* Increased to 120px for better footer clearance */
            left: 50%;
            transform: translateX(-50%);
            background: rgba(17, 21, 28, 0.9);
            backdrop-filter: blur(10px);
+           z-index: 1000; /* Added to ensure it stays above footer */
        padding: 0.5rem;
        border-radius: 30px;
        border: 1px solid var(--card-border);
