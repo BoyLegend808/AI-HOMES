@@ -4,6 +4,8 @@ const filterType = document.getElementById("flt-type");
 const filterPrice = document.getElementById("flt-price");
 const priceDisplay = document.getElementById("price-display");
 const shopContainer = document.getElementById("shop-container");
+const sortSelect = document.getElementById("flt-sort");
+const resultsCount = document.getElementById("results-count");
 
 let allListings = [];
 let isLoading = false;
@@ -21,7 +23,6 @@ function setLoadingState(state) {
       </div>
     `;
   } else {
-    // Clear loading when false
     const loading = shopContainer.querySelector(".shop-loading");
     if (loading) loading.remove();
   }
@@ -73,42 +74,47 @@ function populateAreaOptions(selectedSchool) {
     const option = document.createElement("option");
     option.value = area;
     option.textContent = area;
-    filterArea.appendChild(option); // ← was incorrectly filterType
+    filterArea.appendChild(option);
   });
+}
+
+// Dynamically adjust the price slider max based on actual listings
+function updatePriceFilterRange() {
+  if (!filterPrice || !allListings.length) return;
+  const prices = allListings
+    .filter((l) => String(l.status || "active").toLowerCase() === "active")
+    .map((l) => l.price || 0)
+    .filter((p) => p > 0);
+  if (!prices.length) return;
+
+  const maxListingPrice = Math.max(...prices);
+  // Round up to nearest 100k
+  const roundedMax = Math.ceil(maxListingPrice / 100000) * 100000;
+  const newMax = Math.max(roundedMax, 200000); // at least 200k
+
+  filterPrice.max = newMax;
+  // Only reset value if current value is still at old max (user hasn't manually adjusted)
+  if (Number(filterPrice.value) >= Number(filterPrice.max) - 50000 || Number(filterPrice.value) > newMax) {
+    filterPrice.value = newMax;
+    if (priceDisplay) {
+      priceDisplay.textContent = "\u20A6" + Number(newMax).toLocaleString();
+    }
+  }
 }
 
 function applyFilters() {
   if (window.getListings) {
     allListings = window.getListings();
   }
-  console.log("applyFilters: allListings count:", allListings.length);
   const school = filterSchool ? filterSchool.value : "";
   const area = filterArea ? filterArea.value : "";
   const type = filterType ? filterType.value : "";
   const maxPrice = filterPrice ? Number(filterPrice.value) : Infinity;
-  console.log(
-    "applyFilters: filters - school:",
-    school,
-    "area:",
-    area,
-    "type:",
-    type,
-    "maxPrice:",
-    maxPrice,
-  );
+  const sortBy = sortSelect ? sortSelect.value : "newest";
 
   const filtered = allListings.filter((listing) => {
-    // Filter by status (treat empty/null as active for newly created entries)
     const currentStatus = String(listing.status || "active").toLowerCase();
-    if (currentStatus !== "active") {
-      console.log(
-        "Filtering out inactive listing:",
-        listing.title,
-        "status:",
-        listing.status,
-      );
-      return false;
-    }
+    if (currentStatus !== "active") return false;
 
     const location = String(listing.location || "").toLowerCase();
     let matches = true;
@@ -120,9 +126,46 @@ function applyFilters() {
 
     return matches;
   });
-  console.log("applyFilters: result count:", filtered.length);
+
+  // Sort results
+  filtered.sort((a, b) => {
+    switch (sortBy) {
+      case "price-low": return (a.price || 0) - (b.price || 0);
+      case "price-high": return (b.price || 0) - (a.price || 0);
+      case "name-az": return String(a.title || "").localeCompare(String(b.title || ""));
+      case "newest":
+      default: return (new Date(b.created_at || 0)) - (new Date(a.created_at || 0));
+    }
+  });
+
+  // Update results count
+  if (resultsCount) {
+    resultsCount.textContent = filtered.length + " " + (filtered.length === 1 ? "property" : "properties");
+  }
 
   renderShopGridView(filtered);
+}
+
+function buildCardImageHTML(listing) {
+  const photos = listing.photos || [];
+  const mainImage = listing.photo || photos[0] || "https://via.placeholder.com/400x300?text=No+Image";
+  const title = escapeHtml(listing.title);
+
+  // If multiple photos, render swipeable gallery on mobile
+  if (photos.length > 1) {
+    const imagesHTML = photos.slice(0, 5).map((src) =>
+      `<img loading="lazy" src="${src}" alt="${title}">`
+    ).join("");
+    const dotsHTML = photos.slice(0, 5).map((_, i) =>
+      `<span class="dot${i === 0 ? " active" : ""}"></span>`
+    ).join("");
+    return `
+      <div class="card-image-swipe" data-index="0" data-count="${Math.min(photos.length, 5)}">
+        <div class="swipe-track">${imagesHTML}</div>
+        <div class="card-image-dots">${dotsHTML}</div>
+      </div>`;
+  }
+  return `<img loading="lazy" src="${mainImage}" alt="${title}">`;
 }
 
 function renderShopGridView(listings) {
@@ -131,28 +174,25 @@ function renderShopGridView(listings) {
   if (isLoading) return;
   if (!listings || !listings.length) {
     shopContainer.innerHTML = window.getEmptyStateHTML(
-      "Oops! No houses found",
-      "We couldn't find any pad matching those filters. Try searching for a different school or area. Or check if DB has data.",
+      "No houses found",
+      "We couldn't find any property matching those filters. Try changing the university, area or price range.",
     );
     return;
   }
 
   shopContainer.innerHTML = listings
     .map((listing) => {
-      const image =
-        listing.photo ||
-        (listing.photos && listing.photos[0]) ||
-        "https://via.placeholder.com/400x300?text=No+Image";
       const title = escapeHtml(listing.title);
       const location = escapeHtml(listing.location);
       const type = escapeHtml(listing.type);
       const detailsUrl = `../details/detail.html?id=${encodeURIComponent(listing.id)}`;
       const isFav = window.isFavorited ? window.isFavorited(listing.id) : false;
+      const imageHTML = buildCardImageHTML(listing);
 
       return `
         <article class="list-card reveal" onclick="window.location.href='${detailsUrl}'" style="position:relative;">
           <div class="favorite-overlay" style="position:relative;">
-             <img loading="lazy" src="${image}" alt="${title}">
+             ${imageHTML}
              <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${listing.id}"
                 onclick="event.stopPropagation(); window.toggleFavorite(${listing.id})">
                 <span class="IconContainer">
@@ -177,14 +217,49 @@ function renderShopGridView(listings) {
     .join("");
 
   if (window.initReveal) window.initReveal();
+  initCardSwipe();
+}
+
+// Touch swipe for multi-image cards
+function initCardSwipe() {
+  document.querySelectorAll(".card-image-swipe").forEach((container) => {
+    const track = container.querySelector(".swipe-track");
+    const dots = container.querySelectorAll(".dot");
+    const count = parseInt(container.dataset.count, 10) || 1;
+    if (count <= 1 || !track) return;
+
+    let startX = 0;
+    let currentIndex = 0;
+
+    const goTo = (idx) => {
+      currentIndex = Math.max(0, Math.min(idx, count - 1));
+      track.style.transform = `translateX(-${currentIndex * 100}%)`;
+      dots.forEach((d, i) => d.classList.toggle("active", i === currentIndex));
+      container.dataset.index = currentIndex;
+    };
+
+    container.addEventListener("touchstart", (e) => {
+      startX = e.touches[0].clientX;
+    }, { passive: true });
+
+    container.addEventListener("touchend", (e) => {
+      const diff = startX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 40) {
+        e.preventDefault();
+        e.stopPropagation();
+        goTo(currentIndex + (diff > 0 ? 1 : -1));
+      }
+    });
+
+    // Prevent card click when swiping
+    container.addEventListener("click", (e) => {
+      e.stopPropagation();
+    });
+  });
 }
 
 function waitForDataAndRender(maxWait = 10000) {
   setLoadingState(true);
-  console.log(
-    "Waiting for DB data... hasFetchedHouses:",
-    window.hasFetchedHouses,
-  );
 
   if (window.fetchAllData) {
     window.fetchAllData();
@@ -194,12 +269,6 @@ function waitForDataAndRender(maxWait = 10000) {
   const poll = setInterval(() => {
     if (window.getListings) {
       allListings = window.getListings();
-      console.log(
-        "Poll: listings count:",
-        allListings.length,
-        "hasFetchedHouses:",
-        window.hasFetchedHouses,
-      );
 
       if (
         window.hasFetchedHouses ||
@@ -209,21 +278,19 @@ function waitForDataAndRender(maxWait = 10000) {
         clearInterval(poll);
         setLoadingState(false);
         allListings = window.getListings ? window.getListings() : [];
-        console.log("Data loaded, rendering:", allListings.length, "houses");
-        applyFilters(); // Use applyFilters instead of direct render to respect any filters
+        updatePriceFilterRange();
+        applyFilters();
         renderRecentlyViewed();
-        // Removed noisy load toast per UX request
       }
     }
   }, 500);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  console.log("=== SHOP PAGE LOADING - DB PRIORITY ===");
   populateSchoolOptions();
   populateTypeOptions();
 
-  waitForDataAndRender(); // Always wait for full DB data
+  waitForDataAndRender();
 
   // Filter listeners
   if (filterSchool) {
@@ -235,9 +302,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (filterPrice && priceDisplay) {
     filterPrice.addEventListener("input", (e) => {
-      priceDisplay.textContent = "₦" + Number(e.target.value).toLocaleString();
+      priceDisplay.textContent = "\u20A6" + Number(e.target.value).toLocaleString();
       applyFilters();
     });
+  }
+
+  if (sortSelect) {
+    sortSelect.addEventListener("change", applyFilters);
   }
 
   // Global filter button if exists
@@ -248,45 +319,69 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function renderRecentlyViewed() {
-  const recentIds = JSON.parse(
+  const localRecent = JSON.parse(
     localStorage.getItem("studenthome_recent") || "[]",
   );
-  const section = document.getElementById("recently-viewed-section");
-  const container = document.getElementById("recent-container");
 
-  if (!recentIds.length || !section || !container) {
-    if (section) section.style.display = "none";
-    return;
-  }
+  const showRecent = (ids) => {
+    const section = document.getElementById("recently-viewed-section");
+    const container = document.getElementById("recent-container");
 
-  const recents = recentIds
-    .map((id) => allListings.find((l) => String(l.id) === String(id)))
-    .filter(Boolean);
-  if (recents.length === 0) {
-    section.style.display = "none";
-    return;
-  }
+    if (!ids.length || !section || !container) {
+      if (section) section.style.display = "none";
+      return;
+    }
 
-  section.style.display = "block";
-  container.innerHTML = recents
-    .map((listing) => {
-      const image =
-        listing.photo ||
-        (listing.photos && listing.photos[0]) ||
-        "https://via.placeholder.com/400x300";
-      return `
-        <article class="list-card" onclick="window.location.href='../details/detail.html?id=${encodeURIComponent(listing.id)}'">
-          <img loading="lazy" src="${image}" alt="${escapeHtml(listing.title)}" style="height:150px;">
-          <div class="list-info" style="padding: 1rem;">
-            <h3 style="font-size:1.1rem;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(listing.title)}</h3>
-            <div class="list-price-row">
-              <span class="list-price" style="font-size:1.1rem;">${window.formatPrice(listing.price)}</span>
+    const recents = ids
+      .map((id) => allListings.find((l) => String(l.id) === String(id)))
+      .filter(Boolean);
+    if (recents.length === 0) {
+      section.style.display = "none";
+      return;
+    }
+
+    section.style.display = "block";
+    container.innerHTML = recents
+      .map((listing) => {
+        const image =
+          listing.photo ||
+          (listing.photos && listing.photos[0]) ||
+          "https://via.placeholder.com/400x300";
+        return `
+          <article class="list-card" onclick="window.location.href='../details/detail.html?id=${encodeURIComponent(listing.id)}'">
+            <img loading="lazy" src="${image}" alt="${escapeHtml(listing.title)}" style="height:150px;">
+            <div class="list-info" style="padding: 1rem;">
+              <h3 style="font-size:1.1rem;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(listing.title)}</h3>
+              <div class="list-price-row">
+                <span class="list-price" style="font-size:1.1rem;">${window.formatPrice(listing.price)}</span>
+              </div>
             </div>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
+          </article>
+        `;
+      })
+      .join("");
+  };
+
+  // Start with localStorage data
+  showRecent(localRecent);
+
+  // Merge with Supabase user_metadata if logged in (cross-device sync)
+  if (window.sb_client) {
+    window.sb_client.auth.getUser().then(({ data }) => {
+      if (data?.user?.user_metadata?.recently_viewed) {
+        const cloudRecent = data.user.user_metadata.recently_viewed;
+        const merged = [...localRecent];
+        cloudRecent.forEach((id) => {
+          if (!merged.some((m) => String(m) === String(id))) {
+            merged.push(id);
+          }
+        });
+        const final = merged.slice(0, 10);
+        localStorage.setItem("studenthome_recent", JSON.stringify(final));
+        showRecent(final);
+      }
+    }).catch(() => {});
+  }
 }
 
 window.applyFilters = applyFilters;
@@ -294,6 +389,7 @@ window.populateSchoolOptions = populateSchoolOptions;
 window.renderShopGrid = (listings) => {
   setLoadingState(false);
   allListings = Array.isArray(listings) ? listings : window.getListings();
+  updatePriceFilterRange();
   renderShopGridView(allListings);
   renderRecentlyViewed();
 };

@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /admin-form/
+Disallow: /api/
+Disallow: /reset-password/
+
+Sitemap: https://ai-homes.vercel.app/sitemap.xml

@@ -1,31 +1,4 @@
-:root {
-  --bg-primary: #0F172A;
-  --bg-dark: #020617;
-  --bg-panel: #1E293B;
-  --bg-panel-hover: #334155;
-  --accent: #F97316;
-  --accent-light: #FFEDD5;
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
-  --card-border: rgba(255, 255, 255, 0.08);
-}
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  line-height: 1.6;
-}
-
+/* Variables and reset inherited from nav.css */
 
 /* Extracted from shop.html */
 .shop-header {
@@ -235,3 +208,114 @@ body {
         width: 100%;
       }
     }
+
+/* Empty State */
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 4rem 2rem;
+  min-height: 300px;
+}
+.empty-state h3 {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: var(--text-main);
+}
+.empty-state p {
+  color: var(--text-muted);
+  max-width: 400px;
+  line-height: 1.6;
+}
+
+/* Sort bar */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+.sort-bar label {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.sort-select {
+  background: var(--bg-panel);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.6rem 1rem;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.sort-select:focus {
+  border-color: var(--accent);
+}
+.results-count {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-left: auto;
+}
+
+/* Mobile image swipe on cards */
+.card-image-swipe {
+  position: relative;
+  overflow: hidden;
+  touch-action: pan-y;
+}
+.card-image-swipe .swipe-track {
+  display: flex;
+  transition: transform 0.3s ease;
+}
+.card-image-swipe .swipe-track img {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+.card-image-dots {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 5px;
+  z-index: 2;
+}
+.card-image-dots .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transition: background 0.2s;
+}
+.card-image-dots .dot.active {
+  background: #fff;
+}
+
+/* Back link button */
+.back-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  margin-bottom: 1rem;
+  transition: color 0.2s;
+}
+.back-link-btn:hover {
+  color: var(--accent);
+}

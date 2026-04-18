@@ -202,8 +202,11 @@ router.post("/forgot-password", async (req, res) => {
 // POST /api/auth/reset-password
 router.post("/reset-password", async (req, res) => {
   try {
-    if (!supabase) return res.status(500).json({ error: "Supabase client not initialized." });
-    if (!supabaseAdmin) return res.status(500).json({ error: "Supabase admin client not initialized." });
+    const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
+    if (!activeAdmin) {
+      console.error("RESET-PASSWORD: Supabase admin client missing");
+      return res.status(500).json({ error: "Database connection not initialized." });
+    }
 
     console.log("Reset password called with token length:", req.body.token?.length);
     const { token, newPassword } = req.body;
@@ -216,7 +219,7 @@ router.post("/reset-password", async (req, res) => {
     }
 
     // Find user with valid token using admin client (bypass RLS)
-    const { data: user, error } = await supabaseAdmin
+    const { data: user, error } = await activeAdmin
       .from("profiles")
       .select("id, email, resetToken, resetExpiry")
       .eq("resetToken", token)
@@ -234,7 +237,7 @@ router.post("/reset-password", async (req, res) => {
     // Update password in Supabase auth using admin client
     console.log("Updating password for user.id:", user.id);
     const { error: updateError } =
-      await supabaseAdmin.auth.admin.updateUserById(user.id, {
+      await activeAdmin.auth.admin.updateUserById(user.id, {
         password: newPassword,
       });
 
@@ -244,7 +247,7 @@ router.post("/reset-password", async (req, res) => {
     }
 
     // Clear the reset token after successful password update
-    const { error: clearTokenError } = await supabaseAdmin
+    const { error: clearTokenError } = await activeAdmin
       .from("profiles")
       .update({
         resetToken: null,
@@ -273,7 +276,11 @@ router.post("/reset-password", async (req, res) => {
 // Optional endpoint to validate reset token before showing form
 router.post("/verify-reset-token", async (req, res) => {
   try {
-    if (!supabaseAdmin) return res.status(500).json({ error: "Supabase admin client not initialized." });
+    const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
+    if (!activeAdmin) {
+      console.error("VERIFY-TOKEN: Supabase admin client missing");
+      return res.status(500).json({ error: "Database connection not initialized." });
+    }
     const { token } = req.body;
 
     if (!token) {
@@ -281,7 +288,7 @@ router.post("/verify-reset-token", async (req, res) => {
     }
 
     // Check if token is valid and not expired
-    const { data: user, error } = await supabaseAdmin
+    const { data: user, error } = await activeAdmin
       .from("profiles")
       .select("id, email")
       .eq("resetToken", token)

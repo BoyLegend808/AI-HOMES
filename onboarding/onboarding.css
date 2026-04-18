@@ -8,6 +8,12 @@ body {
   height: 100vh;
   overflow: hidden;
 }
+main {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
 .image-container {
   flex: 1;
   /* Using a modern architectural image to match the vibe */

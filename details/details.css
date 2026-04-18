@@ -1,30 +1,4 @@
-:root {
-  --bg-primary: #0F172A;
-  --bg-dark: #020617;
-  --bg-panel: #1E293B;
-  --bg-panel-hover: #334155;
-  --accent: #F97316;
-  --accent-light: #FFEDD5;
-  --text-main: #F8FAFC;
-  --text-muted: #94A3B8;
-  --card-border: rgba(255, 255, 255, 0.08);
-}
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
-
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  -webkit-tap-highlight-color: transparent;
-}
-
-body {
-  font-family: 'Outfit', sans-serif;
-  background-color: var(--bg-dark);
-  color: var(--text-main);
-  line-height: 1.6;
-}
+/* Variables and reset inherited from nav.css */
 
 /* Split layout logic for desktop */
 .details-grid {

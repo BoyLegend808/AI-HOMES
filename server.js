@@ -82,7 +82,8 @@ app.use((req, res) => {
   if (fs.existsSync(filePath)) {
     res.sendFile(filePath);
   } else {
-    res.status(404).send("File Not Found: " + urlPath);
+    const page404 = path.join(__dirname, '404.html');
+    res.status(404).sendFile(page404);
   }
 });
 

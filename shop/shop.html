@@ -4,7 +4,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>StudentHome - Shop</title>
+  <title>Browse Student Housing | Filter by University, Area & Price - StudentHome</title>
+  <meta name="description" content="Search and filter student housing by university, campus area, house type and price. Find your perfect student accommodation today.">
+  <meta property="og:title" content="Browse Student Housing - StudentHome">
+  <meta property="og:description" content="Search and filter student housing by university, campus area, house type and price.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="">
+  <meta name="twitter:card" content="summary_large_image">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="../js/nav.css">
@@ -73,6 +79,17 @@
         </div>
       </div>
 
+      <div class="sort-bar">
+        <label for="flt-sort">Sort by:</label>
+        <select id="flt-sort" class="sort-select">
+          <option value="newest">Newest First</option>
+          <option value="price-low">Price: Low to High</option>
+          <option value="price-high">Price: High to Low</option>
+          <option value="name-az">Name: A-Z</option>
+        </select>
+        <span class="results-count" id="results-count"></span>
+      </div>
+
       <div class="shop-grid" id="shop-container">
         <!-- Rendered by js -->
       </div>
@@ -86,6 +103,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/data.js"></script>
+  <script src="../js/enhancements.js"></script>
   <script src="shop.js"></script>
 </body>
 

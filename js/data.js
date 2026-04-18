@@ -2,32 +2,7 @@
 // StudentHome Global Cloud Engine (v3.0 - Production Balanced)
 const AUTH_KEY = "studenthome_auth";
 const USERS_KEY = "studenthome_users";
-const DEFAULT_LOCAL_USERS = [
-  {
-    name: "Demo Student",
-    email: "student@studenthome.com",
-    password: "student123",
-    phone: "08000000000",
-    university: "Ebonyi State University (EBSU)",
-    role: "student",
-  },
-  {
-    name: "Demo Admin",
-    email: "admin@studenthome.com",
-    password: "admin123",
-    phone: "08000000000",
-    university: "HQ",
-    role: "admin",
-  },
-  {
-    name: "Demo Owner",
-    email: "owner@studenthome.com",
-    password: "owner123",
-    phone: "08000000000",
-    university: "HQ",
-    role: "admin",
-  },
-];
+const DEFAULT_LOCAL_USERS = [];
 const SUPABASE_URL = "https://loapruxjeolxyngmcszf.supabase.co";
 const SUPABASE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYXBydXhqZW9seHluZ21jc3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NDY4MzQsImV4cCI6MjA5MDMyMjgzNH0.t5H3u-L4M8lODuwWre4NHjKtR_qDboZBBwwzmEXXZh8";
@@ -221,22 +196,8 @@ function ensureDefaultUsers() {
   }
 }
 
-const SYSTEM_ADMINS = [
-  {
-    name: "Main Admin",
-    email: "admin@studenthome.com",
-    password: "admin123",
-    role: "admin",
-    university: "HQ",
-  },
-  {
-    name: "Owner",
-    email: "owner@studenthome.com",
-    password: "owner123",
-    role: "admin",
-    university: "HQ",
-  },
-];
+const SYSTEM_ADMINS = [];
+// Admin accounts are now managed exclusively through Supabase Auth
 
 /* ==========================================
    DATA ENGINE
@@ -860,7 +821,11 @@ function showToast(message, type = "info") {
 }
 
 function getEmptyStateHTML(title, message) {
-  return `<div class="empty-state"><h3>${title}</h3><p>${message}</p></div>`;
+  return `<div class="empty-state">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent, #F97316)" stroke-width="1.5" style="margin-bottom:1rem;opacity:0.6"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
+    <h3>${title}</h3>
+    <p>${message}</p>
+  </div>`;
 }
 
 function ensureGlobalFavicon() {

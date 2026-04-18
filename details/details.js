@@ -24,13 +24,24 @@ window.renderDetailsPage = () => {
   renderDetails();
   window.incrementViews(id);
 
-  // Store recently viewed using a safe local cache array (Maximum 4 items)
+  // Store recently viewed - localStorage + Supabase sync
   try {
     let recent = JSON.parse(localStorage.getItem("studenthome_recent") || "[]");
     recent = recent.filter((r) => String(r) !== String(id));
     recent.unshift(id);
-    if (recent.length > 4) recent.pop();
+    if (recent.length > 10) recent.pop();
     localStorage.setItem("studenthome_recent", JSON.stringify(recent));
+
+    // Sync to Supabase user_metadata if logged in (cross-device)
+    if (window.sb_client) {
+      window.sb_client.auth.getUser().then(({ data }) => {
+        if (data?.user) {
+          window.sb_client.auth.updateUser({
+            data: { recently_viewed: recent.slice(0, 10) }
+          }).catch(() => {});
+        }
+      });
+    }
   } catch (e) {}
 };
 
