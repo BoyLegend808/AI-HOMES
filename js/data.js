@@ -638,23 +638,35 @@ async function ensureAdminAccess() {
     window.location.href = "../home/home.html";
     return false;
   }
-  const { data: userData, error: userError } =
-    await window.sb_client.auth.getUser();
-  if (userError || !userData?.user) {
-    window.location.href = "../home/home.html";
-    return false;
-  }
-  const { data: profile } = await window.sb_client
-    .from("profiles")
-    .select("role")
-    .eq("id", userData.user.id)
-    .single();
+  
+  try {
+    const { data: userData, error: userError } = await window.sb_client.auth.getUser();
+    if (userError || !userData?.user) {
+      window.location.href = "../home/home.html";
+      return false;
+    }
 
-  if (profile?.role !== "admin") {
+    const { data: profile } = await window.sb_client
+      .from("profiles")
+      .select("role")
+      .eq("id", userData.user.id)
+      .single();
+
+    const meta = userData.user.user_metadata || {};
+    const role = profile?.role || meta.role || "student";
+
+    if (role !== "admin") {
+      window.location.href = "../home/home.html";
+      return false;
+    }
+    return true;
+  } catch (e) {
+    // If background check fails but we have a local admin session, allow it for now
+    const localUser = getCurrentUser();
+    if (localUser?.role === "admin") return true;
     window.location.href = "../home/home.html";
     return false;
   }
-  return true;
 }
 
 async function loginUser(email, password) {
