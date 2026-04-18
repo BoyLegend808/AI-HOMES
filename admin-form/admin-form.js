@@ -1,14 +1,11 @@
+// StudentHome - Admin Form Script (Premium v2.0)
+
 let editingId = null;
 let backPage = "admin";
-let uploadedPhotos = []; // Holds the final URLs 
-let pendingFiles = []; // Holds actual files waiting to be uploaded to Bucket
+let uploadedPhotos = []; 
+let pendingFiles = []; 
 
 const normalizeTextInput = (value) => String(value || "").trim();
-
-const ensureUniqueArea = (areas, candidate) => {
-  const normalized = candidate.toLowerCase();
-  return !areas.some((a) => String(a).toLowerCase() === normalized);
-};
 
 const notify = (message, type = "info") => {
   if (window.showToast) {
@@ -22,7 +19,7 @@ const populateUnis = () => {
   const schoolSelect = document.getElementById("add-school");
   if (!schoolSelect) return;
   const savedVal = schoolSelect.value;
-  schoolSelect.innerHTML = '<option value="">Select School</option>';
+  schoolSelect.innerHTML = '<option value="">Select University</option>';
   const unis = window.getUniversities();
   Object.keys(unis).forEach((u) => {
     const op = document.createElement("option");
@@ -50,168 +47,116 @@ const populateAreas = (schoolName) => {
 };
 
 async function addNewSchool() {
-  const name = normalizeTextInput(prompt("Enter the new school name"));
+  const name = prompt("Enter University Name:");
   if (!name) return;
-
-  const unis = window.getUniversities ? window.getUniversities() : {};
-  if (Object.keys(unis).some((u) => u.toLowerCase() === name.toLowerCase())) {
-    notify("That school already exists.", "error");
-    populateUnis();
-    const schoolSelect = document.getElementById("add-school");
-    if (schoolSelect) schoolSelect.value = name;
-    populateAreas(name);
-    return;
-  }
-
   const res = await window.addUniversity(name);
-  if (!res?.success) {
-    notify(
-      "Add School Error: " + (res?.error?.message || "Unable to save."),
-      "error",
-    );
-    return;
+  if (res?.success) {
+    populateUnis();
+    document.getElementById("add-school").value = name;
+    populateAreas(name);
+    notify("School added!", "success");
   }
-
-  populateUnis();
-  const schoolSelect = document.getElementById("add-school");
-  if (schoolSelect) schoolSelect.value = name;
-  populateAreas(name);
-  notify("School added successfully.", "success");
 }
 
 async function addNewArea() {
-  const schoolSelect = document.getElementById("add-school");
-  const school = normalizeTextInput(schoolSelect?.value);
-  if (!school) {
-    notify("Select a school first.", "error");
-    return;
-  }
+  const school = document.getElementById("add-school").value;
+  if (!school) return notify("Select a school first.", "error");
 
-  const area = normalizeTextInput(prompt(`Enter a new area for ${school}`));
+  const area = prompt(`New area for ${school}:`);
   if (!area) return;
 
-  const unis = window.getUniversities ? window.getUniversities() : {};
-  const currentAreas = unis[school] || [];
-  if (!ensureUniqueArea(currentAreas, area)) {
-    notify("That area already exists for this school.", "error");
-    populateAreas(school);
-    const areaSelect = document.getElementById("add-area");
-    if (areaSelect) areaSelect.value = area;
-    return;
-  }
-
   const res = await window.addAreaToUniversity(school, area);
-  if (!res?.success) {
-    notify("Add Area Error: " + (res?.error?.message || "Unable to save."), "error");
-    return;
+  if (res?.success) {
+    populateAreas(school);
+    document.getElementById("add-area").value = area;
+    notify("Area added!", "success");
   }
-
-  populateAreas(school);
-  const areaSelect = document.getElementById("add-area");
-  if (areaSelect) areaSelect.value = area;
-  notify("Area added successfully.", "success");
 }
 
-// Handle photo uploads
 const handleFileUpload = (e) => {
   const files = Array.from(e.target.files);
   const container = document.getElementById("preview-container");
-  const label = document.getElementById("upload-label");
 
   files.forEach((file) => {
-    pendingFiles.push(file); // Save the raw file for the "Submit" step
-
+    pendingFiles.push(file);
     const reader = new FileReader();
     reader.onload = (event) => {
-      const base64 = event.target.result;
-      // We ONLY use base64 here to show a quick UI preview, not for the database
-      const div = document.createElement("div");
-      div.style =
-        "width:100px; height:80px; position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--accent);";
-      div.innerHTML = `<img src="${base64}" style="width:100%; height:100%; object-fit:cover;">`;
-      container.appendChild(div);
-      if (label) label.style.display = "none";
+      const img = document.createElement("img");
+      img.src = event.target.result;
+      img.className = "preview-thumb";
+      container.appendChild(img);
     };
     reader.readAsDataURL(file);
   });
 };
 
 const submitHouse = async () => {
+  const btn = document.getElementById("btn-submit");
+  const originalText = btn.textContent;
+  
   const title = document.getElementById("add-title").value;
   const school = document.getElementById("add-school").value;
   const area = document.getElementById("add-area").value;
-  const exactLocation = document.getElementById("add-location").value;
-  const type = document.getElementById("add-type").value;
   const price = parseInt(document.getElementById("add-price").value);
-  const rooms = parseInt(document.getElementById("add-rooms").value) || 1;
-  const phone = document.getElementById("add-phone").value;
-  const whatsapp = document.getElementById("add-wa").value;
-  const desc = document.getElementById("add-desc").value;
 
-  const btn = document.getElementById("btn-submit");
-  btn.textContent = "Uploading Photos...";
+  if (!title || !school || !area || !price) {
+    return notify("Please fill all required fields.", "error");
+  }
+
+  btn.textContent = "Processing...";
   btn.disabled = true;
 
-  // 1. Upload files to our 'Photo Album' (Storage Bucket) FIRST
   try {
+    // 1. Upload new photos if any
     if (pendingFiles.length > 0) {
-      const uploadPromises = pendingFiles.map((file) => window.uploadPhotoToStorage(file));
-      const urls = await Promise.all(uploadPromises);
-      urls.forEach((url) => {
-        if (url) uploadedPhotos.push(url);
-      });
+      const urls = await Promise.all(pendingFiles.map(f => window.uploadPhotoToStorage(f)));
+      urls.forEach(u => { if(u) uploadedPhotos.push(u); });
     }
+
+    if (uploadedPhotos.length === 0) {
+      btn.textContent = originalText;
+      btn.disabled = false;
+      return notify("Please upload at least one photo.", "error");
+    }
+
+    const house = {
+      title, school, area, price,
+      exactLocation: document.getElementById("add-location").value,
+      type: document.getElementById("add-type").value,
+      rooms: parseInt(document.getElementById("add-rooms").value) || 1,
+      contact: { 
+        phone: document.getElementById("add-phone").value, 
+        whatsapp: document.getElementById("add-wa").value 
+      },
+      description: document.getElementById("add-desc").value,
+      photos: uploadedPhotos,
+      photo: uploadedPhotos[0],
+      location: `${area} (${school})`,
+      status: "Active"
+    };
+
+    let res;
+    if (editingId) {
+      house.id = parseInt(editingId);
+      res = await window.updateListing(house);
+    } else {
+      res = await window.addListing(house);
+    }
+
+    if (res.success) {
+      notify("Property saved successfully!", "success");
+      setTimeout(() => {
+        window.location.href = backPage === "properties" ? "../admin/properties.html" : "../admin/admin.html";
+      }, 1000);
+    } else {
+      throw new Error(res.error?.message);
+    }
+
   } catch (err) {
-    alert("Could not upload photos. Check your internet or bucket permissions.");
-    btn.textContent = "Submit Listing";
+    notify("Error: " + err.message, "error");
+    btn.textContent = originalText;
     btn.disabled = false;
-    return;
   }
-
-  // If no photos exist at all
-  if (!title || !school || !area || !price || uploadedPhotos.length === 0) {
-    alert("Please fill required details and upload photos.");
-    btn.textContent = "Submit Listing";
-    btn.disabled = false;
-    return;
-  }
-
-  // 2. Add the short URL links to our Notebook (Database)
-  const house = {
-    title,
-    school,
-    area,
-    exactLocation,
-    type,
-    price,
-    rooms,
-    status: "Active",
-    photos: uploadedPhotos,
-    photo: uploadedPhotos[0], // Main display image
-    location: `${area} (${school})`, // Combined string for display/search
-    description: desc,
-    desc: desc, // Alias for older components
-    contact: { phone, whatsapp },
-  };
-
-  btn.textContent = "Saving to Database...";
-
-  if (editingId) {
-    house.id = parseInt(editingId);
-    const res = await window.updateListing(house);
-    if (!res.success) alert("Update Error: " + res.error?.message);
-    else {
-      if (window.fetchAllData) window.fetchAllData();
-      alert("Property Updated Successfully!");
-    }
-  } else {
-    const res = await window.addListing(house);
-    if (!res.success) alert("Listing Error: " + res.error?.message);
-    else alert("Property Listed Successfully!");
-  }
-  const target =
-    backPage === "properties" ? "../admin/properties.html" : "../admin/admin.html";
-  window.location.href = target;
 };
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -220,109 +165,60 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const formBody = document.getElementById("form-body");
   const formSkeleton = document.getElementById("form-skeleton");
-  const toggleSkeleton = (show) => {
-    if (formSkeleton) formSkeleton.style.display = show ? "grid" : "none";
-    if (formBody) formBody.style.display = show ? "none" : "";
-  };
-
+  
   populateUnis();
-
+  
   const typeSelect = document.getElementById("add-type");
   if (typeSelect) {
-    typeSelect.innerHTML =
-      '<option value="">Select Type</option>' +
-      (window.HOUSE_TYPES || [])
-        .map((t) => `<option value="${t}">${t}</option>`)
-        .join("");
+    typeSelect.innerHTML = '<option value="">Select Type</option>' +
+      (window.HOUSE_TYPES || []).map(t => `<option value="${t}">${t}</option>`).join("");
   }
-
-  const schoolSelect = document.getElementById("add-school");
-  if (schoolSelect)
-    schoolSelect.addEventListener("change", (e) =>
-      populateAreas(e.target.value),
-    );
-
-  const fileInput = document.getElementById("file-upload");
-  if (fileInput) fileInput.addEventListener("change", handleFileUpload);
-
-  const submitBtn = document.getElementById("btn-submit");
-  if (submitBtn) submitBtn.addEventListener("click", submitHouse);
 
   const urlParams = new URLSearchParams(window.location.search);
   editingId = urlParams.get("edit");
   backPage = urlParams.get("back") || "admin";
 
-  const backLinkEl = document.getElementById("back-link");
-  if (backLinkEl) {
-    backLinkEl.href =
-      backPage === "properties" ? "../admin/properties.html" : "../admin/admin.html";
-  }
-
-  const formTitleEl = document.getElementById("form-title");
-  const formSubTextEl = formTitleEl?.closest(".header-content")?.querySelector("p");
-  const submitBtnEl = document.getElementById("btn-submit");
-
   if (editingId) {
-    toggleSkeleton(true);
-    if (formTitleEl) formTitleEl.textContent = "Edit Property";
-    if (formSubTextEl)
-      formSubTextEl.textContent = "Update listing details and gallery photos.";
-    if (submitBtnEl) submitBtnEl.textContent = "Save Changes";
+    if (formSkeleton) formSkeleton.style.display = "grid";
+    if (formBody) formBody.style.display = "none";
+    
+    if (window.fetchAllData) await window.fetchAllData();
+    let house = window.getListingById(editingId);
+    
+    if (house) {
+      document.getElementById("form-title").textContent = "Edit Property";
+      document.getElementById("btn-submit").textContent = "Update Listing";
+      
+      document.getElementById("add-title").value = house.title;
+      document.getElementById("add-location").value = house.exactLocation || "";
+      document.getElementById("add-price").value = house.price;
+      document.getElementById("add-rooms").value = house.rooms || 1;
+      document.getElementById("add-type").value = house.type || "";
+      document.getElementById("add-phone").value = house.contact?.phone || "";
+      document.getElementById("add-wa").value = house.contact?.whatsapp || "";
+      document.getElementById("add-desc").value = house.description || house.desc || "";
+      
+      document.getElementById("add-school").value = house.school;
+      populateAreas(house.school);
+      document.getElementById("add-area").value = house.area;
 
-    // Ensure cached houses exist (best case)
-    if (window.fetchAllData) {
-      await window.fetchAllData();
+      if (house.photos?.length) {
+        uploadedPhotos = house.photos;
+        const container = document.getElementById("preview-container");
+        house.photos.forEach(src => {
+          const img = document.createElement("img");
+          img.src = src;
+          img.className = "preview-thumb";
+          container.appendChild(img);
+        });
+      }
     }
-
-    // Prefer cache, but fall back to DB fetch if cache isn't ready.
-    let listing = window.getListingById(editingId);
-    if (!listing && window.getListingByIdFromDb) {
-      listing = await window.getListingByIdFromDb(editingId);
-    }
-
-    if (!listing) {
-      notify("Property not found. It may have been deleted.", "error");
-      toggleSkeleton(false);
-      return;
-    }
-
-    document.getElementById("add-title").value = listing.title;
-    document.getElementById("add-location").value =
-      listing.exactLocation || "";
-    document.getElementById("add-price").value = listing.price;
-    document.getElementById("add-rooms").value = listing.rooms || 1;
-    document.getElementById("add-type").value = listing.type;
-    document.getElementById("add-phone").value = listing.contact?.phone || "";
-    document.getElementById("add-wa").value = listing.contact?.whatsapp || "";
-    document.getElementById("add-desc").value =
-      listing.description || listing.desc || "";
-
-    document.getElementById("add-school").value = listing.school;
-    populateAreas(listing.school);
-    document.getElementById("add-area").value = listing.area;
-
-    // Photos
-    if (listing.photos && listing.photos.length > 0) {
-      uploadedPhotos = listing.photos;
-      const container = document.getElementById("preview-container");
-      const label = document.getElementById("upload-label");
-      if (label) label.style.display = "none";
-
-      listing.photos.forEach((img) => {
-        const div = document.createElement("div");
-        div.style =
-          "width:100px; height:80px; position:relative; border-radius:8px; overflow:hidden; border:1px solid var(--accent);";
-        div.innerHTML = `<img src="${img}" style="width:100%; height:100%; object-fit:cover;">`;
-        container.appendChild(div);
-      });
-    }
-
-    toggleSkeleton(false);
-  } else {
-    if (formTitleEl) formTitleEl.textContent = "Property Creator";
-    if (formSubTextEl)
-      formSubTextEl.textContent = "Create full property details and upload gallery photos.";
-    if (submitBtnEl) submitBtnEl.textContent = "Publish Property";
-    toggleSkeleton(false);
   }
+
+  if (formSkeleton) formSkeleton.style.display = "none";
+  if (formBody) formBody.style.display = "block";
+
+  document.getElementById("add-school")?.addEventListener("change", (e) => populateAreas(e.target.value));
+  document.getElementById("file-upload")?.addEventListener("change", handleFileUpload);
+  document.getElementById("btn-submit")?.addEventListener("click", submitHouse);
 });

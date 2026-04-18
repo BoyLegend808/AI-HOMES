@@ -43,19 +43,20 @@
       <div class="container">
         <div class="dashboard-header">
           <div class="header-content">
-            <h1>Admin Dashboard</h1>
-            <p>Welcome back! Here's what's happening today.</p>
+            <h1>Admin Control</h1>
+            <p>Monitor your entire estate and student inquiries in real-time.</p>
           </div>
-          <a href="../admin-form/admin-form.html" class="btn btn-primary">+ Add New Property</a>
-          <a href="../admin/properties.html" class="btn btn-secondary" style="margin-left: 0.75rem;">Manage Properties</a>
+          <div class="header-actions">
+            <a href="../admin-form/admin-form.html" class="btn btn-primary">+ New Property</a>
+          </div>
         </div>
 
-      <button class="back-link-btn" onclick="window.location.href='../home/home.html'">
+        <button class="back-link-btn" onclick="window.location.href='../home/home.html'">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          Back to Home
-      </button>
+          Back to Website
+        </button>
 
-      <main class="admin-grid">
+        <div class="admin-grid">
           <div class="stat-card">
             <div class="stat-icon">🏠</div>
             <div class="stat-content">
@@ -64,121 +65,96 @@
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon">✅</div>
+            <div class="stat-icon">✨</div>
             <div class="stat-content">
               <h3 id="active-count">0</h3>
-              <p>Active Listings</p>
+              <p>Active</p>
             </div>
           </div>
           <div class="stat-card">
             <div class="stat-icon">🎓</div>
             <div class="stat-content">
               <h3 id="uni-count">0</h3>
-              <p>Total Universities</p>
+              <p>Schools</p>
             </div>
           </div>
         </div>
 
         <section class="listings-section">
           <div class="section-header">
-            <h2>Property Management</h2>
+            <h2>Inventory Management</h2>
             <div class="search-wrapper">
-              <input type="text" id="admin-search" placeholder="Search by name, school or area...">
+              <input type="text" id="admin-search" placeholder="Search houses...">
               <select id="admin-status-filter">
-                <option value="all">All Statuses</option>
+                <option value="all">Statuses</option>
                 <option value="Active">Active</option>
                 <option value="Hidden">Hidden</option>
               </select>
-              <select id="admin-uni-filter" style="min-width: 200px;">
-                <option value="all">All Universities</option>
-              </select>
             </div>
           </div>
 
-          <div id="admin-loading" class="admin-loading" style="display:flex;">
-            <!-- Modern Table Row Skeletons -->
-            <div class="skeleton-row-box">
-              <div class="skel-col prop-info">
-                 <div class="skel-img"></div>
-                 <div class="skel-lines">
-                   <div class="skel-line title"></div>
-                   <div class="skel-line sub"></div>
-                 </div>
-              </div>
-              <div class="skel-col price"></div>
-              <div class="skel-col status"></div>
-              <div class="skel-col actions"></div>
-            </div>
-            <div class="skeleton-row-box"></div>
+          <div id="admin-loading" class="admin-loading">
             <div class="skeleton-row-box"></div>
             <div class="skeleton-row-box"></div>
             <div class="skeleton-row-box"></div>
           </div>
 
-          <!-- Desktop Table (Hidden on small screens via CSS) -->
-          <div class="listings-table-container" style="display:none;">
+          <div class="listings-table-container">
             <table>
               <thead>
                 <tr>
-                  <th>Property</th>
+                  <th>Property Details</th>
                   <th>Price</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody id="listings-body">
-                <!-- Rendered by JS -->
+                <!-- Data injections via admin.js -->
               </tbody>
             </table>
           </div>
-
-          <!-- Mobile Cards (Visible only on small screens via CSS) -->
-          <div class="listings-cards" id="listings-cards" style="display:none;">
-            <!-- Rendered by JS -->
-          </div>
         </section>
 
-        <!-- INQUIRIES SECTION -->
-        <section class="listings-section" style="margin-top: 3rem;">
+        <!-- INQUIRIES -->
+        <section class="listings-section">
           <div class="section-header">
-            <h2>Student Messages</h2>
+            <h2>Student Inquiries</h2>
           </div>
           <div class="listings-table-container">
             <table>
               <thead>
                 <tr>
-                  <th>Student</th>
-                  <th>Property</th>
-                  <th>Message</th>
-                  <th>Date</th>
+                  <th>Student Info</th>
+                  <th>Interest</th>
+                  <th>Message Snippet</th>
+                  <th>Received</th>
                 </tr>
               </thead>
               <tbody id="inquiries-body">
-                <!-- Rendered by JS -->
+                <!-- Data injections via admin.js -->
               </tbody>
             </table>
           </div>
         </section>
 
         <!-- UNIVERSITY LOGISTICS -->
-        <section class="listings-section" style="margin-top: 3rem;">
+        <section class="listings-section">
           <div class="section-header">
-            <h2>University Management</h2>
-            <button class="btn btn-primary" onclick="addNewUniversity()">+ Add New University</button>
+            <h2>University Partners</h2>
+            <button class="btn btn-primary" onclick="addNewUniversity()">+ Add School</button>
           </div>
-          <p style="color:var(--text-muted); margin-bottom:1.5rem;">Upload the official University logos here. They will
-            appear powerfully on student navigation bars.</p>
-          <div id="uni-loading" class="uni-loading" style="display:flex;">
-            <div class="uni-skel-card"></div>
-            <div class="uni-skel-card"></div>
+          <div id="uni-loading" class="uni-loading">
             <div class="uni-skel-card"></div>
             <div class="uni-skel-card"></div>
           </div>
-          <div id="uni-cards"
-            style="display:none; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1.5rem;">
-            <!-- Rendered by JS -->
+          <div id="uni-cards" class="uni-cards-grid">
+            <!-- Data injections via admin.js -->
           </div>
         </section>
+      </div>
+    </main>
+
 
         <input type="file" id="uni-logo-upload" accept="image/*" style="display:none;" />
       </div>
