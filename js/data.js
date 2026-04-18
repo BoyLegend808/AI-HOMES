@@ -259,8 +259,8 @@ if (!sb_client) {
   
   console.log('Cloud fetch START');
   try {
-    // TIMEOUT-RACED PARALLEL CALLS (5s max each)
-    const TIMEOUT = 5000;
+    // TIMEOUT-RACED PARALLEL CALLS (15s max each)
+    const TIMEOUT = 15000;
     const safeCall = (p) => Promise.race([
       p, 
       new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')), TIMEOUT))
@@ -276,11 +276,11 @@ if (!sb_client) {
     // ROBUST PROCESSING WITH FALLBACKS
     const [listingsRes, reviewsRes, unisRes, favsRes] = results;
     
-    // HOUSES: Fallback to DEFAULT if empty/failed
-    if (listingsRes.status === "fulfilled" && listingsRes.value.data?.length > 0) {
-      CACHED_LISTINGS = listingsRes.value.data.map(normalizeListing);
+    // HOUSES: Fallback to DEFAULT if failed
+    if (listingsRes.status === "fulfilled" && !listingsRes.value?.error) {
+      CACHED_LISTINGS = (listingsRes.value.data || []).map(normalizeListing);
     } else {
-      console.warn('Houses fetch failed → DEFAULT_LISTINGS');
+      console.warn('Houses fetch failed → DEFAULT_LISTINGS', listingsRes.reason || listingsRes.value?.error);
       CACHED_LISTINGS = DEFAULT_LISTINGS.map(normalizeListing);
     }
     window.hasFetchedHouses = true;
@@ -291,15 +291,15 @@ if (!sb_client) {
     }
 
     // UNIS: Fallback to DEFAULT_UNIVERSITIES
-    if (unisRes.status === "fulfilled" && unisRes.value.data) {
-      window.CLOUD_UNIVERSITIES_DATA = unisRes.value.data;
+    if (unisRes.status === "fulfilled" && !unisRes.value?.error) {
+      window.CLOUD_UNIVERSITIES_DATA = unisRes.value.data || [];
       const transformed = {};
-      unisRes.value.data.forEach((u) => transformed[u.name] = u.locations);
+      (unisRes.value.data || []).forEach((u) => transformed[u.name] = u.locations);
       if (Object.keys(transformed).length > 0) {
         CLOUD_UNIVERSITIES = transformed;
       }
     } else {
-      console.warn('Unis fetch failed or zero results');
+      console.warn('Unis fetch failed');
     }
 
 
