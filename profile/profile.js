@@ -173,6 +173,7 @@ window.saveProfile = async () => {
             document.getElementById("user-uni").textContent = updated.university;
             if(updated.avatar_url) {
                 document.getElementById("header-avatar").innerHTML = `<img src="${updated.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
+                document.getElementById("edit-avatar-preview").innerHTML = `<img src="${updated.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
             }
         } else {
             throw error;
