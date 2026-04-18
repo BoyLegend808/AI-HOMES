@@ -1,4 +1,7 @@
-/* Variables and reset inherited from nav.css */
+/* :root variables defined in nav.css — no duplicate needed */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
+
 
 /* Extracted from shop.html */
 .shop-header {

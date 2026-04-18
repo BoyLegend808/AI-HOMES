@@ -1,10 +1,10 @@
 /* StudentHome - Admin Dashboard Styles */
+/* :root color variables defined in nav.css — aliases mapped below for admin-specific shorthand */
 :root {
-  --bg: #0f172a;
-  --card: #1e293b;
-  --text: #e2e8f0;
-  --accent: #ea580c;
-  --muted: #94a3b8;
+  --bg: var(--bg-primary);
+  --card: var(--bg-panel);
+  --text: var(--text-main);
+  --muted: var(--text-muted);
   --shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
 }
 
