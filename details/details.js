@@ -15,8 +15,11 @@ window.renderDetailsPage = () => {
   if (!listing) {
     // Only show "not found" if we actually have data but no matching ID
     if (all.length > 0) {
-      document.getElementById("app").innerHTML =
-        '<div style="padding:4rem;text-align:center;color:white;font-weight:600;">Listing not found. <br><br> <a href="../shop/shop.html" style="color:var(--accent);">← Go back to Shop</a></div>';
+      const main = document.getElementById("main-content");
+      if (main) {
+        main.innerHTML =
+          '<div style="padding:4rem;text-align:center;color:white;font-weight:600;">Listing not found. <br><br> <a href="../shop/shop.html" style="color:var(--accent);">← Go back to Shop</a></div>';
+      }
     }
     return;
   }
@@ -55,7 +58,9 @@ document.addEventListener("DOMContentLoaded", () => {
     window.renderDetailsPage();
   } else {
     // Show skeleton while loading
-    document.getElementById("app").innerHTML = `
+    const main = document.getElementById("main-content");
+    if (main) {
+      main.innerHTML = `
       <div class="details-grid" style="padding: 2rem;">
         <div class="left-col">
           <div class="hero-image loading-card" style="animation: pulse 1.5s infinite; background: rgba(255,255,255,0.05); border-radius: 24px;"></div>
@@ -84,11 +89,13 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       </div>
     `;
+    }
   }
 });
 
 function renderDetails() {
-  const app = document.getElementById("app");
+  const app = document.getElementById("main-content");
+  if (!app) return;
 
   const allPhotos =
     listing.photos && listing.photos.length > 0
@@ -141,7 +148,7 @@ function renderDetails() {
           <button class="bookmarkBtn ${window.isFavorited(listing.id) ? "active" : ""}" 
             data-house-id="${listing.id}"
             style="position:relative; top:0; right:0;"
-            onclick="event.stopPropagation(); window.toggleFavorite(${listing.id})">
+            onclick="event.stopPropagation(); window.toggleFavorite('${listing.id}')">
               <span class="IconContainer">
                 <svg viewBox="0 0 384 512" height="0.9em" class="icon"><path d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"></path></svg>
               </span>
