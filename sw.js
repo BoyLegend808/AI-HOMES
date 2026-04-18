@@ -34,6 +34,7 @@ self.addEventListener("fetch", (event) => {
 
   // Skip non-GET requests and API calls
   if (event.request.method !== "GET") return;
+  if (!url.protocol.startsWith("http")) return;
   if (url.pathname.startsWith("/api/")) return;
 
   // Cache-first for static assets (CSS, JS, images, fonts)

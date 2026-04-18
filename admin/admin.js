@@ -261,12 +261,25 @@ async function renderInquiries() {
 
   const { data, error } = await window.sb_client
     .from('inquiries')
-    .select('*, profiles(full_name, email, phone, university), houses(title)')
+    .select('*, houses(title)')
     .order('created_at', { ascending: false });
 
   if (error || !data || data.length === 0) {
     if (body) body.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:3rem; color:var(--text-muted);">No student inquiries found.</td></tr>';
     return;
+  }
+
+  const userIds = data.map(i => i.user_id).filter(id => id);
+  if (userIds.length > 0) {
+    const { data: profiles } = await window.sb_client
+      .from('profiles')
+      .select('id, full_name, email, phone, university')
+      .in('id', userIds);
+    if (profiles) {
+      data.forEach(inq => {
+        inq.profiles = profiles.find(p => p.id === inq.user_id);
+      });
+    }
   }
 
   body.innerHTML = data.map(inq => `
