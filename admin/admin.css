@@ -352,5 +352,51 @@ tr:hover { background: var(--row-hover); }
 }
 
 @media (max-width: 900px) {
+  .dashboard-header { flex-direction: column; align-items: flex-start; gap: 1.5rem; padding-top: 2rem; }
+  .header-actions { width: 100%; }
+  .btn-primary { width: 100%; }
   .search-wrapper { flex-direction: column; min-width: 100%; }
+  
+  /* Responsive Table to Cards */
+  .listings-table-container { border: none; background: transparent; backdrop-filter: none; }
+  table, thead, tbody, th, td, tr { display: block; }
+  thead { display: none; } /* Hide headers on mobile */
+  
+  tr { 
+    background: var(--bg-panel); 
+    backdrop-filter: var(--glass);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    margin-bottom: 1rem;
+    padding: 1rem;
+  }
+  
+  td { 
+    border: none; 
+    padding: 0.5rem 0; 
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  td:first-child { border-bottom: 1px solid var(--card-border); padding-bottom: 1rem; margin-bottom: 0.5rem; }
+
+  /* Labeling the mobile data */
+  td:nth-of-type(2):before { content: "Rate"; color: var(--text-muted); font-size: 0.8rem; font-weight: 500; }
+  td:nth-of-type(3):before { content: "Visibility"; color: var(--text-muted); font-size: 0.8rem; font-weight: 500; }
+  
+  .actions { width: 100%; justify-content: flex-end; }
+  .prop-cell { width: 100%; }
+  .prop-titles h4 { font-size: 1rem; }
+}
+
+@media (max-width: 600px) {
+  .container { padding: 0 1rem; }
+  .admin-grid { grid-template-columns: 1fr; }
+  .stat-card { padding: 1.5rem; }
+  .stat-icon { width: 55px; height: 55px; font-size: 1.8rem; }
+  .stat-content h3 { font-size: 1.5rem; }
+  
+  .section-header h2 { font-size: 1.5rem; }
 }

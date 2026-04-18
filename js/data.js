@@ -597,7 +597,7 @@ async function fetchSessionUser() {
 
   // High-Performance Timeout Race
   const timeout = new Promise((_, rej) =>
-    setTimeout(() => rej(new Error("Timeout")), 3500),
+    setTimeout(() => rej(new Error("Timeout")), 10000),
   );
 
   try {
@@ -632,41 +632,36 @@ async function fetchSessionUser() {
 }
 
 async function ensureAdminAccess() {
-  if (!window.sb_client) {
-    const localUser = getCurrentUser();
-    if (localUser?.role === "admin") return true;
-    window.location.href = "../home/home.html";
-    return false;
-  }
+  console.log("Admin security check initializing...");
   
-  try {
-    const { data: userData, error: userError } = await window.sb_client.auth.getUser();
-    if (userError || !userData?.user) {
-      window.location.href = "../home/home.html";
-      return false;
-    }
-
-    const { data: profile } = await window.sb_client
-      .from("profiles")
-      .select("role")
-      .eq("id", userData.user.id)
-      .single();
-
-    const meta = userData.user.user_metadata || {};
-    const role = profile?.role || meta.role || "student";
-
-    if (role !== "admin") {
-      window.location.href = "../home/home.html";
-      return false;
-    }
-    return true;
-  } catch (e) {
-    // If background check fails but we have a local admin session, allow it for now
-    const localUser = getCurrentUser();
-    if (localUser?.role === "admin") return true;
-    window.location.href = "../home/home.html";
-    return false;
+  // Wait up to 3 seconds for Supabase client to initialize if it hasn't yet
+  for (let i = 0; i < 15; i++) {
+    if (window.sb_client) break;
+    await new Promise(r => setTimeout(r, 200));
   }
+
+  try {
+    const user = await fetchSessionUser();
+    console.log("Session User Resolved:", user?.email, "| Role:", user?.role);
+    
+    if (user && user.role === "admin") {
+      console.log("Access Granted: Admin confirmed.");
+      return true;
+    }
+    
+    // Safety net: fresh local check
+    const localUser = getCurrentUser();
+    if (localUser && localUser.role === "admin") {
+      console.log("Access Granted: Local admin session found.");
+      return true;
+    }
+  } catch (e) {
+    console.error("Admin Access Security Check Error:", e);
+  }
+
+  console.warn("Access Denied: Redirecting to home.");
+  window.location.href = "../home/home.html";
+  return false;
 }
 
 async function loginUser(email, password) {
