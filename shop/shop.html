@@ -5,9 +5,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Browse Student Housing | Filter by University, Area & Price - StudentHome</title>
-  <meta name="description" content="Search and filter student housing by university, campus area, house type and price. Find your perfect student accommodation today.">
+  <meta name="description"
+    content="Search and filter student housing by university, campus area, house type and price. Find your perfect student accommodation today.">
   <meta property="og:title" content="Browse Student Housing - StudentHome">
-  <meta property="og:description" content="Search and filter student housing by university, campus area, house type and price.">
+  <meta property="og:description"
+    content="Search and filter student housing by university, campus area, house type and price.">
   <meta property="og:type" content="website">
   <meta property="og:image" content="">
   <meta name="twitter:card" content="summary_large_image">
@@ -29,7 +31,11 @@
       <div class="nav-center">
         <nav class="nav-links">
           <ul class="nav-list is-loading">
-            <li></li><li></li><li></li><li></li><li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
+            <li></li>
           </ul>
         </nav>
       </div>
@@ -43,15 +49,18 @@
     </header>
     <div class="nav-overlay"></div>
 
-    <main id="main-content">
+    <main id="main-content" style="padding-bottom: 150px;">
       <div id="recently-viewed-section" style="display:none; margin-bottom: 3rem;">
         <h3 style="font-size: 1.5rem; margin-bottom: 1rem; color: var(--text-muted);">Recently Viewed</h3>
-        <div class="shop-grid" id="recent-container" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;"></div>
+        <div class="shop-grid" id="recent-container"
+          style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;"></div>
       </div>
 
       <button class="back-link-btn" onclick="window.location.href='../home/home.html'">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"></polyline></svg>
-          Back to Home
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        Back to Home
       </button>
 
       <div class="shop-header" id="shop-header">
@@ -95,10 +104,9 @@
         <!-- Rendered by js -->
       </div>
     </main>
-    
+
     <div class="mobile-sticky-action-bar">
       <button onclick="document.getElementById('shop-header').scrollIntoView({behavior: 'smooth'})">⚙ Filters</button>
-      <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})">⬆ Top</button>
     </div>
   </div>
 
