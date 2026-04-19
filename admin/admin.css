@@ -268,14 +268,13 @@ tr:hover { background: var(--row-hover); }
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 0;
+  opacity: 1;
   transition: all 0.2s ease;
   z-index: 10;
   box-shadow: 0 2px 8px rgba(244, 63, 94, 0.4);
 }
 
 .image-remove-btn:hover {
-  opacity: 1;
   background: #f43f5e;
   transform: scale(1.1);
 }
