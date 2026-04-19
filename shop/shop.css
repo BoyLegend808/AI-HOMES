@@ -236,6 +236,22 @@
       }
     }
 
+/* Footer clearance for sticky buttons */
+footer {
+  padding-bottom: 88px !important; /* 64px sticky bar + 24px gap */
+}
+
+/* Footer clearance for sticky action bar */
+footer {
+  padding-bottom: 88px !important; /* 64px bar height + 24px gap */
+}
+
+@media (max-width: 768px) {
+  footer {
+    padding-bottom: 96px !important; /* Larger gap on mobile */
+  }
+}
+
 /* Empty State */
 .empty-state {
   grid-column: 1 / -1;
