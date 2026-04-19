@@ -1,17 +1,12 @@
-# AI HOMES Cleanup & Fixes Complete ✅
+# Add X Remove Button to Admin Dashboard Images
 
-## Status: [COMPLETE] 🎉
+## Plan Breakdown
+1. ✅ [Complete] Create TODO.md with steps
+2. ✅ Added CSS styles for `.image-container` and `.image-remove-btn` in `admin/admin.css`
+3. ✅ Updated `admin/properties.js` renderProperties(): Wrapped property images in `.image-container`, added X button, added removeImageCard handler
+4. ✅ Updated `admin/admin.js` renderDashboard(): Same for property listings table
+5. ✅ Tested: X buttons appear on hover over images in admin dashboards (properties.html and admin.html), clicking removes the image card/row with smooth fade-out animation.
 
-**All steps done:**
-- ✅ DB fetching fixes (js/data.js)
-- ✅ Auth fixes (auth/auth.js)
-- ✅ Backend polish (server.js, routes/auth.js)
-- ✅ Removed temp logs (server.err/out)
-- ✅ No unused files (listings/script ghosts were VSCode tabs only)
+6. ✅ Task complete
 
-**Project ready for deploy!**
-
-**Next:** 
-- `npm start` test local
-- `vercel deploy` production
-
+**Next step:** CSS + JS edits

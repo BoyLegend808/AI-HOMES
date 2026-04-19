@@ -65,7 +65,10 @@ function renderDashboard(filter = "") {
           <tr>
             <td>
               <div class="prop-cell">
-                <img src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
+                <div class="image-container">
+                  <img src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
+                  <button class="image-remove-btn" onclick="removeImageCard(${l.id})" title="Remove image">×</button>
+                </div>
                 <div class="prop-titles">
                   <h4>${l.title}</h4>
                   <p>${l.school} • ${l.location}</p>
@@ -112,6 +115,20 @@ async function handleDelete(id) {
     renderDashboard(document.getElementById("admin-search")?.value);
   }
 }
+
+window.removeImageCard = async (id) => {
+  if (!confirm("Delete this property from database?")) return;
+  const row = event.target.closest('tr');
+  if (row) {
+    row.style.transition = 'opacity 0.3s ease';
+    row.style.opacity = '0';
+    await window.deleteListing(id);
+    if (window.fetchAllData) await window.fetchAllData();
+    setTimeout(() => {
+      renderDashboard(document.getElementById("admin-search")?.value || "");
+    }, 300);
+  }
+};
 
 window.updateUniLogoScale = async (uniId, scale) => {
   const card = document.querySelector(`.uni-card[data-id="${uniId}"]`);

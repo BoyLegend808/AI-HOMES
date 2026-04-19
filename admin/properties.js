@@ -88,7 +88,10 @@ function renderProperties(searchText = "") {
         <tr>
           <td>
             <div class="property-cell">
-              <img src="${l.photo || (l.photos && l.photos[0]) || ""}" class="property-thumb" alt="">
+              <div class="image-container">
+                <img src="${l.photo || (l.photos && l.photos[0]) || ""}" class="property-thumb" alt="">
+                <button class="image-remove-btn" onclick="removeImageCard(${l.id})" title="Remove image">×</button>
+              </div>
               <div class="property-info">
                 <h4>${l.title}</h4>
                 <p>${l.location}</p>
@@ -113,7 +116,10 @@ function renderProperties(searchText = "") {
     .map(
       (l) => `
         <div class="listing-card">
-          <img src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
+          <div class="image-container">
+            <img src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
+            <button class="image-remove-btn" onclick="removeImageCard(${l.id})" title="Remove card">×</button>
+          </div>
           <div class="listing-card-content">
             <h4>${l.title}</h4>
             <p>${l.location}</p>
@@ -151,6 +157,20 @@ async function handleDelete(id) {
     renderProperties(document.getElementById("admin-search")?.value || "");
   }
 }
+
+window.removeImageCard = async (id) => {
+  if (!confirm("Delete this property from database?")) return;
+  const rowOrCard = event.target.closest('tr, .listing-card');
+  if (rowOrCard) {
+    rowOrCard.style.transition = 'opacity 0.3s ease';
+    rowOrCard.style.opacity = '0';
+    await window.deleteListing(id);
+    if (window.fetchAllData) await window.fetchAllData();
+    setTimeout(() => {
+      renderProperties(document.getElementById("admin-search")?.value || "");
+    }, 300);
+  }
+};
 
 document.addEventListener("DOMContentLoaded", async () => {
   const isAdmin = await window.ensureAdminAccess();

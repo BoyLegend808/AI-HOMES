@@ -246,6 +246,50 @@ tr:hover { background: var(--row-hover); }
 .status-badge.active { background: rgba(16, 185, 129, 0.1); color: #10b981; }
 .status-badge.hidden { background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
 
+/* Image Container & Remove Button */
+.image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.image-remove-btn {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  width: 24px;
+  height: 24px;
+  background: rgba(244, 63, 94, 0.9);
+  border: 2px solid #fff;
+  border-radius: 50%;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s ease;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(244, 63, 94, 0.4);
+}
+
+.image-remove-btn:hover {
+  opacity: 1;
+  background: #f43f5e;
+  transform: scale(1.1);
+}
+
+.image-container:hover .image-remove-btn {
+  opacity: 1;
+}
+
+/* Property Info Cell */
+.prop-cell,
+.property-cell {
+  position: relative;
+}
+
 /* Buttons */
 .btn {
   display: inline-flex;
