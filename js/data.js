@@ -120,6 +120,20 @@ function saveCachedDataToStorage() {
 // Load cached data ASAP (then refresh from cloud in background)
 loadCachedDataFromStorage();
 
+// SMART CACHE VALIDATION (check if cache is stale)
+const CACHE_MAX_AGE = 5 * 60 * 1000; // 5 minutes
+function isCacheStale() {
+  try {
+    const raw = localStorage.getItem(CACHE_KEY);
+    if (!raw) return true;
+    const parsed = JSON.parse(raw);
+    const age = Date.now() - (parsed.updatedAt || 0);
+    return age > CACHE_MAX_AGE;
+  } catch {
+    return true;
+  }
+}
+
 function normalizeListing(listing = {}) {
   const school = listing.school || "";
   const area = listing.area || "";
@@ -204,6 +218,15 @@ const SYSTEM_ADMINS = [];
 ========================================== */
 async function fetchAllData() {
   if (fetchAllData.inFlight) return fetchAllData.inFlightPromise;
+  
+  // SKIP FETCH if cache is fresh (avoid redundant API calls)
+  if (!isCacheStale() && CACHED_LISTINGS.length > 0) {
+    console.log('Using fresh cache, skipping fetch');
+    window.hasFetchedHouses = true;
+    refreshAllPages();
+    return Promise.resolve();
+  }
+  
   fetchAllData.inFlight = true;
   fetchAllData.inFlightPromise = (async () => {
   
@@ -259,17 +282,32 @@ if (!sb_client) {
   
   console.log('Cloud fetch START');
   try {
-    // TIMEOUT-RACED PARALLEL CALLS (15s max each)
-    const TIMEOUT = 15000;
+    // REDUCED TIMEOUT (8s instead of 15s - fail fast)
+    const TIMEOUT = 8000;
     const safeCall = (p) => Promise.race([
       p, 
       new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')), TIMEOUT))
     ]);
     
+    // OPTIMIZED: Select only needed columns instead of SELECT *
     const results = await Promise.allSettled([
-      safeCall(sb_client.from("houses").select("*").order("created_at", { ascending: false })),
-      safeCall(sb_client.from("reviews").select("*").order("created_at", { ascending: false })),
-      safeCall(sb_client.from("universities").select("*")),
+      // Houses: Only fetch columns actually used in UI
+      safeCall(sb_client
+        .from("houses")
+        .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
+        .eq("status", "Active")  // Only fetch active houses
+        .order("created_at", { ascending: false })
+      ),
+      // Reviews: Only fetch recent reviews (last 50)
+      safeCall(sb_client
+        .from("reviews")
+        .select("id, name, text, school, avatar, house_id, created_at")
+        .order("created_at", { ascending: false })
+        .limit(50)
+      ),
+      // Universities: All columns needed (small table)
+      safeCall(sb_client.from("universities").select("id, name, locations, logo_url, logo_scale")),
+      // Favorites: Only if user is logged in
       ...(window.CACHED_FAVORITES?.length ? [safeCall(sb_client.from("favorites").select("house_id").eq("user_id", getCurrentUser()?.id))] : [])
     ]);
 
@@ -331,6 +369,66 @@ function useFallbackData() {
   CLOUD_UNIVERSITIES = DEFAULT_UNIVERSITIES;
   syncUniversitiesCache();
 }
+
+// PAGINATED FETCH (for loading more houses on demand)
+window.fetchHousesPaginated = async (page = 1, limit = 20, filters = {}) => {
+  if (!sb_client) {
+    console.warn('No Supabase client for paginated fetch');
+    return { data: [], error: 'No client' };
+  }
+  
+  try {
+    let query = sb_client
+      .from("houses")
+      .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
+      .eq("status", "Active")
+      .order("created_at", { ascending: false })
+      .range((page - 1) * limit, page * limit - 1);
+    
+    // Apply filters
+    if (filters.school) query = query.eq("school", filters.school);
+    if (filters.area) query = query.eq("area", filters.area);
+    if (filters.type) query = query.eq("type", filters.type);
+    if (filters.minPrice) query = query.gte("price", filters.minPrice);
+    if (filters.maxPrice) query = query.lte("price", filters.maxPrice);
+    
+    const { data, error } = await query;
+    
+    if (error) throw error;
+    return { data: (data || []).map(normalizeListing), error: null };
+  } catch (e) {
+    console.error('Paginated fetch error:', e);
+    return { data: [], error: e.message };
+  }
+};
+
+// DEBOUNCED SEARCH (prevents excessive API calls while typing)
+const searchDebounce = { timer: null };
+window.debouncedSearch = async (query, callback, delay = 300) => {
+  if (searchDebounce.timer) clearTimeout(searchDebounce.timer);
+  
+  searchDebounce.timer = setTimeout(async () => {
+    if (!query || query.trim().length < 2) {
+      callback([]);
+      return;
+    }
+    
+    try {
+      const { data, error } = await sb_client
+        .from("houses")
+        .select("id, title, school, area, location, type, price, photo")
+        .eq("status", "Active")
+        .or(`title.ilike.%${query}%,area.ilike.%${query}%,school.ilike.%${query}%`)
+        .limit(20);
+      
+      if (error) throw error;
+      callback((data || []).map(normalizeListing));
+    } catch (e) {
+      console.error('Search error:', e);
+      callback([]);
+    }
+  }, delay);
+};
 
 function refreshAllPages() {
   requestAnimationFrame(() => {
