@@ -30,17 +30,50 @@ async function waitForHousesReady({ timeoutMs = 8000 } = {}) {
 function renderDashboard(filter = "") {
   const allListings = window.getListings();
   const searchText = String(filter || "").toLowerCase();
-  const statusFilter =
-    document.getElementById("admin-status-filter")?.value || "all";
+  const statusFilter = document.getElementById("admin-status-filter")?.value || "all";
+  const schoolFilter = document.getElementById("admin-school-filter")?.value || "";
+  const typeFilter = document.getElementById("admin-type-filter")?.value || "";
+  const sortFilter = document.getElementById("admin-sort-filter")?.value || "newest";
 
-  const listings = allListings.filter(
-    (l) =>
-      (!searchText ||
+  let listings = allListings.filter((l) => {
+    // Text search
+    if (searchText) {
+      const matchesSearch = 
         String(l.title || "").toLowerCase().includes(searchText) ||
         String(l.location || "").toLowerCase().includes(searchText) ||
-        String(l.school || "").toLowerCase().includes(searchText)) &&
-      (statusFilter === "all" || String(l.status || "") === statusFilter),
-  );
+        String(l.school || "").toLowerCase().includes(searchText) ||
+        String(l.area || "").toLowerCase().includes(searchText);
+      if (!matchesSearch) return false;
+    }
+    
+    // Status filter
+    if (statusFilter !== "all" && String(l.status || "") !== statusFilter) return false;
+    
+    // School filter
+    if (schoolFilter && String(l.school || "") !== schoolFilter) return false;
+    
+    // Type filter
+    if (typeFilter && String(l.type || "") !== typeFilter) return false;
+    
+    return true;
+  });
+
+  // Apply sorting
+  listings.sort((a, b) => {
+    switch (sortFilter) {
+      case "oldest":
+        return (new Date(a.created_at || 0)) - (new Date(b.created_at || 0));
+      case "price-high":
+        return (b.price || 0) - (a.price || 0);
+      case "price-low":
+        return (a.price || 0) - (b.price || 0);
+      case "name-az":
+        return String(a.title || "").localeCompare(String(b.title || ""));
+      case "newest":
+      default:
+        return (new Date(b.created_at || 0)) - (new Date(a.created_at || 0));
+    }
+  });
 
   document.getElementById("prop-count").textContent = allListings.length;
   document.getElementById("active-count").textContent = allListings.filter(
@@ -318,6 +351,50 @@ if (adminSearchEl) adminSearchEl.addEventListener("input", (e) => renderDashboar
 const statusFilterEl = document.getElementById("admin-status-filter");
 if (statusFilterEl) statusFilterEl.addEventListener("change", () => renderDashboard(adminSearchEl?.value || ""));
 
+const schoolFilterEl = document.getElementById("admin-school-filter");
+if (schoolFilterEl) schoolFilterEl.addEventListener("change", () => renderDashboard(adminSearchEl?.value || ""));
+
+const typeFilterEl = document.getElementById("admin-type-filter");
+if (typeFilterEl) typeFilterEl.addEventListener("change", () => renderDashboard(adminSearchEl?.value || ""));
+
+const sortFilterEl = document.getElementById("admin-sort-filter");
+if (sortFilterEl) sortFilterEl.addEventListener("change", () => renderDashboard(adminSearchEl?.value || ""));
+
+// Reset all admin filters
+window.resetAdminFilters = () => {
+  if (adminSearchEl) adminSearchEl.value = '';
+  if (statusFilterEl) statusFilterEl.value = 'all';
+  if (schoolFilterEl) schoolFilterEl.value = '';
+  if (typeFilterEl) typeFilterEl.value = '';
+  if (sortFilterEl) sortFilterEl.value = 'newest';
+  renderDashboard('');
+};
+
+// Populate school filter
+window.populateAdminSchoolFilter = () => {
+  if (!schoolFilterEl) return;
+  const universities = window.NIGERIA_UNIVERSITIES || {};
+  schoolFilterEl.innerHTML = '<option value="">All Universities</option>';
+  Object.keys(universities).forEach((school) => {
+    const option = document.createElement("option");
+    option.value = school;
+    option.textContent = school;
+    schoolFilterEl.appendChild(option);
+  });
+};
+
+// Populate type filter
+window.populateAdminTypeFilter = () => {
+  if (!typeFilterEl) return;
+  typeFilterEl.innerHTML = '<option value="">All Types</option>';
+  (window.HOUSE_TYPES || []).forEach((type) => {
+    const option = document.createElement("option");
+    option.value = type;
+    option.textContent = type;
+    typeFilterEl.appendChild(option);
+  });
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
   const isAdmin = await window.ensureAdminAccess();
   if (!isAdmin) return;
@@ -325,6 +402,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.fetchAllData) await window.fetchAllData();
   await waitForHousesReady();
   setAdminLoading(false);
+  window.populateAdminSchoolFilter();
+  window.populateAdminTypeFilter();
   renderDashboard();
   renderInquiries();
   renderUniversities();

@@ -9,70 +9,132 @@
   margin-bottom: 2rem;
 }
 
-.shop-header h2 {
-  font-size: 2rem;
+.shop-header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 1.5rem;
 }
 
-.cool-filter {
+.shop-header h2 {
+  font-size: 2rem;
+  margin: 0;
+}
+
+/* Modern Filter Bar */
+.filter-bar-modern {
   background: var(--bg-panel);
-  padding: 1.5rem;
-  border-radius: 20px;
-  margin-bottom: 2rem;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
   border: 1px solid var(--card-border);
-}
-
-.filter-row {
+  border-radius: 16px;
+  padding: 1.25rem;
   display: flex;
-  flex: 1;
+  flex-direction: column;
   gap: 1rem;
-  min-width: 250px;
 }
 
-.filter-select {
-  flex: 1;
+.filter-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.filter-search svg {
+  position: absolute;
+  left: 1rem;
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.filter-search input {
+  width: 100%;
   background: var(--bg-dark);
   color: var(--text-main);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 1rem;
+  padding: 0.85rem 1rem 0.85rem 3rem;
   border-radius: 12px;
   font-family: inherit;
-  font-size: 1rem;
+  font-size: 0.95rem;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
-.filter-select:focus {
+.filter-search input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.filter-search input::placeholder {
+  color: var(--text-muted);
+}
+
+.filter-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+}
+
+.filter-chip {
+  background: var(--bg-dark);
+  color: var(--text-main);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  padding-right: 2.5rem;
+}
+
+.filter-chip:hover {
   border-color: var(--accent);
 }
 
-.price-filter-row {
+.filter-chip:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.1);
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.btn-reset {
+  display: inline-flex;
   align-items: center;
-  gap: 1rem;
-  background: var(--bg-dark);
-  padding: 0.5rem 1rem;
-  border-radius: 12px;
+  gap: 0.5rem;
+  background: transparent;
+  color: var(--text-muted);
   border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.btn-filter {
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  padding: 1rem 2rem;
-  border-radius: 12px;
-  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
   cursor: pointer;
-  font-size: 1rem;
-  transition: background 0.2s, transform 0.2s;
+  transition: all 0.2s;
 }
 
-.btn-filter:hover {
-  background: #e87b51;
-  transform: translateY(-2px);
+.btn-reset:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(249, 115, 22, 0.05);
+}
+
+.btn-reset svg {
+  transition: transform 0.3s;
+}
+
+.btn-reset:hover svg {
+  transform: rotate(-180deg);
 }
 
 .shop-grid {
@@ -209,25 +271,23 @@
     display: flex;
   }
 
-  .filter-row {
+  .shop-header-top {
     flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
   }
 
-  .price-filter-row {
-    flex-direction: row;
-    flex-wrap: wrap;
+  .filter-chips {
+    grid-template-columns: 1fr;
   }
 
-  .price-filter-row input[type="range"] {
-    min-width: 150px;
+  .filter-bar-modern {
+    padding: 1rem;
   }
 
-  .cool-filter {
-    flex-direction: column;
-  }
-
-  .btn-filter {
+  .btn-reset {
     width: 100%;
+    justify-content: center;
   }
 }
 

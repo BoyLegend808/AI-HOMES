@@ -1,14 +1,15 @@
 const filterSchool = document.getElementById("flt-school");
 const filterArea = document.getElementById("flt-area");
 const filterType = document.getElementById("flt-type");
-const filterPrice = document.getElementById("flt-price");
-const priceDisplay = document.getElementById("price-display");
+const filterRooms = document.getElementById("flt-rooms");
+const filterSearch = document.getElementById("flt-search");
 const shopContainer = document.getElementById("shop-container");
 const sortSelect = document.getElementById("flt-sort");
 const resultsCount = document.getElementById("results-count");
 
 let allListings = [];
 let isLoading = false;
+let searchDebounceTimer = null;
 
 function setLoadingState(state) {
   isLoading = !!state;
@@ -64,7 +65,7 @@ function populateTypeOptions() {
 function populateAreaOptions(selectedSchool) {
   if (!filterArea) return;
 
-  filterArea.innerHTML = '<option value="">Select Area / Location</option>';
+  filterArea.innerHTML = '<option value="">📍 Area</option>';
 
   const areas =
     (window.NIGERIA_UNIVERSITIES &&
@@ -78,38 +79,25 @@ function populateAreaOptions(selectedSchool) {
   });
 }
 
-// Dynamically adjust the price slider max based on actual listings
-function updatePriceFilterRange() {
-  if (!filterPrice || !allListings.length) return;
-  const prices = allListings
-    .filter((l) => String(l.status || "active").toLowerCase() === "active")
-    .map((l) => l.price || 0)
-    .filter((p) => p > 0);
-  if (!prices.length) return;
-
-  const maxListingPrice = Math.max(...prices);
-  // Round up to nearest 100k
-  const roundedMax = Math.ceil(maxListingPrice / 100000) * 100000;
-  const newMax = Math.max(roundedMax, 200000); // at least 200k
-
-  filterPrice.max = newMax;
-  // Only reset value if current value is still at old max (user hasn't manually adjusted)
-  if (Number(filterPrice.value) >= Number(filterPrice.max) - 50000 || Number(filterPrice.value) > newMax) {
-    filterPrice.value = newMax;
-    if (priceDisplay) {
-      priceDisplay.textContent = "\u20A6" + Number(newMax).toLocaleString();
-    }
-  }
-}
+// Reset all filters
+window.resetFilters = () => {
+  if (filterSearch) filterSearch.value = '';
+  if (filterSchool) filterSchool.value = '';
+  if (filterArea) filterArea.value = '';
+  if (filterType) filterType.value = '';
+  if (filterRooms) filterRooms.value = '';
+  applyFilters();
+};
 
 function applyFilters() {
   if (window.getListings) {
     allListings = window.getListings();
   }
+  const searchText = filterSearch ? filterSearch.value.trim().toLowerCase() : "";
   const school = filterSchool ? filterSchool.value : "";
   const area = filterArea ? filterArea.value : "";
   const type = filterType ? filterType.value : "";
-  const maxPrice = filterPrice ? Number(filterPrice.value) : Infinity;
+  const rooms = filterRooms ? filterRooms.value : "";
   const sortBy = sortSelect ? sortSelect.value : "newest";
 
   const filtered = allListings.filter((listing) => {
@@ -117,12 +105,32 @@ function applyFilters() {
     if (currentStatus !== "active") return false;
 
     const location = String(listing.location || "").toLowerCase();
+    const title = String(listing.title || "").toLowerCase();
     let matches = true;
+
+    // Text search across title, location, area
+    if (searchText) {
+      const searchTerms = searchText.split(' ').filter(Boolean);
+      const matchesSearch = searchTerms.some(term => 
+        title.includes(term) || 
+        location.includes(term) ||
+        String(listing.area || "").toLowerCase().includes(term) ||
+        String(listing.school || "").toLowerCase().includes(term)
+      );
+      if (!matchesSearch) matches = false;
+    }
 
     if (school && !location.includes(school.toLowerCase())) matches = false;
     if (area && !location.includes(area.toLowerCase())) matches = false;
     if (type && listing.type !== type) matches = false;
-    if (listing.price > maxPrice) matches = false;
+    if (rooms) {
+      const listingRooms = Number(listing.rooms) || 1;
+      if (rooms === "4") {
+        if (listingRooms < 4) matches = false; // 4+ rooms
+      } else {
+        if (listingRooms !== Number(rooms)) matches = false;
+      }
+    }
 
     return matches;
   });
@@ -278,7 +286,6 @@ function waitForDataAndRender(maxWait = 10000) {
         clearInterval(poll);
         setLoadingState(false);
         allListings = window.getListings ? window.getListings() : [];
-        updatePriceFilterRange();
         applyFilters();
         renderRecentlyViewed();
       }
@@ -292,7 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   waitForDataAndRender();
 
-  // Filter listeners
+  // Filter listeners - auto-apply on change
   if (filterSchool) {
     filterSchool.addEventListener("change", (event) => {
       populateAreaOptions(event.target.value);
@@ -300,21 +307,30 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (filterPrice && priceDisplay) {
-    filterPrice.addEventListener("input", (e) => {
-      priceDisplay.textContent = "\u20A6" + Number(e.target.value).toLocaleString();
-      applyFilters();
+  // Real-time search with debounce
+  if (filterSearch) {
+    filterSearch.addEventListener("input", (e) => {
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => {
+        applyFilters();
+      }, 300); // 300ms debounce
     });
+  }
+
+  if (filterArea) {
+    filterArea.addEventListener("change", applyFilters);
+  }
+
+  if (filterType) {
+    filterType.addEventListener("change", applyFilters);
+  }
+
+  if (filterRooms) {
+    filterRooms.addEventListener("change", applyFilters);
   }
 
   if (sortSelect) {
     sortSelect.addEventListener("change", applyFilters);
-  }
-
-  // Global filter button if exists
-  const filterBtn = document.getElementById("apply-filters");
-  if (filterBtn) {
-    filterBtn.addEventListener("click", applyFilters);
   }
 });
 
@@ -389,7 +405,6 @@ window.populateSchoolOptions = populateSchoolOptions;
 window.renderShopGrid = (listings) => {
   setLoadingState(false);
   allListings = Array.isArray(listings) ? listings : window.getListings();
-  updatePriceFilterRange();
   renderShopGridView(allListings);
   renderRecentlyViewed();
 };
