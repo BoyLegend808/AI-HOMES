@@ -14,7 +14,7 @@ begin;
 
 -- Houses: Common filter combinations
 create index if not exists idx_houses_school_area 
-  on puablic.houses(school, area);
+  on public.houses(school, area);
 
 create index if not exists idx_houses_school_price 
   on public.houses(school, price);
