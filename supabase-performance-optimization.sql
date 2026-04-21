@@ -42,8 +42,8 @@ create index if not exists idx_profiles_email
   on public.profiles(email);
 
 create index if not exists idx_profiles_reset_token 
-  on public.profiles("resetToken") 
-  where "resetToken" is not null;
+  on public.profiles(resettoken) 
+  where resettoken is not null;
 
 -- ----------------------------------------------------------------
 -- STEP 2: PARTIAL INDEXES (only index active/valid rows)

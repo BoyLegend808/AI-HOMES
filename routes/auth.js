@@ -152,7 +152,7 @@ router.post("/forgot-password", async (req, res) => {
     // Store token in database using admin client (bypass RLS)
     const { error: updateError } = await activeAdmin
       .from("profiles")
-      .update({ resetToken: token, resetExpiry: expiry })
+      .update({ resettoken: token, resetexpiry: expiry })
       .eq("id", userId);
 
     if (updateError) {
@@ -221,9 +221,9 @@ router.post("/reset-password", async (req, res) => {
     // Find user with valid token using admin client (bypass RLS)
     const { data: user, error } = await activeAdmin
       .from("profiles")
-      .select("id, email, resetToken, resetExpiry")
-      .eq("resetToken", token)
-      .gt("resetExpiry", Date.now())
+      .select("id, email, resettoken, resetexpiry")
+      .eq("resettoken", token)
+      .gt("resetexpiry", Date.now())
       .single();
 
     console.log("Token validation:", !!user, error?.message);
@@ -250,9 +250,9 @@ router.post("/reset-password", async (req, res) => {
     const { error: clearTokenError } = await activeAdmin
       .from("profiles")
       .update({
-        resetToken: null,
-        resetExpiry: null,
-        updatedAt: new Date().toISOString(),
+        resettoken: null,
+        resetexpiry: null,
+        updatedat: new Date().toISOString(),
       })
       .eq("id", user.id);
 
@@ -291,8 +291,8 @@ router.post("/verify-reset-token", async (req, res) => {
     const { data: user, error } = await activeAdmin
       .from("profiles")
       .select("id, email")
-      .eq("resetToken", token)
-      .gt("resetExpiry", Date.now())
+      .eq("resettoken", token)
+      .gt("resetexpiry", Date.now())
       .single();
 
     if (error || !user) {
