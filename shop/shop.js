@@ -30,6 +30,43 @@ window.clearSearch = () => {
   }
 };
 
+// Update active filters display
+function updateActiveFilters() {
+  const activeFiltersContainer = document.getElementById("active-filters");
+  const activeFiltersList = document.getElementById("active-filters-list");
+  
+  if (!activeFiltersContainer || !activeFiltersList) return;
+  
+  const filters = [];
+  
+  if (filterSchool && filterSchool.value) {
+    filters.push({ label: filterSchool.value, type: 'school' });
+  }
+  if (filterArea && filterArea.value) {
+    filters.push({ label: filterArea.value, type: 'area' });
+  }
+  if (filterType && filterType.value) {
+    filters.push({ label: filterType.value, type: 'type' });
+  }
+  if (filterRooms && filterRooms.value) {
+    const roomLabels = { '1': '1 BR', '2': '2 BR', '3': '3 BR', '4': '4+ BR' };
+    filters.push({ label: roomLabels[filterRooms.value] || filterRooms.value, type: 'rooms' });
+  }
+  if (filterSearch && filterSearch.value.trim()) {
+    filters.push({ label: `"${filterSearch.value.trim().substring(0, 20)}${filterSearch.value.trim().length > 20 ? '...' : ''}"`, type: 'search' });
+  }
+  
+  if (filters.length === 0) {
+    activeFiltersContainer.style.display = "none";
+    return;
+  }
+  
+  activeFiltersContainer.style.display = "flex";
+  activeFiltersList.innerHTML = filters.map(f => 
+    `<span class="active-filter-tag">${f.label}</span>`
+  ).join('');
+}
+
 // Show/hide clear button based on search input
 if (filterSearch) {
   filterSearch.addEventListener("input", (e) => {
@@ -183,6 +220,9 @@ function applyFilters() {
   if (resultsCount) {
     resultsCount.textContent = filtered.length + " " + (filtered.length === 1 ? "property" : "properties");
   }
+
+  // Update active filters display
+  updateActiveFilters();
 
   renderShopGridView(filtered);
 }
