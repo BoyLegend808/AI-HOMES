@@ -6,10 +6,43 @@ const filterSearch = document.getElementById("flt-search");
 const shopContainer = document.getElementById("shop-container");
 const sortSelect = document.getElementById("flt-sort");
 const resultsCount = document.getElementById("results-count");
+const clearSearchBtn = document.getElementById("btn-clear-search");
 
 let allListings = [];
 let isLoading = false;
 let searchDebounceTimer = null;
+
+// Toggle filter bar on mobile
+window.toggleFilterBar = () => {
+  const filterContent = document.getElementById("filter-content");
+  if (filterContent) {
+    filterContent.classList.toggle("active");
+  }
+};
+
+// Clear search input
+window.clearSearch = () => {
+  if (filterSearch) {
+    filterSearch.value = "";
+    if (clearSearchBtn) clearSearchBtn.style.display = "none";
+    applyFilters();
+    filterSearch.focus();
+  }
+};
+
+// Show/hide clear button based on search input
+if (filterSearch) {
+  filterSearch.addEventListener("input", (e) => {
+    if (clearSearchBtn) {
+      clearSearchBtn.style.display = e.target.value ? "flex" : "none";
+    }
+    
+    if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      applyFilters();
+    }, 300);
+  });
+}
 
 function setLoadingState(state) {
   isLoading = !!state;
@@ -304,16 +337,6 @@ document.addEventListener("DOMContentLoaded", () => {
     filterSchool.addEventListener("change", (event) => {
       populateAreaOptions(event.target.value);
       applyFilters();
-    });
-  }
-
-  // Real-time search with debounce
-  if (filterSearch) {
-    filterSearch.addEventListener("input", (e) => {
-      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
-      searchDebounceTimer = setTimeout(() => {
-        applyFilters();
-      }, 300); // 300ms debounce
     });
   }
 
