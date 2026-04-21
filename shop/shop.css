@@ -237,7 +237,7 @@
 .mobile-sticky-action-bar {
   display: none;
   position: fixed;
-  bottom: 100px;
+  bottom: 120px;
   /* Positioned above footer to prevent overlap */
   left: 50%;
   transform: translateX(-50%);
@@ -300,20 +300,14 @@
 
 /* Footer clearance for sticky buttons */
 footer {
-  padding-bottom: 88px !important;
-  /* 64px sticky bar + 24px gap */
-}
-
-/* Footer clearance for sticky action bar */
-footer {
-  padding-bottom: 88px !important;
-  /* 64px bar height + 24px gap */
+  padding-bottom: 120px !important;
+  /* 64px sticky bar + 56px gap to prevent overlap */
 }
 
 @media (max-width: 768px) {
   footer {
-    padding-bottom: 96px !important;
-    /* Larger gap on mobile */
+    padding-bottom: 140px !important;
+    /* Larger gap on mobile to prevent overlap with sticky filter button */
   }
 }
 
