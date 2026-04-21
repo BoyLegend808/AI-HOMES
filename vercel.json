@@ -7,7 +7,7 @@
     },
     {
       "source": "/",
-      "destination": "/home/home.html"
+      "destination": "/onboarding/onboarding.html"
     }
   ]
 }

@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Page Not Found - StudentHome</title>
+  <meta name="description" content="The page you're looking for doesn't exist. Return to StudentHome to find student housing.">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -18,38 +19,92 @@
       text-align: center;
       padding: 2rem;
     }
-    .error-wrap { max-width: 420px; }
+    .error-wrap { max-width: 500px; }
+    .error-icon {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 1.5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
     .error-code {
       font-size: 6rem;
       font-weight: 800;
-      color: #F97316;
+      background: linear-gradient(135deg, #F97316, #EA580C);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       line-height: 1;
       margin-bottom: 0.5rem;
     }
-    h1 { font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }
+    h1 { font-size: 1.8rem; font-weight: 600; margin-bottom: 1rem; }
     p { color: #94A3B8; margin-bottom: 2rem; line-height: 1.6; }
-    .btn-home {
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn-home, .btn-browse {
       display: inline-block;
-      background: #F97316;
-      color: #fff;
       padding: 0.85rem 2rem;
       border-radius: 12px;
       text-decoration: none;
       font-weight: 600;
       transition: transform 0.2s, box-shadow 0.2s;
     }
+    .btn-home {
+      background: #F97316;
+      color: #fff;
+    }
     .btn-home:hover {
       transform: translateY(-2px);
       box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3);
+    }
+    .btn-browse {
+      background: transparent;
+      color: #F97316;
+      border: 2px solid #F97316;
+    }
+    .btn-browse:hover {
+      background: rgba(249, 115, 22, 0.1);
+      transform: translateY(-2px);
+    }
+    .help-text {
+      margin-top: 2rem;
+      font-size: 0.85rem;
+      color: #64748B;
+    }
+    .help-text a {
+      color: #F97316;
+      text-decoration: none;
+    }
+    .help-text a:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="error-wrap">
+    <div class="error-icon">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#F97316" stroke-width="1.5">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4m0 4h.01"/>
+      </svg>
+    </div>
     <div class="error-code">404</div>
     <h1>Page Not Found</h1>
     <p>The page you're looking for doesn't exist or has been moved. Let's get you back on track.</p>
-    <a href="/home/home.html" class="btn-home">Back to Home</a>
+    <div class="btn-group">
+      <a href="/onboarding/onboarding.html" class="btn-home">Back to Home</a>
+      <a href="/shop/shop.html" class="btn-browse">Browse Houses</a>
+    </div>
+    <div class="help-text">
+      Need help? <a href="/contact/contact.html">Contact our support team</a>
+    </div>
   </div>
 </body>
 </html>

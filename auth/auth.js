@@ -25,6 +25,31 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
+  const forgotHint = document.getElementById("forgot-hint");
+  const loginHint = document.getElementById("login-hint");
+  const regHint = document.getElementById("reg-hint");
+
+  const setForgotHint = (text, type = "info") => {
+    if (!forgotHint) return;
+    forgotHint.textContent = text || "";
+    forgotHint.style.color =
+      type === "error" ? "#f87171" : type === "success" ? "#34d399" : "var(--text-muted)";
+  };
+
+  const setLoginHint = (text, type = "info") => {
+    if (!loginHint) return;
+    loginHint.textContent = text || "";
+    loginHint.style.color =
+      type === "error" ? "#f87171" : type === "success" ? "#34d399" : "var(--text-muted)";
+  };
+
+  const setRegHint = (text, type = "info") => {
+    if (!regHint) return;
+    regHint.textContent = text || "";
+    regHint.style.color =
+      type === "error" ? "#f87171" : type === "success" ? "#34d399" : "var(--text-muted)";
+  };
+
   const setupPasswordToggle = (inputId, buttonId) => {
     const input = document.getElementById(inputId);
     const button = document.getElementById(buttonId);
@@ -47,6 +72,19 @@ document.addEventListener("DOMContentLoaded", () => {
   setupPasswordToggle("login-pass", "toggle-login-pass");
   setupPasswordToggle("reg-pass", "toggle-reg-pass");
 
+  // Real-time email validation
+  const forgotEmailInput = document.getElementById("forgot-email");
+  if (forgotEmailInput) {
+    forgotEmailInput.addEventListener("input", () => {
+      const email = forgotEmailInput.value.trim();
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setForgotHint("Please enter a valid email address", "error");
+      } else {
+        setForgotHint("", "info");
+      }
+    });
+  }
+
   const showRegisterView = () => {
     loginView.classList.add("hidden");
     regView.classList.remove("hidden");
@@ -56,6 +94,9 @@ document.addEventListener("DOMContentLoaded", () => {
     regView.classList.add("hidden");
     loginView.classList.remove("hidden");
     if (forgotView) forgotView.classList.add("hidden");
+    setLoginHint("", "info");
+    setRegHint("", "info");
+    setForgotHint("", "info");
   };
 
   const showForgotView = () => {
@@ -85,22 +126,33 @@ document.addEventListener("DOMContentLoaded", () => {
     const password = passwordInput ? passwordInput.value.trim() : "";
 
     if (!email || !password) {
-      alert("Fill all fields");
+      setLoginHint("Please fill in all fields", "error");
       return;
     }
+
+    setLoginHint("", "info");
+    loginButton.disabled = true;
+    loginButton.textContent = "Logging in...";
 
     const res = await window.loginUser(email, password);
 
     if (res.success) {
+      setLoginHint("Login successful! Redirecting...", "success");
       if (res.user.role === "admin") {
-        window.location.href = "../admin/admin.html";
+        setTimeout(() => {
+          window.location.href = "../admin/admin.html";
+        }, 1000);
       } else {
-        window.location.href = "../home/home.html";
+        setTimeout(() => {
+          window.location.href = "../home/home.html";
+        }, 1000);
       }
       return;
     }
 
-    alert(res.message);
+    setLoginHint(res.message || "Login failed. Please try again.", "error");
+    loginButton.disabled = false;
+    loginButton.textContent = "Login";
   });
 
   registerButton.addEventListener("click", async () => {
@@ -117,11 +169,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const university = universityInput ? universityInput.value.trim() : "";
 
     if (!name || !email || !password || !university) {
-      alert(
-        "Please fill in all mandatory fields (Name, Email, Password, University)",
-      );
+      setRegHint("Please fill in all mandatory fields (Name, Email, Password, University)", "error");
       return;
     }
+
+    if (password.length < 6) {
+      setRegHint("Password must be at least 6 characters long", "error");
+      return;
+    }
+
+    setRegHint("", "info");
+    registerButton.disabled = true;
+    registerButton.textContent = "Creating Account...";
 
     const res = await window.registerUser({
       name,
@@ -132,12 +191,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     if (res.success) {
-      alert("Account Created! You can now login.");
-      showLoginView();
+      setRegHint("Account created successfully! You can now login.", "success");
+      setTimeout(() => {
+        showLoginView();
+        setRegHint("", "info");
+      }, 2000);
       return;
     }
 
-    alert("Registration Error: " + res.message);
+    setRegHint("Registration Error: " + res.message, "error");
+    registerButton.disabled = false;
+    registerButton.textContent = "Register";
   });
 
   if (forgotButton) {
@@ -147,24 +211,27 @@ document.addEventListener("DOMContentLoaded", () => {
       
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email || !emailRegex.test(email)) {
-        alert("Please enter a valid email address");
+        setForgotHint("Please enter a valid email address", "error");
         return;
       }
 
+      setForgotHint("", "info");
       forgotButton.disabled = true;
       forgotButton.textContent = "Sending...";
 
       const res = await window.resetPasswordForEmail(email);
       
       if (res.success) {
-        alert(res.message || "Check your email for the reset link.");
-        showLoginView();
+        setForgotHint(res.message || "Check your email for the reset link.", "success");
+        setTimeout(() => {
+          showLoginView();
+          setForgotHint("", "info");
+        }, 3000);
       } else {
-        alert(res.message || "Error sending reset email. Please try again later.");
+        setForgotHint(res.message || "Error sending reset email. Please try again later.", "error");
+        forgotButton.disabled = false;
+        forgotButton.textContent = "Send Reset Link";
       }
-
-      forgotButton.disabled = false;
-      forgotButton.textContent = "Send Reset Link";
     });
   }
 });

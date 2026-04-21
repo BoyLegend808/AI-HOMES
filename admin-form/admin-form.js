@@ -114,6 +114,12 @@ const addPreviewItem = (src, file = null, url = "", isExisting = false) => {
 const removePreviewItem = (id) => {
   const index = previewItems.findIndex((item) => item.id === id);
   if (index === -1) return;
+  
+  const removedItem = previewItems[index];
+  if (removedItem.isExisting) {
+    uploadedPhotos = uploadedPhotos.filter(url => url !== removedItem.url);
+  }
+  
   previewItems.splice(index, 1);
   renderPreviewImages();
 };

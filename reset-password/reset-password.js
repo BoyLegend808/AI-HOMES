@@ -34,6 +34,43 @@
   setupPasswordToggle("new-pass", "toggle-new-pass");
   setupPasswordToggle("confirm-pass", "toggle-confirm-pass");
 
+  const strengthFill = document.getElementById("strength-fill");
+  const strengthText = document.getElementById("strength-text");
+
+  const calculatePasswordStrength = (password) => {
+    let score = 0;
+    if (!password) return { score: 0, label: "" };
+
+    if (password.length >= 6) score++;
+    if (password.length >= 10) score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    if (score <= 2) return { score, label: "Weak", class: "weak" };
+    if (score <= 4) return { score, label: "Fair", class: "fair" };
+    return { score, label: "Strong", class: "strong" };
+  };
+
+  const updatePasswordStrength = () => {
+    const password = newPassInput ? newPassInput.value : "";
+    const strength = calculatePasswordStrength(password);
+
+    if (strengthFill && strengthText) {
+      strengthFill.className = "strength-fill";
+      if (password) {
+        strengthFill.classList.add(strength.class);
+        strengthText.textContent = strength.label;
+      } else {
+        strengthText.textContent = "";
+      }
+    }
+  };
+
+  if (newPassInput) {
+    newPassInput.addEventListener("input", updatePasswordStrength);
+  }
+
   const setHint = (text, type = "info") => {
     if (!hint) return;
     hint.textContent = text || "";
