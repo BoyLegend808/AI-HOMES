@@ -248,17 +248,8 @@ const renderUniversities = () => {
   const uniTrack = document.querySelector(".uni-logo-track");
   if (!uniTrack) return;
 
-  // Try cloud data first, fallback to DEFAULT_UNIVERSITIES
-  let unis = window.CLOUD_UNIVERSITIES_DATA || [];
-  
-  // If no cloud data, use default universities
-  if (unis.length === 0 && window.DEFAULT_UNIVERSITIES) {
-    unis = Object.keys(window.DEFAULT_UNIVERSITIES).map(name => ({
-      name: name,
-      logo_url: null,
-      logo_scale: 1.1
-    }));
-  }
+  // Only use cloud data from Supabase - no fallback
+  const unis = window.CLOUD_UNIVERSITIES_DATA || [];
   
   if (unis.length > 0) {
     uniTrack.innerHTML = unis
@@ -277,8 +268,9 @@ const renderUniversities = () => {
     `,
       )
       .join("");
-  } else if (window.CLOUD_ENGINE_READY) {
-    uniTrack.innerHTML = '<p class="muted">No partners yet.</p>';
+  } else {
+    // Show loading state or empty message
+    uniTrack.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem; text-align:center; width:100%;">No university partners added yet. Add universities from the admin dashboard.</p>';
   }
 };
 
@@ -373,11 +365,6 @@ if (window.fetchAllData) {
   refreshLists();
   renderUniversities();
 }
-
-// Re-render universities after a delay to ensure data is loaded
-setTimeout(() => {
-  renderUniversities();
-}, 1000);
 
 // Link to global cloud trigger
 window.renderShopGrid = refreshLists;

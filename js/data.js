@@ -588,7 +588,7 @@ function getUniversityLogo(uniName) {
     );
     if (uni && uni.logo_url) return uni.logo_url;
   }
-  return "https://via.placeholder.com/150/020617/F97316?text=UNI";
+  return null;
 }
 
 window.updateUniversityLogoScale = async (uniId, scale) => {
@@ -1260,4 +1260,3 @@ window.initReveal = () => {
 };
 window.toggleMobileMenu = toggleMobileMenu;
 window.closeMobileMenu = closeMobileMenu;
-window.DEFAULT_UNIVERSITIES = DEFAULT_UNIVERSITIES;
