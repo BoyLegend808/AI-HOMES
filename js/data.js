@@ -619,8 +619,7 @@ async function fetchSessionUser() {
       .eq("id", data.user.id)
       .single();
 
-    const meta = data.user.user_metadata || {};
-    return {
+    _currentUser = {
       id: data.user.id,
       name: profile?.full_name || meta.full_name || "Student",
       email: data.user.email,
@@ -628,6 +627,7 @@ async function fetchSessionUser() {
       role: profile?.role || meta.role || "student",
       avatar_url: data.user.user_metadata?.avatar_url || "",
     };
+    return _currentUser;
   } catch (err) {
     console.warn("Session Recovery: Using local cache due to latency/error.");
     return getCurrentUser();
