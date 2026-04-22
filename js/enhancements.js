@@ -22,7 +22,7 @@
     document
       .querySelector('link[href*="nav.css"]')
       ?.href?.replace("nav.css", "") || "../js/";
-  cssLink.href = basePath + "enhancements.css";
+  cssLink.href = basePath + "enhancements.css?v=5";
   document.head.appendChild(cssLink);
 
   // =========================================

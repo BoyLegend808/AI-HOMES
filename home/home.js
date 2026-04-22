@@ -246,10 +246,16 @@ if (adminSearch) {
 // Render University Partners
 const renderUniversities = () => {
   const uniTrack = document.querySelector(".uni-logo-track");
-  if (!uniTrack) return;
+  if (!uniTrack) {
+    console.warn('University track element not found');
+    return;
+  }
 
   // Only use cloud data from Supabase - no fallback
   const unis = window.CLOUD_UNIVERSITIES_DATA || [];
+  
+  console.log('Rendering universities, count:', unis.length);
+  console.log('CLOUD_UNIVERSITIES_DATA:', window.CLOUD_UNIVERSITIES_DATA);
   
   if (unis.length > 0) {
     uniTrack.innerHTML = unis
@@ -268,9 +274,11 @@ const renderUniversities = () => {
     `,
       )
       .join("");
+    console.log('Universities rendered successfully');
   } else {
     // Show loading state or empty message
     uniTrack.innerHTML = '<p style="color:var(--text-muted); font-size:0.9rem; text-align:center; width:100%;">No university partners added yet. Add universities from the admin dashboard.</p>';
+    console.log('No universities to display');
   }
 };
 

@@ -333,13 +333,16 @@ if (!sb_client) {
     // UNIS: Fallback to DEFAULT_UNIVERSITIES
     if (unisRes.status === "fulfilled" && !unisRes.value?.error) {
       window.CLOUD_UNIVERSITIES_DATA = unisRes.value.data || [];
+      console.log('Universities fetched:', window.CLOUD_UNIVERSITIES_DATA.length, 'universities');
+      console.log('Universities data:', window.CLOUD_UNIVERSITIES_DATA);
       const transformed = {};
       (unisRes.value.data || []).forEach((u) => transformed[u.name] = u.locations);
       if (Object.keys(transformed).length > 0) {
         CLOUD_UNIVERSITIES = transformed;
       }
     } else {
-      console.warn('Unis fetch failed');
+      console.warn('Unis fetch failed:', unisRes.reason || unisRes.value?.error);
+      window.CLOUD_UNIVERSITIES_DATA = [];
     }
 
 
