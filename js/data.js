@@ -90,10 +90,13 @@ function loadCachedDataFromStorage() {
     const listings = Array.isArray(parsed?.listings) ? parsed.listings : null;
     const reviews = Array.isArray(parsed?.reviews) ? parsed.reviews : null;
     const unis = parsed?.universities && typeof parsed.universities === "object" ? parsed.universities : null;
+    const unisArray = Array.isArray(parsed?.universities_array) ? parsed.universities_array : null;
 
     if (listings && listings.length) CACHED_LISTINGS = listings.map(normalizeListing);
     if (reviews && reviews.length) CACHED_REVIEWS = reviews;
     if (unis && Object.keys(unis).length) CLOUD_UNIVERSITIES = unis;
+    // Restore full university array so admin panel works even on fresh cache
+    if (unisArray && unisArray.length) window.CLOUD_UNIVERSITIES_DATA = unisArray;
 
     if (CACHED_LISTINGS.length) window.hasFetchedHouses = true;
     syncUniversitiesCache();
@@ -110,6 +113,8 @@ function saveCachedDataToStorage() {
       listings: CACHED_LISTINGS,
       reviews: CACHED_REVIEWS,
       universities: CLOUD_UNIVERSITIES,
+      // Also save the full array so admin panel can restore it from cache
+      universities_array: Array.isArray(window.CLOUD_UNIVERSITIES_DATA) ? window.CLOUD_UNIVERSITIES_DATA : [],
     };
     localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
   } catch (e) {
@@ -225,6 +230,14 @@ async function fetchAllData() {
   if (!isCacheStale() && CACHED_LISTINGS.length > 0) {
     console.log('Using fresh cache, skipping fetch');
     window.hasFetchedHouses = true;
+    // Ensure CLOUD_UNIVERSITIES_DATA is populated for admin panel even when skipping fetch
+    if (!Array.isArray(window.CLOUD_UNIVERSITIES_DATA) || window.CLOUD_UNIVERSITIES_DATA.length === 0) {
+      // Re-derive from whatever we have in the name→locations dict
+      const uniEntries = Object.entries(CLOUD_UNIVERSITIES || {});
+      if (uniEntries.length > 0) {
+        window.CLOUD_UNIVERSITIES_DATA = uniEntries.map(([name, locations], idx) => ({ id: idx + 1, name, locations: locations || [], logo_url: '', logo_scale: 1.1 }));
+      }
+    }
     refreshAllPages();
     return Promise.resolve();
   }
@@ -1038,7 +1051,8 @@ async function renderGlobalNav() {
       const uniName = String(user.university || "").trim();
       const logoUrl =
         user.avatar_url ||
-        (window.getUniversityLogo ? getUniversityLogo(uniName) : "");
+        (window.getUniversityLogo ? getUniversityLogo(uniName) : "") ||
+        "";
       idBox.innerHTML = `
         <div class="nav-id-inner" onclick="window.location.href='../profile/profile.html'">
            <img src="${logoUrl}" alt="${uniName} Logo" style="border-radius: 50%; object-fit: cover;">
