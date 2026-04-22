@@ -1260,3 +1260,4 @@ window.initReveal = () => {
 };
 window.toggleMobileMenu = toggleMobileMenu;
 window.closeMobileMenu = closeMobileMenu;
+window.DEFAULT_UNIVERSITIES = DEFAULT_UNIVERSITIES;

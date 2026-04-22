@@ -248,17 +248,31 @@ const renderUniversities = () => {
   const uniTrack = document.querySelector(".uni-logo-track");
   if (!uniTrack) return;
 
-  const unis = window.CLOUD_UNIVERSITIES_DATA || [];
+  // Try cloud data first, fallback to DEFAULT_UNIVERSITIES
+  let unis = window.CLOUD_UNIVERSITIES_DATA || [];
+  
+  // If no cloud data, use default universities
+  if (unis.length === 0 && window.DEFAULT_UNIVERSITIES) {
+    unis = Object.keys(window.DEFAULT_UNIVERSITIES).map(name => ({
+      name: name,
+      logo_url: null,
+      logo_scale: 1.1
+    }));
+  }
+  
   if (unis.length > 0) {
     uniTrack.innerHTML = unis
       .map(
         (u) => `
       <div class="uni-logo-item">
         <div class="uni-logo-placeholder" style="overflow:hidden; background:transparent; border:none; width:50px; height:50px;">
-          <img src="${u.logo_url || "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=200&auto=format&fit=crop"}" 
-               style="width:100%; height:100%; object-fit:contain; transform: scale(${u.logo_scale || 1.1}); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); transition: 0.3s ease;">
+          ${u.logo_url ? 
+            `<img src="${u.logo_url}" 
+               style="width:100%; height:100%; object-fit:contain; transform: scale(${u.logo_scale || 1.1}); filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3)); transition: 0.3s ease;">` :
+            `<div style="width:100%; height:100%; background:var(--accent-light); border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:0.65rem; color:var(--accent);">${u.name.split(' ').map(w => w[0]).join('').substring(0, 3).toUpperCase()}</div>`
+          }
         </div>
-        <span>${u.name}</span>
+        <span>${u.name.split('(')[0].trim()}</span>
       </div>
     `,
       )
@@ -359,6 +373,11 @@ if (window.fetchAllData) {
   refreshLists();
   renderUniversities();
 }
+
+// Re-render universities after a delay to ensure data is loaded
+setTimeout(() => {
+  renderUniversities();
+}, 1000);
 
 // Link to global cloud trigger
 window.renderShopGrid = refreshLists;
