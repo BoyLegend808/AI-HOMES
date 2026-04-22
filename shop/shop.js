@@ -399,69 +399,42 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 function renderRecentlyViewed() {
-  const localRecent = JSON.parse(
-    localStorage.getItem("studenthome_recent") || "[]",
-  );
+  const section = document.getElementById("recently-viewed-section");
+  const container = document.getElementById("recent-container");
+  if (!section || !container) return;
 
-  const showRecent = (ids) => {
-    const section = document.getElementById("recently-viewed-section");
-    const container = document.getElementById("recent-container");
+  // Use only Supabase user_metadata — no localStorage
+  if (!window.sb_client) {
+    section.style.display = "none";
+    return;
+  }
 
-    if (!ids.length || !section || !container) {
-      if (section) section.style.display = "none";
-      return;
-    }
+  window.sb_client.auth.getUser().then(({ data }) => {
+    const ids = data?.user?.user_metadata?.recently_viewed || [];
+    if (!ids.length) { section.style.display = "none"; return; }
 
     const recents = ids
       .map((id) => allListings.find((l) => String(l.id) === String(id)))
       .filter(Boolean);
-    if (recents.length === 0) {
-      section.style.display = "none";
-      return;
-    }
+
+    if (!recents.length) { section.style.display = "none"; return; }
 
     section.style.display = "block";
-    container.innerHTML = recents
-      .map((listing) => {
-        const image =
-          listing.photo ||
-          (listing.photos && listing.photos[0]) ||
-          "https://via.placeholder.com/400x300";
-        return `
-          <article class="list-card" onclick="window.location.href='../details/detail.html?id=${encodeURIComponent(listing.id)}'">
-            <img loading="lazy" src="${image}" alt="${escapeHtml(listing.title)}" style="height:150px;">
-            <div class="list-info" style="padding: 1rem;">
-              <h3 style="font-size:1.1rem;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(listing.title)}</h3>
-              <div class="list-price-row">
-                <span class="list-price" style="font-size:1.1rem;">${window.formatPrice(listing.price)}</span>
-              </div>
+    container.innerHTML = recents.map((listing) => {
+      const image = listing.photo || (listing.photos && listing.photos[0]) || "https://via.placeholder.com/400x300";
+      return `
+        <article class="list-card" onclick="window.location.href='../details/detail.html?id=${encodeURIComponent(listing.id)}'">
+          <img loading="lazy" src="${image}" alt="${escapeHtml(listing.title)}" style="height:150px;">
+          <div class="list-info" style="padding: 1rem;">
+            <h3 style="font-size:1.1rem;margin-bottom:0.2rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHtml(listing.title)}</h3>
+            <div class="list-price-row">
+              <span class="list-price" style="font-size:1.1rem;">${window.formatPrice(listing.price)}</span>
             </div>
-          </article>
-        `;
-      })
-      .join("");
-  };
-
-  // Start with localStorage data
-  showRecent(localRecent);
-
-  // Merge with Supabase user_metadata if logged in (cross-device sync)
-  if (window.sb_client) {
-    window.sb_client.auth.getUser().then(({ data }) => {
-      if (data?.user?.user_metadata?.recently_viewed) {
-        const cloudRecent = data.user.user_metadata.recently_viewed;
-        const merged = [...localRecent];
-        cloudRecent.forEach((id) => {
-          if (!merged.some((m) => String(m) === String(id))) {
-            merged.push(id);
-          }
-        });
-        const final = merged.slice(0, 10);
-        localStorage.setItem("studenthome_recent", JSON.stringify(final));
-        showRecent(final);
-      }
-    }).catch(() => {});
-  }
+          </div>
+        </article>
+      `;
+    }).join("");
+  }).catch(() => { section.style.display = "none"; });
 }
 
 window.applyFilters = applyFilters;

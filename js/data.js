@@ -1,8 +1,7 @@
 // runing it from ther https://ai-homes.vercel.app/home/home.html
 // StudentHome Global Cloud Engine (v3.0 - Production Balanced)
-const AUTH_KEY = "studenthome_auth";
-const USERS_KEY = "studenthome_users";
-const DEFAULT_LOCAL_USERS = [];
+// Auth is now in-memory only (no localStorage)
+let _currentUser = null;
 const SUPABASE_URL = "https://loapruxjeolxyngmcszf.supabase.co";
 const SUPABASE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYXBydXhqZW9seHluZ21jc3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NDY4MzQsImV4cCI6MjA5MDMyMjgzNH0.t5H3u-L4M8lODuwWre4NHjKtR_qDboZBBwwzmEXXZh8";
@@ -80,64 +79,7 @@ let CLOUD_UNIVERSITIES = {};
 let CACHED_FAVORITES = [];
 window.hasFetchedHouses = false;
 
-// Lightweight client-side cache to reduce perceived load time on DB-driven pages.
-const CACHE_KEY = "studenthome_cache_v1";
-function loadCachedDataFromStorage() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return false;
-    const parsed = JSON.parse(raw);
-    const listings = Array.isArray(parsed?.listings) ? parsed.listings : null;
-    const reviews = Array.isArray(parsed?.reviews) ? parsed.reviews : null;
-    const unis = parsed?.universities && typeof parsed.universities === "object" ? parsed.universities : null;
-    const unisArray = Array.isArray(parsed?.universities_array) ? parsed.universities_array : null;
-
-    if (listings && listings.length) CACHED_LISTINGS = listings.map(normalizeListing);
-    if (reviews && reviews.length) CACHED_REVIEWS = reviews;
-    if (unis && Object.keys(unis).length) CLOUD_UNIVERSITIES = unis;
-    // Restore full university array so admin panel works even on fresh cache
-    if (unisArray && unisArray.length) window.CLOUD_UNIVERSITIES_DATA = unisArray;
-
-    if (CACHED_LISTINGS.length) window.hasFetchedHouses = true;
-    syncUniversitiesCache();
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-function saveCachedDataToStorage() {
-  try {
-    const payload = {
-      updatedAt: Date.now(),
-      listings: CACHED_LISTINGS,
-      reviews: CACHED_REVIEWS,
-      universities: CLOUD_UNIVERSITIES,
-      // Also save the full array so admin panel can restore it from cache
-      universities_array: Array.isArray(window.CLOUD_UNIVERSITIES_DATA) ? window.CLOUD_UNIVERSITIES_DATA : [],
-    };
-    localStorage.setItem(CACHE_KEY, JSON.stringify(payload));
-  } catch (e) {
-    // ignore storage quota / privacy errors
-  }
-}
-
-// Load cached data ASAP (then refresh from cloud in background)
-loadCachedDataFromStorage();
-
-// SMART CACHE VALIDATION (check if cache is stale)
-const CACHE_MAX_AGE = 5 * 60 * 1000; // 5 minutes
-function isCacheStale() {
-  try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    if (!raw) return true;
-    const parsed = JSON.parse(raw);
-    const age = Date.now() - (parsed.updatedAt || 0);
-    return age > CACHE_MAX_AGE;
-  } catch {
-    return true;
-  }
-}
+// No localStorage cache — all data is fetched fresh from Supabase each session.
 
 function normalizeListing(listing = {}) {
   const school = listing.school || "";
@@ -198,24 +140,7 @@ function syncUniversitiesCache() {
   window.NIGERIA_UNIVERSITIES = getUniversities();
 }
 
-function getLocalUsers() {
-  try {
-    return JSON.parse(localStorage.getItem(USERS_KEY)) || [];
-  } catch (e) {
-    return [];
-  }
-}
-
-function saveLocalUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users));
-}
-
-function ensureDefaultUsers() {
-  const users = getLocalUsers();
-  if (!users || users.length === 0) {
-    saveLocalUsers(DEFAULT_LOCAL_USERS);
-  }
-}
+// Local user helpers removed — auth is Supabase-only.
 
 const SYSTEM_ADMINS = [];
 // Admin accounts are now managed exclusively through Supabase Auth
@@ -225,22 +150,6 @@ const SYSTEM_ADMINS = [];
 ========================================== */
 async function fetchAllData() {
   if (fetchAllData.inFlight) return fetchAllData.inFlightPromise;
-  
-  // SKIP FETCH if cache is fresh (avoid redundant API calls)
-  if (!isCacheStale() && CACHED_LISTINGS.length > 0) {
-    console.log('Using fresh cache, skipping fetch');
-    window.hasFetchedHouses = true;
-    // Ensure CLOUD_UNIVERSITIES_DATA is populated for admin panel even when skipping fetch
-    if (!Array.isArray(window.CLOUD_UNIVERSITIES_DATA) || window.CLOUD_UNIVERSITIES_DATA.length === 0) {
-      // Re-derive from whatever we have in the name→locations dict
-      const uniEntries = Object.entries(CLOUD_UNIVERSITIES || {});
-      if (uniEntries.length > 0) {
-        window.CLOUD_UNIVERSITIES_DATA = uniEntries.map(([name, locations], idx) => ({ id: idx + 1, name, locations: locations || [], logo_url: '', logo_scale: 1.1 }));
-      }
-    }
-    refreshAllPages();
-    return Promise.resolve();
-  }
   
   fetchAllData.inFlight = true;
   fetchAllData.inFlightPromise = (async () => {
@@ -359,19 +268,16 @@ if (!sb_client) {
     }
 
 
-    // FAVORITES: Merge safely
+    // FAVORITES: Merge safely (in-memory only)
     if (favsRes?.status === "fulfilled" && favsRes.value.data) {
       const cloudIds = favsRes.value.data.map(f => String(f.house_id));
       CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...cloudIds])];
-      localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
     }
 
-    // Persist for fast startup next time
-    saveCachedDataToStorage();
   } catch (e) {
     console.error('Cloud batch failed:', e);
     useFallbackData();
-} finally {
+  } finally {
     window.hasFetchedHouses = true;
     fetchAllData.inFlight = false;
     fetchAllData.inFlightPromise = null;
@@ -458,8 +364,7 @@ function refreshAllPages() {
 }
 
 
-// FAVORITES PERSISTENCE SYSTEM
-const LOCAL_FAVS_KEY = "studenthome_wishlist";
+// FAVORITES — in-memory only, synced to Supabase per session
 
 window.toggleFavorite = async (houseId) => {
   // 1. Instantly Calculate New State (Zero Latency)
@@ -485,9 +390,6 @@ window.toggleFavorite = async (houseId) => {
       const ariaLabel = newStatus ? "Remove from variants" : "Save property";
       btn.setAttribute("aria-label", ariaLabel);
     });
-
-  // Persist to LocalStorage (Immediate backup)
-  localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
 
   // 3. BACKGROUND SYNC: Verify user and sync to Supabase without blocking the UI
   try {
@@ -523,36 +425,22 @@ window.toggleFavorite = async (houseId) => {
   return { success: true };
 };
 
-// Initialize favorites on load
+// Initialize favorites — load from Supabase only (no localStorage)
 async function initFavorites() {
-  // Load local storage first
-  try {
-    const local = JSON.parse(localStorage.getItem(LOCAL_FAVS_KEY) || "[]");
-    CACHED_FAVORITES = [
-      ...new Set([...CACHED_FAVORITES.map(String), ...local.map(String)]),
-    ];
-  } catch (e) {}
-
-  // Load cloud favorites if logged in
   const user = await fetchSessionUser();
   if (user && sb_client) {
-    const {
-      data: { user: authUser },
-    } = await sb_client.auth.getUser();
-    if (authUser) {
-      const { data: favs } = await sb_client
-        .from("favorites")
-        .select("house_id")
-        .eq("user_id", authUser.id);
-      if (favs) {
-        const cloudIds = favs.map((f) => String(f.house_id));
-        // Merge cloud into local
-        CACHED_FAVORITES = [
-          ...new Set([...CACHED_FAVORITES.map(String), ...cloudIds]),
-        ];
-        localStorage.setItem(LOCAL_FAVS_KEY, JSON.stringify(CACHED_FAVORITES));
+    try {
+      const { data: { user: authUser } } = await sb_client.auth.getUser();
+      if (authUser) {
+        const { data: favs } = await sb_client
+          .from("favorites")
+          .select("house_id")
+          .eq("user_id", authUser.id);
+        if (favs) {
+          CACHED_FAVORITES = favs.map((f) => String(f.house_id));
+        }
       }
-    }
+    } catch (e) {}
   }
 }
 
@@ -704,8 +592,7 @@ window.addAreaToUniversity = async (schoolName, areaName) => {
    PRODUCTION AUTH
 ========================================== */
 function getCurrentUser() {
-  const u = localStorage.getItem(AUTH_KEY);
-  return u ? JSON.parse(u) : null;
+  return _currentUser || null;
 }
 
 async function fetchSessionUser() {
@@ -801,7 +688,7 @@ async function loginUser(email, password) {
         university: profile?.university || meta.university || "Lagos",
         role: profile?.role || "student",
       };
-      localStorage.setItem(AUTH_KEY, JSON.stringify(user));
+      _currentUser = user;
       return { success: true, user };
     }
   }
@@ -809,7 +696,7 @@ async function loginUser(email, password) {
     (u) => u.email.toLowerCase() === checkEmail && u.password === password,
   );
   if (admin) {
-    localStorage.setItem(AUTH_KEY, JSON.stringify(admin));
+    _currentUser = admin;
     return { success: true, user: admin };
   }
   return { success: false, message: "Invalid credentials or cloud offline." };
@@ -833,8 +720,13 @@ async function registerUser(data) {
 }
 
 function resetSystemData() {
-  if (confirm("Nuclear Reset?")) {
-    localStorage.clear();
+  if (confirm("Reset session and return to home?")) {
+    _currentUser = null;
+    CACHED_LISTINGS = [];
+    CACHED_REVIEWS = [...DEFAULT_REVIEWS];
+    CLOUD_UNIVERSITIES = {};
+    CACHED_FAVORITES = [];
+    window.hasFetchedHouses = false;
     window.location.href = "../home/home.html";
   }
 }
@@ -848,7 +740,7 @@ async function logoutUser() {
   } catch (e) {
     console.warn("Logout failed (continuing):", e);
   } finally {
-    localStorage.removeItem(AUTH_KEY);
+    _currentUser = null;
     __isLoggingOut = false;
     window.location.href = "../home/home.html";
   }

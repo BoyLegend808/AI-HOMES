@@ -27,21 +27,14 @@ window.renderDetailsPage = () => {
   renderDetails();
   window.incrementViews(id);
 
-  // Store recently viewed - localStorage + Supabase sync
+  // Track recently viewed — Supabase user_metadata only (no localStorage)
   try {
-    let recent = JSON.parse(localStorage.getItem("studenthome_recent") || "[]");
-    recent = recent.filter((r) => String(r) !== String(id));
-    recent.unshift(id);
-    if (recent.length > 10) recent.pop();
-    localStorage.setItem("studenthome_recent", JSON.stringify(recent));
-
-    // Sync to Supabase user_metadata if logged in (cross-device)
     if (window.sb_client) {
       window.sb_client.auth.getUser().then(({ data }) => {
         if (data?.user) {
-          window.sb_client.auth.updateUser({
-            data: { recently_viewed: recent.slice(0, 10) }
-          }).catch(() => {});
+          const prev = data.user.user_metadata?.recently_viewed || [];
+          const recent = [id, ...prev.filter((r) => String(r) !== String(id))].slice(0, 10);
+          window.sb_client.auth.updateUser({ data: { recently_viewed: recent } }).catch(() => {});
         }
       });
     }
