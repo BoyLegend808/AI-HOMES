@@ -1,4 +1,4 @@
-const CACHE_NAME = "studenthome-v1";
+const CACHE_NAME = "studenthome-v2";
 const STATIC_ASSETS = [
   "/js/nav.css",
   "/js/enhancements.css",
@@ -47,11 +47,14 @@ self.addEventListener("fetch", (event) => {
       caches.match(event.request).then((cached) => {
         if (cached) return cached;
         return fetch(event.request).then((response) => {
-          if (response.ok) {
+          if (response && response.ok) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return response;
+        }).catch(() => {
+          // Return a basic fallback if both cache and network fail
+          return new Response('Resource not available', { status: 404 });
         });
       })
     );
@@ -63,13 +66,13 @@ self.addEventListener("fetch", (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          if (response.ok) {
+          if (response && response.ok) {
             const clone = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
           }
           return response;
         })
-        .catch(() => caches.match(event.request))
+        .catch(() => caches.match(event.request).then(cached => cached || new Response('Page not available offline', { status: 503 })))
     );
     return;
   }
