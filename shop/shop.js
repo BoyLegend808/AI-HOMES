@@ -274,6 +274,7 @@ function renderShopGridView(listings) {
         <article class="list-card reveal" onclick="window.location.href='${detailsUrl}'" style="position:relative;">
           <div class="favorite-overlay" style="position:relative;">
              ${imageHTML}
+             ${listing.video_url ? '<div class="video-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Video Tour</div>' : ''}
              <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${listing.id}"
                 onclick="event.stopPropagation(); window.toggleFavorite('${listing.id}')">
                 <span class="IconContainer">

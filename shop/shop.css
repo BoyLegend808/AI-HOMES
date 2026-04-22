@@ -2,6 +2,36 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
 
+/* Fix mobile overflow issue */
+.filter-select,
+.search-input-wrapper input {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
+.filter-bar-v2,
+.filter-controls {
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* Additional mobile overflow prevention */
+@media (max-width: 768px) {
+  .filter-select,
+  .search-input-wrapper input {
+    width: 100% !important;
+    min-width: 0;
+  }
+  
+  .filter-group {
+    min-width: 0;
+  }
+  
+  .filter-bar-v2 {
+    overflow-x: hidden;
+  }
+}
+
 
 /* Extracted from shop.html */
 .shop-header {
@@ -550,4 +580,32 @@ footer {
 
 .back-link-btn:hover {
   color: var(--accent);
+}
+
+/* Video Badge on Cards */
+.video-badge {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(239, 68, 68, 0.95);
+  color: white;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
+  backdrop-filter: blur(8px);
+  transition: transform 0.2s;
+}
+
+.list-card:hover .video-badge {
+  transform: scale(1.05);
+}
+
+.video-badge svg {
+  flex-shrink: 0;
 }

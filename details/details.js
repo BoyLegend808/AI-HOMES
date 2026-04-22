@@ -129,6 +129,18 @@ function renderDetails() {
           ${photosHtml}
         </div>
         
+        ${listing.video_url ? `
+        <div class="video-tour-section">
+          <h3 class="section-title">🎥 Video Tour</h3>
+          <div class="video-wrapper">
+            <video controls preload="metadata" poster="${listing.video_thumbnail || ''}">
+              <source src="${listing.video_url}" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+        ` : ''}
+        
         <h3 class="section-title">Description</h3>
         <p class="desc">${listing.description || "Verified property listing connected to StudentHome."}</p>
 

@@ -184,6 +184,8 @@ function normalizeListing(listing = {}) {
     rooms: Number(listing.rooms) || 1,
     status: listing.status || "Active",
     type: listing.type || "Self-contain",
+    video_url: listing.video_url || null,
+    video_thumbnail: listing.video_thumbnail || null,
   };
 }
 

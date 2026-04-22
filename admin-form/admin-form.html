@@ -117,6 +117,25 @@
                 </div>
               </div>
 
+              <div class="form-group">
+                <label>Upload Video Tour (Optional - Max 50MB)</label>
+                <div class="upload-zone video-upload-zone">
+                  <div id="video-upload-label">
+                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2">
+                      <polygon points="23 7 16 12 23 17 23 7"></polygon>
+                      <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
+                    </svg>
+                    <p>Click or Drag video to upload</p>
+                    <span class="video-hint">MP4 or WebM, Max 50MB (30-60 seconds recommended)</span>
+                  </div>
+                  <input type="file" id="video-upload" accept="video/mp4,video/webm,video/ogg" style="opacity:0; position:absolute; inset:0; cursor:pointer;">
+                  <div id="video-preview-container" style="display:none;">
+                    <video id="video-preview" controls style="max-width:100%; border-radius:12px;"></video>
+                    <button type="button" onclick="removeVideo()" class="btn-remove-video">Remove Video</button>
+                  </div>
+                </div>
+              </div>
+
               <div class="skeleton-row" style="margin-bottom: 2rem;">
                 <div class="form-group">
                   <label>Landlord Phone</label>

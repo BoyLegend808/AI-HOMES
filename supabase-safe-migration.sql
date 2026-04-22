@@ -61,6 +61,8 @@ create table if not exists public.houses (
   status          text    default 'Active',
   photo           text,
   photos          text[]  default '{}',
+  video_url       text,
+  video_thumbnail text,
   description     text,
   "desc"          text,
   contact         jsonb   default '{"phone":"","whatsapp":""}'::jsonb,
@@ -309,6 +311,7 @@ create policy "admin_update_inquiries"
 -- ----------------------------------------------------------------
 insert into storage.buckets (id, name, public)
 values ('house-photos', 'house-photos', true),
+       ('house-videos', 'house-videos', true),
        ('avatars', 'avatars', true)
 on conflict (id) do nothing;
 
@@ -317,6 +320,12 @@ drop policy if exists "Allow public access to house-photos" on storage.objects;
 create policy "Allow public access to house-photos"
   on storage.objects for all
   using (bucket_id = 'house-photos');
+
+-- House Videos Policy
+drop policy if exists "Allow public access to house-videos" on storage.objects;
+create policy "Allow public access to house-videos"
+  on storage.objects for all
+  using (bucket_id = 'house-videos');
 
 -- Avatars Policy (Everyone can read, authenticated can upload)
 drop policy if exists "Allow public access to avatars" on storage.objects;

@@ -307,3 +307,35 @@
     border-radius:20px; font-size:0.85rem; pointer-events:none;
     backdrop-filter:blur(5px); display:flex; gap:0.5rem; align-items:center;
 }
+
+/* Video Tour Section */
+.video-tour-section {
+  margin: 2rem 0;
+}
+
+.video-tour-section .section-title {
+  margin-bottom: 1rem;
+}
+
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #000;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.video-wrapper video {
+  width: 100%;
+  height: auto;
+  display: block;
+  max-height: 500px;
+  object-fit: contain;
+}
+
+@media (max-width: 768px) {
+  .video-wrapper video {
+    max-height: 300px;
+  }
+}

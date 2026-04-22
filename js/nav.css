@@ -18,6 +18,12 @@
   --focus-ring: 0 0 0 3px rgba(249, 115, 22, 0.6);
 }
 
+/* Global form input fix - prevent overflow */
+input, select, textarea {
+  box-sizing: border-box;
+  max-width: 100%;
+}
+
 /* ==========================================================================
    #11 — SKIP-TO-CONTENT LINK (accessibility)
    Visually hidden until focused by keyboard users

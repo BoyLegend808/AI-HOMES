@@ -6,6 +6,12 @@ let uploadedPhotos = [];
 let previewItems = [];
 let previewCounter = 0;
 
+// Video upload variables
+let uploadedVideoFile = null;
+let uploadedVideoUrl = null;
+let uploadedVideoThumbnail = null;
+const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+
 const normalizeTextInput = (value) => String(value || "").trim();
 
 const notify = (message, type = "info") => {
@@ -105,6 +111,125 @@ const renderPreviewImages = () => {
   );
 };
 
+// Video Upload Functions
+const handleVideoUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const videoUploadLabel = document.getElementById("video-upload-label");
+  const videoPreviewContainer = document.getElementById("video-preview-container");
+  const videoPreview = document.getElementById("video-preview");
+
+  // Validate file type
+  const allowedTypes = ["video/mp4", "video/webm", "video/ogg"];
+  if (!allowedTypes.includes(file.type)) {
+    notify("Please upload a valid video file (MP4, WebM, or OGG)", "error");
+    return;
+  }
+
+  // Validate file size
+  if (file.size > MAX_VIDEO_SIZE) {
+    notify(
+      `Video is too large. Maximum size is 50MB. Your file is ${(file.size / 1024 / 1024).toFixed(1)}MB`,
+      "error"
+    );
+    return;
+  }
+
+  uploadedVideoFile = file;
+
+  // Show preview
+  const videoURL = URL.createObjectURL(file);
+  videoPreview.src = videoURL;
+  videoPreviewContainer.style.display = "block";
+  videoUploadLabel.style.display = "none";
+
+  // Generate thumbnail
+  await generateVideoThumbnail(file);
+  notify("Video uploaded successfully!", "success");
+};
+
+const generateVideoThumbnail = (file) => {
+  return new Promise((resolve) => {
+    const video = document.createElement("video");
+    video.preload = "metadata";
+    video.src = URL.createObjectURL(file);
+
+    video.onloadeddata = () => {
+      video.currentTime = 1;
+    };
+
+    video.onseeked = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        if (blob) {
+          const thumbnailFileName = `thumbnails/${Date.now()}_thumb.jpg`;
+          const { data, error } = await window.sb_client.storage
+            .from("house-photos")
+            .upload(thumbnailFileName, blob, {
+              contentType: "image/jpeg",
+              cacheControl: "3600",
+            });
+
+          if (!error) {
+            const { data: urlData } = window.sb_client.storage
+              .from("house-photos")
+              .getPublicUrl(thumbnailFileName);
+            uploadedVideoThumbnail = urlData.publicUrl;
+          }
+        }
+        resolve();
+      }, "image/jpeg", 0.7);
+    };
+  });
+};
+
+const uploadVideoToStorage = async () => {
+  if (!uploadedVideoFile) return null;
+
+  const fileName = `videos/${Date.now()}_${uploadedVideoFile.name}`;
+
+  const { data, error } = await window.sb_client.storage
+    .from("house-videos")
+    .upload(fileName, uploadedVideoFile, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (error) {
+    console.error("Video upload error:", error);
+    notify("Failed to upload video. Please try again.", "error");
+    return null;
+  }
+
+  const { data: urlData } = window.sb_client.storage
+    .from("house-videos")
+    .getPublicUrl(fileName);
+
+  return urlData.publicUrl;
+};
+
+window.removeVideo = () => {
+  uploadedVideoFile = null;
+  uploadedVideoUrl = null;
+  uploadedVideoThumbnail = null;
+  const videoPreview = document.getElementById("video-preview");
+  const videoPreviewContainer = document.getElementById("video-preview-container");
+  const videoUploadLabel = document.getElementById("video-upload-label");
+  const videoUpload = document.getElementById("video-upload");
+
+  if (videoPreview) videoPreview.src = "";
+  if (videoPreviewContainer) videoPreviewContainer.style.display = "none";
+  if (videoUploadLabel) videoUploadLabel.style.display = "block";
+  if (videoUpload) videoUpload.value = "";
+};
+
 const addPreviewItem = (src, file = null, url = "", isExisting = false) => {
   const id = `preview-${Date.now()}-${previewCounter++}`;
   previewItems.push({ id, src, file, url, isExisting });
@@ -179,6 +304,11 @@ const submitHouse = async () => {
       return notify("Please upload at least one photo.", "error");
     }
 
+    // Upload video if present
+    if (uploadedVideoFile) {
+      uploadedVideoUrl = await uploadVideoToStorage();
+    }
+
     const house = {
       title,
       school,
@@ -194,6 +324,8 @@ const submitHouse = async () => {
       description: document.getElementById("add-desc").value,
       photos: uploadedPhotos,
       photo: uploadedPhotos[0],
+      video_url: uploadedVideoUrl,
+      video_thumbnail: uploadedVideoThumbnail,
       location: `${area} (${school})`,
       status: "Active",
     };
@@ -287,5 +419,8 @@ document.addEventListener("DOMContentLoaded", async () => {
   document
     .getElementById("file-upload")
     ?.addEventListener("change", handleFileUpload);
+  document
+    .getElementById("video-upload")
+    ?.addEventListener("change", handleVideoUpload);
   document.getElementById("btn-submit")?.addEventListener("click", submitHouse);
 });

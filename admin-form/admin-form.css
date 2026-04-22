@@ -331,3 +331,38 @@ select.search-wrapper {
     grid-template-columns: 1fr;
   }
 }
+
+/* Video Upload Styles */
+.video-upload-zone {
+  min-height: 200px;
+}
+
+.video-hint {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+#video-preview-container {
+  position: relative;
+  padding: 1rem;
+}
+
+.btn-remove-video {
+  margin-top: 1rem;
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.btn-remove-video:hover {
+  background: #ef4444;
+  color: white;
+}
