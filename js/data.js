@@ -155,12 +155,12 @@ async function fetchAllData() {
   fetchAllData.inFlightPromise = (async () => {
   
   // LAZY INIT CONFIG + CLIENT
-  if (!SUPABASE_CONFIG) {
+  if (!SUPABASE_CONFIG && !sb_client) {
     try {
       console.log('Fetching configuration from /api/config...');
       const res = await Promise.race([
         fetch(`/api/config?t=${Date.now()}`),
-        new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')), 5000))
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')), 5000))
       ]);
       
       if (!res.ok) {
@@ -206,11 +206,11 @@ if (!sb_client) {
   
   console.log('Cloud fetch START');
   try {
-    // REDUCED TIMEOUT (8s instead of 15s - fail fast)
-    const TIMEOUT = 8000;
+    // REDUCED TIMEOUT (15s instead of 8s - allow slow connections)
+    const TIMEOUT = 15000;
     const safeCall = (p) => Promise.race([
       p, 
-      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')), TIMEOUT))
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')), TIMEOUT))
     ]);
     
     // OPTIMIZED: Select only needed columns instead of SELECT *
@@ -765,7 +765,7 @@ window.resetPasswordForEmail = async (email) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: email.toLowerCase().trim() }),
           }),
-          new Promise((_,r) => setTimeout(() => r(new Error('timeout')), 10000))
+          new Promise((_,reject) => setTimeout(() => reject(new Error('timeout')), 10000))
         ]);
         const data = await response.json();
         resetDebounce.lastCall = Date.now();

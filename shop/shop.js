@@ -340,7 +340,7 @@ function initCardSwipe() {
   });
 }
 
-function waitForDataAndRender(maxWait = 10000) {
+function waitForDataAndRender(maxWait = 15000) {
   setLoadingState(true);
 
   if (window.fetchAllData) {
