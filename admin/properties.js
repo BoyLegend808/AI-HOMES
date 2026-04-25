@@ -90,7 +90,7 @@ function renderProperties(searchText = "") {
             <div class="property-cell">
               <div class="image-container">
                 <img src="${l.photo || (l.photos && l.photos[0]) || ""}" class="property-thumb" alt="">
-                <button class="image-remove-btn" onclick="removeImageCard(${l.id})" title="Remove image">×</button>
+                <button class="image-remove-btn" onclick="removeImageCard(event, ${l.id})" title="Remove image">×</button>
               </div>
               <div class="property-info">
                 <h4>${l.title}</h4>
@@ -118,7 +118,7 @@ function renderProperties(searchText = "") {
         <div class="listing-card">
           <div class="image-container">
             <img src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
-            <button class="image-remove-btn" onclick="removeImageCard(${l.id})" title="Remove card">×</button>
+            <button class="image-remove-btn" onclick="removeImageCard(event, ${l.id})" title="Remove card">×</button>
           </div>
           <div class="listing-card-content">
             <h4>${l.title}</h4>
@@ -160,7 +160,7 @@ async function handleDelete(id) {
 }
 window.handleDelete = handleDelete;
 
-window.removeImageCard = async (id) => {
+window.removeImageCard = async (event, id) => {
   if (!confirm("Delete this property from database?")) return;
   const rowOrCard = event.target.closest('tr, .listing-card');
   if (rowOrCard) {

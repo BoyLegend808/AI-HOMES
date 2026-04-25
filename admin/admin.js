@@ -100,7 +100,7 @@ function renderDashboard(filter = "") {
               <div class="prop-cell">
                 <div class="image-container">
                   <img src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
-                  <button class="image-remove-btn" onclick="removeImageCard(${l.id})" title="Remove image">×</button>
+                  <button class="image-remove-btn" onclick="removeImageCard(event, ${l.id})" title="Remove image">×</button>
                 </div>
                 <div class="prop-titles">
                   <h4>${l.title}</h4>
@@ -151,7 +151,7 @@ async function handleDelete(id) {
 }
 window.handleDelete = handleDelete;
 
-window.removeImageCard = async (id) => {
+window.removeImageCard = async (event, id) => {
   if (!confirm("Delete this property from database?")) return;
   const row = event.target.closest('tr');
   if (row) {
