@@ -140,6 +140,7 @@ async function toggleStatus(id, currentStatus) {
   if (!res.success) alert("Error toggling: " + res.error?.message);
   renderDashboard(document.getElementById("admin-search")?.value);
 }
+window.toggleStatus = toggleStatus;
 
 async function handleDelete(id) {
   if (confirm("Delete this listing permanently?")) {
@@ -148,6 +149,7 @@ async function handleDelete(id) {
     renderDashboard(document.getElementById("admin-search")?.value);
   }
 }
+window.handleDelete = handleDelete;
 
 window.removeImageCard = async (id) => {
   if (!confirm("Delete this property from database?")) return;

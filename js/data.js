@@ -1138,8 +1138,7 @@ window.getEmptyStateHTML = getEmptyStateHTML;
 window.showToast = showToast;
 window.updateListing = async (h) => {
   if (!sb_client) return { success: false };
-  const payload = normalizeListing(h);
-  const { id, ...updates } = payload;
+  const { id, ...updates } = h;
   if (typeof CACHED_LISTINGS !== 'undefined') {
     const idx = CACHED_LISTINGS.findIndex(l => String(l.id) === String(id));
     if (idx !== -1) {
@@ -1148,7 +1147,7 @@ window.updateListing = async (h) => {
   }
   const { error } = await sb_client.from("houses").update(updates).eq("id", id);
   if (!error) fetchAllData();
-  return { success: !error };
+  return { success: !error, error };
 };
 window.addReview = async (r) => {
   if (!sb_client) return { success: false };

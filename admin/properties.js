@@ -148,6 +148,7 @@ async function toggleStatus(id, currentStatus) {
     renderProperties(document.getElementById("admin-search")?.value || "");
   }
 }
+window.toggleStatus = toggleStatus;
 
 async function handleDelete(id) {
   if (confirm("Delete this listing permanently?")) {
@@ -157,6 +158,7 @@ async function handleDelete(id) {
     renderProperties(document.getElementById("admin-search")?.value || "");
   }
 }
+window.handleDelete = handleDelete;
 
 window.removeImageCard = async (id) => {
   if (!confirm("Delete this property from database?")) return;
