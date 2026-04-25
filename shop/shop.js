@@ -171,9 +171,6 @@ function applyFilters() {
   const sortBy = sortSelect ? sortSelect.value : "newest";
 
   const filtered = allListings.filter((listing) => {
-    const currentStatus = String(listing.status || "active").toLowerCase();
-    if (currentStatus !== "active") return false;
-
     const location = String(listing.location || "").toLowerCase();
     const title = String(listing.title || "").toLowerCase();
     let matches = true;
@@ -274,6 +271,7 @@ function renderShopGridView(listings) {
         <article class="list-card reveal" onclick="window.location.href='${detailsUrl}'" style="position:relative;">
           <div class="favorite-overlay" style="position:relative;">
              ${imageHTML}
+             ${listing.status !== 'Active' ? `<div style="position:absolute; top:10px; left:10px; background:var(--accent, #f43f5e); color:black; padding:0.3rem 0.6rem; border-radius:4px; font-weight:700; z-index:10; font-size:0.75rem;">${listing.status}</div>` : ''}
              ${listing.video_url ? '<div class="video-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Video Tour</div>' : ''}
              <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${listing.id}"
                 onclick="event.stopPropagation(); window.toggleFavorite('${listing.id}')">

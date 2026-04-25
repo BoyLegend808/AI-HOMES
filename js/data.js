@@ -219,7 +219,6 @@ if (!sb_client) {
       safeCall(sb_client
         .from("houses")
         .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
-        .eq("status", "Active")  // Only fetch active houses
         .order("created_at", { ascending: false })
       ),
       // Reviews: Only fetch recent reviews (last 50)
@@ -305,7 +304,6 @@ window.fetchHousesPaginated = async (page = 1, limit = 20, filters = {}) => {
     let query = sb_client
       .from("houses")
       .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
-      .eq("status", "Active")
       .order("created_at", { ascending: false })
       .range((page - 1) * limit, page * limit - 1);
     
@@ -340,8 +338,7 @@ window.debouncedSearch = async (query, callback, delay = 300) => {
     try {
       const { data, error } = await sb_client
         .from("houses")
-        .select("id, title, school, area, location, type, price, photo")
-        .eq("status", "Active")
+        .select("id, title, school, area, location, type, price, photo, status")
         .or(`title.ilike.%${query}%,area.ilike.%${query}%,school.ilike.%${query}%`)
         .limit(20);
       

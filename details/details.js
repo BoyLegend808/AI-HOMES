@@ -149,7 +149,10 @@ function renderDetails() {
 
       <div class="right-col">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
-          <h1 class="details-title" style="flex:1;">${listing.title}</h1>
+          <h1 class="details-title" style="flex:1;">
+             ${listing.status !== 'Active' ? `<span style="background:var(--accent, #f43f5e); color:black; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700; font-size:0.8rem; vertical-align:middle; margin-right:10px;">${listing.status}</span>` : ''}
+             ${listing.title}
+          </h1>
           <button class="bookmarkBtn ${window.isFavorited(listing.id) ? "active" : ""}" 
             data-house-id="${listing.id}"
             style="position:relative; top:0; right:0;"

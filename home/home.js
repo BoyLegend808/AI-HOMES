@@ -37,9 +37,10 @@ navLinks.forEach((link) => {
 const renderCard = (item) => {
   const isFav = window.isFavorited ? window.isFavorited(item.id) : false;
   return `
-  <article class="card-item" data-id="${item.id}" style="position:relative;">
+  <article class="card-item" data-id="${item.id}" style="position:relative; ${item.status !== 'Active' ? 'opacity:0.8;' : ''}">
     <div class="card-image-wrapper" style="position:relative;">
       <img src="${item.photo || item.photos?.[0]}" alt="${item.title}" />
+      ${item.status !== 'Active' ? `<div style="position:absolute; top:10px; left:10px; background:var(--accent, #f43f5e); color:black; padding:0.3rem 0.6rem; border-radius:4px; font-weight:700; z-index:10; font-size:0.75rem;">${item.status}</div>` : ''}
       <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${item.id}" onclick="event.stopPropagation(); window.toggleFavorite('${item.id}')">
         <span class="IconContainer">
           <svg viewBox="0 0 384 512" height="0.9em" class="icon"><path d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"></path></svg>
@@ -69,9 +70,10 @@ const refreshLists = () => {
           (item) => {
             const isFav = window.isFavorited ? window.isFavorited(item.id) : false;
             return `
-              <article class="testimonial-card trending-card" style="width:300px; padding:0; overflow:hidden; position:relative;" onclick="window.location.href='../details/detail.html?id=${item.id}'">
+              <article class="testimonial-card trending-card" style="width:300px; padding:0; overflow:hidden; position:relative; ${item.status !== 'Active' ? 'opacity:0.8;' : ''}" onclick="window.location.href='../details/detail.html?id=${item.id}'">
                 <div style="position:relative; height:180px;">
                   <img src="${item.photo || (item.photos && item.photos[0]) || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800"}" style="width:100%; height:100%; object-fit:cover;">
+                  ${item.status !== 'Active' ? `<div style="position:absolute; top:10px; left:10px; background:var(--accent, #f43f5e); color:black; padding:0.3rem 0.6rem; border-radius:4px; font-weight:700; z-index:10; font-size:0.75rem;">${item.status}</div>` : ''}
                   <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${item.id}" onclick="event.stopPropagation(); window.toggleFavorite('${item.id}')">
                     <span class="IconContainer">
                       <svg viewBox="0 0 384 512" height="0.9em" class="icon"><path d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"></path></svg>
