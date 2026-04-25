@@ -38,7 +38,13 @@
         <div class="dashboard-header">
           <div class="header-content">
             <h1 id="form-title">Property Creator</h1>
-            <p>Create full property details and upload gallery photos.</p>
+            <p id="form-desc">Create full property details and upload gallery photos.</p>
+            <script>
+              if (new URLSearchParams(window.location.search).has("edit")) {
+                document.getElementById("form-title").textContent = "Edit Property";
+                document.getElementById("form-desc").textContent = "Update property details and manage gallery photos.";
+              }
+            </script>
           </div>
           <a href="../admin/admin.html" class="btn btn-secondary" id="back-link">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right: 8px;"><polyline points="15 18 9 12 15 6"></polyline></svg>
