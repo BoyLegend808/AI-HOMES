@@ -886,11 +886,7 @@ main {
   }
 
   #nav-id-box {
-    position: absolute;
-    right: 145px;
-    left: auto;
-    top: 50%;
-    transform: translateY(-50%);
+    position: relative;
     padding: 0.35rem 0.6rem;
     background: transparent;
     border-radius: 999px;
@@ -904,6 +900,7 @@ main {
     border: none;
     box-shadow: none;
     z-index: 5001;
+    margin: 0 auto;
   }
 
   .nav-id-inner {
@@ -1105,10 +1102,7 @@ main {
   }
 
   #nav-id-box {
-    right: 125px;
-    left: auto;
-    transform: translateY(-50%);
-    max-width: 150px;
+    max-width: 140px;
   }
 
   .top-nav {

@@ -908,6 +908,7 @@ async function renderGlobalNav() {
   const overlay = document.querySelector(".nav-overlay");
   const navLinks = document.querySelector(".nav-list");
   const rightZone = head.querySelector(".nav-right");
+  const centerZone = head.querySelector(".nav-center");
 
   // 1. FAST BINDING (Zero Delay)
   if (toggle) {
@@ -965,7 +966,11 @@ async function renderGlobalNav() {
           <div class="nav-skel-line is-uni"></div>
         </div>
       </div>`;
-    rightZone.insertBefore(idBox, toggle);
+    if (centerZone) {
+      centerZone.appendChild(idBox);
+    } else if (rightZone) {
+      rightZone.insertBefore(idBox, toggle);
+    }
   }
 
   // 4. OPTIMIZED ASYNC AUTH RESOLUTION (Parallel & Single-Call)
