@@ -181,7 +181,42 @@ function renderDetails() {
           <span class="price-sub">Exclusive of utilities</span>
           <button class="btn-checkout" onclick="handleCheckout()">Check Out Contact</button>
         </div>
+        
+        <div id="similar-properties-container" style="margin-top: 3rem;"></div>
       </div>
+    </div>
+  `;
+  setTimeout(renderSimilarProperties, 100);
+}
+
+function renderSimilarProperties() {
+  const container = document.getElementById("similar-properties-container");
+  if (!container) return;
+  const allListings = window.getListings ? window.getListings() : [];
+  
+  // Filter for active, same school, similar price (+/- 30%), not the current house
+  const similar = allListings.filter(l => 
+    String(l.id) !== String(listing.id) &&
+    l.status === 'Active' &&
+    l.school === listing.school &&
+    l.price >= listing.price * 0.7 && 
+    l.price <= listing.price * 1.3
+  ).slice(0, 3);
+  
+  if (similar.length === 0) return; // Don't show anything if no similar houses
+  
+  container.innerHTML = `
+    <h3 class="section-title">Similar Properties Nearby</h3>
+    <div style="display:flex; flex-direction:column; gap:1rem;">
+      ${similar.map(item => `
+        <div style="display:flex; gap:1rem; background:rgba(255,255,255,0.02); padding:0.75rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05); cursor:pointer; align-items:center;" onclick="window.location.href='../details/detail.html?id=${item.id}'">
+          <img loading="lazy" src="${item.photo || item.photos?.[0] || ''}" style="width:80px; height:60px; border-radius:8px; object-fit:cover;">
+          <div style="flex:1;">
+            <h4 style="font-size:0.9rem; margin-bottom:0.25rem;">${item.title}</h4>
+            <div style="color:var(--accent); font-weight:700; font-size:0.85rem;">₦${item.price.toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('')}
     </div>
   `;
 }

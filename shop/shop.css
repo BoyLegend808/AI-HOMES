@@ -336,7 +336,7 @@
 }
 
 .loading-card {
-  height: 320px;
+  height: 360px;
   border-radius: 20px;
   background: linear-gradient(110deg,
       rgba(255, 255, 255, 0.06) 8%,

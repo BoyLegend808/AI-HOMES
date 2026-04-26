@@ -1099,16 +1099,36 @@ window.uploadPhotoToStorage = async (file) => {
     .getPublicUrl(`public/${fileName}`);
   return data.publicUrl;
 };
+
+window.logAudit = async (action, entity_type, entity_id, details = {}) => {
+  if (!sb_client) return;
+  const user = await window.fetchSessionUser();
+  if (user) {
+    await sb_client.from("audit_logs").insert([{
+      admin_id: user.id,
+      admin_name: user.name || user.email || 'Unknown',
+      action,
+      entity_type,
+      entity_id: String(entity_id),
+      details
+    }]);
+  }
+};
+
 window.addListing = async (h) => {
   if (!sb_client) return { success: false };
   const payload = normalizeListing(h);
   if (typeof CACHED_LISTINGS !== 'undefined') {
     CACHED_LISTINGS.unshift({ ...payload, id: Date.now() });
   }
-  const { error } = await sb_client
+  const { data, error } = await sb_client
     .from("houses")
-    .insert([payload]);
-  if (!error) fetchAllData();
+    .insert([payload])
+    .select();
+  if (!error) {
+    if (data && data[0]) window.logAudit('CREATE', 'HOUSE', data[0].id, { title: payload.title });
+    fetchAllData();
+  }
   return { success: !error };
 };
 window.deleteListing = async (id) => {
@@ -1117,7 +1137,10 @@ window.deleteListing = async (id) => {
     CACHED_LISTINGS = CACHED_LISTINGS.filter(l => String(l.id) !== String(id));
   }
   const { error } = await sb_client.from("houses").delete().eq("id", id);
-  if (!error) fetchAllData();
+  if (!error) {
+    window.logAudit('DELETE', 'HOUSE', id, {});
+    fetchAllData();
+  }
   return { success: !error };
 };
 
@@ -1143,7 +1166,10 @@ window.updateListing = async (h) => {
     }
   }
   const { error } = await sb_client.from("houses").update(updates).eq("id", id);
-  if (!error) fetchAllData();
+  if (!error) {
+    window.logAudit('UPDATE', 'HOUSE', id, { updated_keys: Object.keys(updates) });
+    fetchAllData();
+  }
   return { success: !error, error };
 };
 window.addReview = async (r) => {
