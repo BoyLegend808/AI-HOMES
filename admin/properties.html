@@ -78,24 +78,44 @@
             </div>
           </div>
 
-          <section class="listings-section">
-            <div class="section-header">
-              <h2>Property Management</h2>
-            </div>
-            <div class="property-filters">
-              <input
-                type="text"
-                id="admin-search"
-                placeholder="Search by title, school, area..."
-              />
-              <select id="admin-status-filter">
-                <option value="all">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Hidden">Hidden</option>
-              </select>
-              <select id="admin-uni-filter">
-                <option value="all">All Universities</option>
-              </select>
+            <div class="section-header" style="flex-direction: column; align-items: stretch; gap: 1rem;">
+              <div class="search-wrapper">
+                <input type="text" id="admin-search" placeholder="Search by title, location, school...">
+                <select id="admin-status-filter">
+                  <option value="all">All Status</option>
+                  <option value="Active">Active</option>
+                  <option value="Hidden">Hidden</option>
+                </select>
+              </div>
+
+              <div class="admin-filter-bar">
+                <select id="admin-school-filter" class="admin-filter-chip">
+                  <option value="">All Universities</option>
+                </select>
+                
+                <select id="admin-type-filter" class="admin-filter-chip">
+                  <option value="">All Types</option>
+                </select>
+                
+                <div class="admin-filter-date">
+                  <label>Sort:</label>
+                  <select id="admin-sort-filter" class="admin-filter-chip">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="price-high">Price: High to Low</option>
+                    <option value="price-low">Price: Low to High</option>
+                    <option value="name-az">Name: A-Z</option>
+                  </select>
+                </div>
+                
+                <button class="btn-reset-filters" onclick="resetAdminFilters()">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                    <path d="M3 3v5h5"></path>
+                  </svg>
+                  Reset
+                </button>
+              </div>
             </div>
 
             <div id="admin-loading" class="admin-loading" style="display:flex;">

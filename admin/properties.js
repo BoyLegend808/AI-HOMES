@@ -24,19 +24,26 @@ async function waitForHousesReady({ timeoutMs = 8000 } = {}) {
   });
 }
 
-function populateUniFilter() {
-  const uniSelect = document.getElementById("admin-uni-filter");
-  if (!uniSelect || !window.getUniversities) return;
+function populateFilters() {
+  const schoolSelect = document.getElementById("admin-school-filter");
+  const typeSelect = document.getElementById("admin-type-filter");
+  
+  if (schoolSelect && window.getUniversities) {
+    const savedVal = schoolSelect.value;
+    const uniNames = Object.keys(window.getUniversities());
+    schoolSelect.innerHTML = '<option value="">All Universities</option>' +
+      uniNames.map(u => `<option value="${u}">${u}</option>`).join("");
+    if (uniNames.includes(savedVal)) schoolSelect.value = savedVal;
+    else schoolSelect.value = "";
+  }
 
-  const savedVal = uniSelect.value;
-  const uniNames = Object.keys(window.getUniversities());
-
-  uniSelect.innerHTML =
-    '<option value="all">All Universities</option>' +
-    uniNames.map((u) => `<option value="${u}">${u}</option>`).join("");
-
-  if (uniNames.includes(savedVal)) uniSelect.value = savedVal;
-  else uniSelect.value = "all";
+  if (typeSelect && window.HOUSE_TYPES) {
+    const savedVal = typeSelect.value;
+    typeSelect.innerHTML = '<option value="">All Types</option>' +
+      window.HOUSE_TYPES.map(t => `<option value="${t}">${t}</option>`).join("");
+    if (window.HOUSE_TYPES.includes(savedVal)) typeSelect.value = savedVal;
+    else typeSelect.value = "";
+  }
 }
 
 async function renderProperties(filter = "") {
@@ -46,25 +53,43 @@ async function renderProperties(filter = "") {
   } else {
     allListings = window.getListings ? window.getListings() : [];
   }
-
+ 
   const query = String(filter || "").toLowerCase();
-  const statusFilter =
-    document.getElementById("admin-status-filter")?.value || "all";
-  const uniFilter =
-    document.getElementById("admin-uni-filter")?.value || "all";
+  const statusFilter = document.getElementById("admin-status-filter")?.value || "all";
+  const schoolFilter = document.getElementById("admin-school-filter")?.value || "";
+  const typeFilter = document.getElementById("admin-type-filter")?.value || "";
+  const sortFilter = document.getElementById("admin-sort-filter")?.value || "newest";
+ 
+  let listings = allListings.filter((l) => {
+    // Search
+    if (query) {
+      const matches = String(l.title || "").toLowerCase().includes(query) ||
+                      String(l.location || "").toLowerCase().includes(query) ||
+                      String(l.school || "").toLowerCase().includes(query) ||
+                      String(l.area || "").toLowerCase().includes(query);
+      if (!matches) return false;
+    }
+    // Status filter
+    if (statusFilter !== "all" && String(l.status || "") !== statusFilter) return false;
+    // School filter
+    if (schoolFilter && String(l.school || "") !== schoolFilter) return false;
+    // Type filter
+    if (typeFilter && String(l.type || "") !== typeFilter) return false;
+    
+    return true;
+  });
 
-  const listings = allListings.filter(
-    (l) =>
-      // Search
-      (!query ||
-        String(l.title || "").toLowerCase().includes(query) ||
-        String(l.location || "").toLowerCase().includes(query) ||
-        String(l.school || "").toLowerCase().includes(query)) &&
-      // Status filter
-      (statusFilter === "all" || String(l.status || "") === statusFilter) &&
-      // Uni filter
-      (uniFilter === "all" || String(l.school || "") === uniFilter),
-  );
+  // Sorting
+  listings.sort((a, b) => {
+    switch (sortFilter) {
+      case "oldest": return (new Date(a.created_at || 0)) - (new Date(b.created_at || 0));
+      case "price-high": return (b.price || 0) - (a.price || 0);
+      case "price-low": return (a.price || 0) - (b.price || 0);
+      case "name-az": return String(a.title || "").localeCompare(String(b.title || ""));
+      case "newest":
+      default: return (new Date(b.created_at || 0)) - (new Date(a.created_at || 0));
+    }
+  });
 
   const propCountEl = document.getElementById("prop-count");
   const activeCountEl = document.getElementById("active-count");
@@ -187,33 +212,43 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (window.fetchAllData) await window.fetchAllData();
   try {
     await waitForHousesReady();
+    populateFilters();
     await renderProperties();
-    populateUniFilter();
   } catch (e) {
     console.error(e);
   } finally {
     setPropertiesLoading(false);
   }
-
+ 
   const adminSearchEl = document.getElementById("admin-search");
-  if (adminSearchEl) {
-    adminSearchEl.addEventListener("input", (e) => {
-      renderProperties(e.target.value);
-    });
-  }
+  const filters = [
+    "admin-search",
+    "admin-status-filter",
+    "admin-school-filter",
+    "admin-type-filter",
+    "admin-sort-filter"
+  ];
 
-  const statusFilterEl = document.getElementById("admin-status-filter");
-  if (statusFilterEl) {
-    statusFilterEl.addEventListener("change", () => {
-      renderProperties(adminSearchEl?.value || "");
-    });
-  }
-
-  const uniFilterEl = document.getElementById("admin-uni-filter");
-  if (uniFilterEl) {
-    uniFilterEl.addEventListener("change", () => {
-      renderProperties(adminSearchEl?.value || "");
-    });
-  }
+  filters.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      const event = (id === "admin-search") ? "input" : "change";
+      el.addEventListener(event, () => {
+        renderProperties(adminSearchEl?.value || "");
+      });
+    }
+  });
 });
+
+window.resetAdminFilters = () => {
+  const ids = ["admin-search", "admin-status-filter", "admin-school-filter", "admin-type-filter", "admin-sort-filter"];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      if (el.tagName === "SELECT") el.selectedIndex = 0;
+      else el.value = "";
+    }
+  });
+  renderProperties();
+};
 
