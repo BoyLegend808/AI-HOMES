@@ -233,6 +233,49 @@ async function renderInquiries() {
   `).join('');
 }
 
+async function renderReviews() {
+  const body = document.getElementById("reviews-body");
+  if (!body || !window.sb_client) return;
+
+  const { data, error } = await window.sb_client
+    .from('reviews')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    body.innerHTML = '<tr><td colspan="5" style="text-align:center; padding:3rem; color:var(--text-muted);">No student experiences found.</td></tr>';
+    return;
+  }
+
+  body.innerHTML = data.map(rev => `
+    <tr>
+      <td>
+        <div style="display:flex; align-items:center; gap:0.5rem;">
+          <img src="${rev.avatar || 'https://via.placeholder.com/30'}" style="width:30px; height:30px; border-radius:50%; object-fit:cover;">
+          <div style="font-weight:700; color:#fff;">${rev.name}</div>
+        </div>
+      </td>
+      <td><div style="color:var(--text-muted); font-size:0.85rem;">${rev.school || 'General'}</div></td>
+      <td><div class="message-cell" style="max-width:400px;">${rev.text}</div></td>
+      <td style="font-size:0.8rem; color:var(--text-muted);">${new Date(rev.created_at).toLocaleDateString()}</td>
+      <td>
+        <button class="btn btn-small" style="background:rgba(244,63,94,0.1); color:#f43f5e; padding:0.4rem 0.8rem;" onclick="deleteReview(${rev.id})">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+window.deleteReview = async (id) => {
+  if (!confirm("Delete this review permanently?")) return;
+  if (window.sb_client) {
+    const { error } = await window.sb_client.from('reviews').delete().eq('id', id);
+    if (!error) {
+      if (window.fetchAllData) await window.fetchAllData();
+      renderReviews();
+    }
+  }
+};
+
 document.addEventListener("DOMContentLoaded", async () => {
   const isAdmin = await window.ensureAdminAccess();
   if (!isAdmin) return;
@@ -242,6 +285,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     await renderDashboard();
     renderUniversities();
     renderInquiries();
+    renderReviews();
   } catch (e) {
     console.error(e);
   } finally {
