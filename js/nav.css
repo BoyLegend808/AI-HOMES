@@ -1099,6 +1099,14 @@ main {
     right: 105px;
     max-width: calc(100% - 150px);
   }
+
+  .top-nav {
+    padding: 0.7rem 1.25rem;
+  }
+
+  .brand-logo {
+    height: 32px !important;
+  }
 }
 
 /* ==========================================================================
