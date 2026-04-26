@@ -880,7 +880,7 @@ main {
 
   #nav-id-box {
     position: absolute;
-    right: 96px;
+    right: 115px;
     top: 50%;
     transform: translateY(-50%);
     padding: 0.35rem 0.75rem;
@@ -1096,8 +1096,8 @@ main {
   }
 
   #nav-id-box {
-    right: 72px;
-    max-width: calc(100% - 120px);
+    right: 95px;
+    max-width: calc(100% - 140px);
   }
 }
 
