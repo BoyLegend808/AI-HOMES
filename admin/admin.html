@@ -57,7 +57,7 @@
         </button>
 
         <div class="admin-grid">
-          <div class="stat-card">
+          <div class="stat-card" onclick="window.location.href='properties.html'" style="cursor:pointer; border: 1px solid var(--accent);">
             <div class="stat-icon">🏠</div>
             <div class="stat-content">
               <h3 id="prop-count">0</h3>
@@ -78,78 +78,24 @@
               <p>Schools</p>
             </div>
           </div>
+          <div class="stat-card" onclick="window.location.href='properties.html'" style="cursor:pointer; background: rgba(249, 115, 22, 0.05); border: 1px dashed var(--accent);">
+            <div class="stat-icon">📑</div>
+            <div class="stat-content">
+              <h3>Inventory</h3>
+              <p>Manage Listings →</p>
+            </div>
+          </div>
         </div>
 
-        <section class="listings-section">
+        <!-- INQUIRIES -->
+        <section class="listings-section" id="inquiries-section">
           <div class="section-header">
-            <h2>Inventory Management</h2>
-            <div class="search-wrapper">
-              <input type="text" id="admin-search" placeholder="Search by title, location, school...">
-              <select id="admin-status-filter">
-                <option value="all">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Hidden">Hidden</option>
-              </select>
-            </div>
+            <h2>Recent Student Inquiries</h2>
+            <p style="color:var(--text-muted); font-size:0.85rem;">Review messages from interested students.</p>
           </div>
-
-          <!-- Advanced Filter Bar -->
-          <div class="admin-filter-bar">
-            <select id="admin-school-filter" class="admin-filter-chip">
-              <option value="">All Universities</option>
-            </select>
-            
-            <select id="admin-type-filter" class="admin-filter-chip">
-              <option value="">All Types</option>
-            </select>
-            
-            <div class="admin-filter-date">
-              <label>Sort:</label>
-              <select id="admin-sort-filter" class="admin-filter-chip">
-                <option value="newest">Newest First</option>
-                <option value="oldest">Oldest First</option>
-                <option value="price-high">Price: High to Low</option>
-                <option value="price-low">Price: Low to High</option>
-                <option value="name-az">Name: A-Z</option>
-              </select>
-            </div>
-            
-            <button class="btn-reset-filters" onclick="resetAdminFilters()">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                <path d="M3 3v5h5"></path>
-              </svg>
-              Reset
-            </button>
-          </div>
-
           <div id="admin-loading" class="admin-loading">
             <div class="skeleton-row-box"></div>
             <div class="skeleton-row-box"></div>
-            <div class="skeleton-row-box"></div>
-          </div>
-
-          <div class="listings-table-container">
-            <table>
-              <thead>
-                <tr>
-                  <th>Property Details</th>
-                  <th>Price</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="listings-body">
-                <!-- Data injections via admin.js -->
-              </tbody>
-            </table>
-          </div>
-        </section>
-
-        <!-- INQUIRIES -->
-        <section class="listings-section">
-          <div class="section-header">
-            <h2>Student Inquiries</h2>
           </div>
           <div class="listings-table-container">
             <table>

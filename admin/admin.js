@@ -27,148 +27,29 @@ async function waitForHousesReady({ timeoutMs = 8000 } = {}) {
   });
 }
 
-async function renderDashboard(filter = "") {
+async function renderDashboard() {
   let allListings = [];
   if (window.fetchAdminHouses) {
     allListings = await window.fetchAdminHouses();
   } else {
     allListings = window.getListings ? window.getListings() : [];
   }
-  const searchText = String(filter || "").toLowerCase();
-  const statusFilter = document.getElementById("admin-status-filter")?.value || "all";
-  const schoolFilter = document.getElementById("admin-school-filter")?.value || "";
-  const typeFilter = document.getElementById("admin-type-filter")?.value || "";
-  const sortFilter = document.getElementById("admin-sort-filter")?.value || "newest";
 
-  let listings = allListings.filter((l) => {
-    // Text search
-    if (searchText) {
-      const matchesSearch = 
-        String(l.title || "").toLowerCase().includes(searchText) ||
-        String(l.location || "").toLowerCase().includes(searchText) ||
-        String(l.school || "").toLowerCase().includes(searchText) ||
-        String(l.area || "").toLowerCase().includes(searchText);
-      if (!matchesSearch) return false;
-    }
-    
-    // Status filter
-    if (statusFilter !== "all" && String(l.status || "") !== statusFilter) return false;
-    
-    // School filter
-    if (schoolFilter && String(l.school || "") !== schoolFilter) return false;
-    
-    // Type filter
-    if (typeFilter && String(l.type || "") !== typeFilter) return false;
-    
-    return true;
-  });
-
-  // Apply sorting
-  listings.sort((a, b) => {
-    switch (sortFilter) {
-      case "oldest":
-        return (new Date(a.created_at || 0)) - (new Date(b.created_at || 0));
-      case "price-high":
-        return (b.price || 0) - (a.price || 0);
-      case "price-low":
-        return (a.price || 0) - (b.price || 0);
-      case "name-az":
-        return String(a.title || "").localeCompare(String(b.title || ""));
-      case "newest":
-      default:
-        return (new Date(b.created_at || 0)) - (new Date(a.created_at || 0));
-    }
-  });
-
-  document.getElementById("prop-count").textContent = allListings.length;
-  document.getElementById("active-count").textContent = allListings.filter(
-    (h) => h.status === "Active",
-  ).length;
+  const propCountEl = document.getElementById("prop-count");
+  if (propCountEl) propCountEl.textContent = allListings.length;
+  
+  const activeCountEl = document.getElementById("active-count");
+  if (activeCountEl) {
+    activeCountEl.textContent = allListings.filter((h) => h.status === "Active").length;
+  }
 
   const uniCountSource = (window.getUniversities && window.getUniversities()) || window.NIGERIA_UNIVERSITIES || {};
   const uniCountEl = document.getElementById("uni-count");
   if (uniCountEl) uniCountEl.textContent = Object.keys(uniCountSource).length;
   
   if (window.renderUniversities) window.renderUniversities();
-
-  const body = document.getElementById("listings-body");
-  if (!body) return;
-
-  if (listings.length === 0) {
-    body.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:4rem; color:var(--text-muted);">No properties found Matching your filters.</td></tr>';
-  } else {
-    body.innerHTML = listings
-      .map(
-        (l) => `
-          <tr>
-            <td>
-              <div class="prop-cell">
-                <div class="image-container">
-                  <img loading="lazy" decoding="async" src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
-                  <button class="image-remove-btn" onclick="removeImageCard(event, ${l.id})" title="Remove image">×</button>
-                </div>
-                <div class="prop-titles">
-                  <h4>${l.title}</h4>
-                  <p>${l.school} • ${l.location}</p>
-                </div>
-              </div>
-            </td>
-            <td><div style="font-weight:700;">₦${l.price.toLocaleString()}</div></td>
-            <td><span class="status-badge ${l.status.toLowerCase()}">${l.status}</span></td>
-            <td>
-              <div class="actions">
-                <button class="btn-icon" title="Toggle Status" onclick="toggleStatus(${l.id}, '${l.status}')">
-                   ${l.status === "Active" ? 
-                     `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>` : 
-                     `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`
-                   }
-                </button>
-                <button class="btn-icon" title="Edit" onclick="window.location.href='../admin-form/admin-form.html?edit=${l.id}'">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                </button>
-                <button class="btn-icon delete" title="Delete" onclick="handleDelete(${l.id})">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                </button>
-              </div>
-            </td>
-          </tr>
-        `,
-      )
-      .join("");
-  }
 }
 window.renderDashboard = renderDashboard;
-
-async function toggleStatus(id, currentStatus) {
-  const newStatus = currentStatus === "Active" ? "Hidden" : "Active";
-  const res = await window.updateListing({ id, status: newStatus });
-  if (!res.success) alert("Error toggling: " + res.error?.message);
-  renderDashboard(document.getElementById("admin-search")?.value);
-}
-window.toggleStatus = toggleStatus;
-
-async function handleDelete(id) {
-  if (confirm("Delete this listing permanently?")) {
-    const res = await window.deleteListing(id);
-    if (!res.success) alert("Delete Error: " + res.error?.message);
-    renderDashboard(document.getElementById("admin-search")?.value);
-  }
-}
-window.handleDelete = handleDelete;
-
-window.removeImageCard = async (event, id) => {
-  if (!confirm("Delete this property from database?")) return;
-  const row = event.target.closest('tr');
-  if (row) {
-    row.style.transition = 'opacity 0.3s ease';
-    row.style.opacity = '0';
-    await window.deleteListing(id);
-    if (window.fetchAllData) await window.fetchAllData();
-    setTimeout(() => {
-      renderDashboard(document.getElementById("admin-search")?.value || "");
-    }, 300);
-  }
-};
 
 window.updateUniLogoScale = async (uniId, scale) => {
   const card = document.querySelector(`.uni-card[data-id="${uniId}"]`);
@@ -352,56 +233,6 @@ async function renderInquiries() {
   `).join('');
 }
 
-const adminSearchEl = document.getElementById("admin-search");
-if (adminSearchEl) adminSearchEl.addEventListener("input", (e) => renderDashboard(e.target.value));
-
-const statusFilterEl = document.getElementById("admin-status-filter");
-if (statusFilterEl) statusFilterEl.addEventListener("change", () => renderDashboard(adminSearchEl?.value || ""));
-
-const schoolFilterEl = document.getElementById("admin-school-filter");
-if (schoolFilterEl) schoolFilterEl.addEventListener("change", () => renderDashboard(adminSearchEl?.value || ""));
-
-const typeFilterEl = document.getElementById("admin-type-filter");
-if (typeFilterEl) typeFilterEl.addEventListener("change", () => renderDashboard(adminSearchEl?.value || ""));
-
-const sortFilterEl = document.getElementById("admin-sort-filter");
-if (sortFilterEl) sortFilterEl.addEventListener("change", () => renderDashboard(adminSearchEl?.value || ""));
-
-// Reset all admin filters
-window.resetAdminFilters = () => {
-  if (adminSearchEl) adminSearchEl.value = '';
-  if (statusFilterEl) statusFilterEl.value = 'all';
-  if (schoolFilterEl) schoolFilterEl.value = '';
-  if (typeFilterEl) typeFilterEl.value = '';
-  if (sortFilterEl) sortFilterEl.value = 'newest';
-  renderDashboard('');
-};
-
-// Populate school filter
-window.populateAdminSchoolFilter = () => {
-  if (!schoolFilterEl) return;
-  const universities = window.NIGERIA_UNIVERSITIES || {};
-  schoolFilterEl.innerHTML = '<option value="">All Universities</option>';
-  Object.keys(universities).forEach((school) => {
-    const option = document.createElement("option");
-    option.value = school;
-    option.textContent = school;
-    schoolFilterEl.appendChild(option);
-  });
-};
-
-// Populate type filter
-window.populateAdminTypeFilter = () => {
-  if (!typeFilterEl) return;
-  typeFilterEl.innerHTML = '<option value="">All Types</option>';
-  (window.HOUSE_TYPES || []).forEach((type) => {
-    const option = document.createElement("option");
-    option.value = type;
-    option.textContent = type;
-    typeFilterEl.appendChild(option);
-  });
-};
-
 document.addEventListener("DOMContentLoaded", async () => {
   const isAdmin = await window.ensureAdminAccess();
   if (!isAdmin) return;
@@ -416,6 +247,5 @@ document.addEventListener("DOMContentLoaded", async () => {
   } finally {
     setAdminLoading(false);
   }
-  window.populateAdminSchoolFilter();
-  window.populateAdminTypeFilter();
+
 });
