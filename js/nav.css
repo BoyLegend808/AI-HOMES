@@ -880,13 +880,14 @@ main {
 
   #nav-id-box {
     position: absolute;
-    right: 125px;
+    left: 50%;
+    right: auto;
     top: 50%;
-    transform: translateY(-50%);
-    padding: 0.35rem 0.75rem;
+    transform: translate(-50%, -50%);
+    padding: 0.35rem 0.6rem;
     background: transparent;
     border-radius: 999px;
-    max-width: calc(100% - 140px);
+    max-width: 180px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -895,6 +896,7 @@ main {
     gap: 0.65rem;
     border: none;
     box-shadow: none;
+    z-index: 5001;
   }
 
   .nav-id-inner {
@@ -1096,8 +1098,9 @@ main {
   }
 
   #nav-id-box {
-    right: 105px;
-    max-width: calc(100% - 150px);
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-width: 160px;
   }
 
   .top-nav {
@@ -1105,7 +1108,7 @@ main {
   }
 
   .brand-logo {
-    height: 32px !important;
+    height: 42px !important;
   }
 }
 
