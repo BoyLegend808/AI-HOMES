@@ -887,10 +887,10 @@ main {
 
   #nav-id-box {
     position: absolute;
-    left: 50%;
-    right: auto;
+    right: 135px;
+    left: auto;
     top: 50%;
-    transform: translate(-50%, -50%);
+    transform: translateY(-50%);
     padding: 0.35rem 0.6rem;
     background: transparent;
     border-radius: 999px;
@@ -1105,8 +1105,9 @@ main {
   }
 
   #nav-id-box {
-    left: 50%;
-    transform: translate(-50%, -50%);
+    right: 115px;
+    left: auto;
+    transform: translateY(-50%);
     max-width: 160px;
   }
 
