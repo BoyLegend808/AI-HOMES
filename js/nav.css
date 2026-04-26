@@ -881,7 +881,7 @@ main {
   }
 
   .brand-logo {
-    max-width: 130px;
+    max-width: 160px;
     height: auto;
   }
 
@@ -1115,7 +1115,7 @@ main {
   }
 
   .brand-logo {
-    height: 48px !important;
+    height: 60px !important;
   }
 }
 
