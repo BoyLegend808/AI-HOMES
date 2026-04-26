@@ -1,6 +1,6 @@
 let listing = null;
 
-window.renderDetailsPage = () => {
+window.renderDetailsPage = async () => {
   const params = new URLSearchParams(window.location.search);
   const id = params.get("id");
 
@@ -10,11 +10,23 @@ window.renderDetailsPage = () => {
     if (all.length > 0) listing = all[0];
   } else {
     listing = window.getListingById(id);
+    
+    // Fetch directly from database if not found in local cache (due to pagination)
+    if (!listing && window.sb_client) {
+      const { data, error } = await window.sb_client
+        .from("houses")
+        .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
+        .eq("id", id)
+        .single();
+      if (!error && data) {
+        listing = window.normalizeListing ? window.normalizeListing(data) : data;
+      }
+    }
   }
 
   if (!listing) {
     // Only show "not found" if we actually have data but no matching ID
-    if (all.length > 0) {
+    if (all.length > 0 || window.hasFetchedHouses) {
       const main = document.getElementById("main-content");
       if (main) {
         main.innerHTML =

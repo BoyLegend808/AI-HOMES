@@ -220,6 +220,7 @@ if (!sb_client) {
         .from("houses")
         .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
         .order("created_at", { ascending: false })
+        .limit(20)
       ),
       // Reviews: Only fetch recent reviews (last 50)
       safeCall(sb_client
@@ -303,16 +304,37 @@ window.fetchHousesPaginated = async (page = 1, limit = 20, filters = {}) => {
   try {
     let query = sb_client
       .from("houses")
-      .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
-      .order("created_at", { ascending: false })
-      .range((page - 1) * limit, page * limit - 1);
+      .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at");
+      
+    // Handle sorting
+    if (filters.sortBy === 'price-low') {
+      query = query.order("price", { ascending: true });
+    } else if (filters.sortBy === 'price-high') {
+      query = query.order("price", { ascending: false });
+    } else if (filters.sortBy === 'name-az') {
+      query = query.order("title", { ascending: true });
+    } else {
+      query = query.order("created_at", { ascending: false }); // newest
+    }
+
+    query = query.range((page - 1) * limit, page * limit - 1);
     
     // Apply filters
-    if (filters.school) query = query.eq("school", filters.school);
-    if (filters.area) query = query.eq("area", filters.area);
+    if (filters.school) query = query.ilike("school", `%${filters.school}%`);
+    if (filters.area) query = query.ilike("area", `%${filters.area}%`);
     if (filters.type) query = query.eq("type", filters.type);
+    if (filters.rooms) {
+      if (String(filters.rooms) === "4") {
+        query = query.gte("rooms", 4);
+      } else {
+        query = query.eq("rooms", Number(filters.rooms));
+      }
+    }
     if (filters.minPrice) query = query.gte("price", filters.minPrice);
     if (filters.maxPrice) query = query.lte("price", filters.maxPrice);
+    if (filters.query) {
+      query = query.or(`title.ilike.%${filters.query}%,location.ilike.%${filters.query}%,area.ilike.%${filters.query}%,school.ilike.%${filters.query}%`);
+    }
     
     const { data, error } = await query;
     
@@ -321,6 +343,22 @@ window.fetchHousesPaginated = async (page = 1, limit = 20, filters = {}) => {
   } catch (e) {
     console.error('Paginated fetch error:', e);
     return { data: [], error: e.message };
+  }
+};
+
+window.fetchAdminHouses = async () => {
+  if (!sb_client) return [];
+  try {
+    const { data, error } = await sb_client
+      .from("houses")
+      .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, views, created_at")
+      .order("created_at", { ascending: false })
+      .limit(1000);
+    if (error) throw error;
+    return (data || []).map(normalizeListing);
+  } catch (e) {
+    console.error("Admin fetch error", e);
+    return [];
   }
 };
 

@@ -11,6 +11,30 @@ const clearSearchBtn = document.getElementById("btn-clear-search");
 let allListings = [];
 let isLoading = false;
 let searchDebounceTimer = null;
+let currentPage = 1;
+const ITEMS_PER_PAGE = 20;
+
+// Load More Button
+let loadMoreBtn = null;
+function setupLoadMore() {
+  if (!document.getElementById("load-more-container")) {
+    const container = document.createElement("div");
+    container.id = "load-more-container";
+    container.style = "text-align:center; padding: 2rem 0; width: 100%; grid-column: 1 / -1;";
+    container.innerHTML = `<button id="btn-load-more" class="btn btn-secondary" style="padding: 0.8rem 2rem; border-radius: 30px;">Load More</button>`;
+    if (shopContainer && shopContainer.parentNode) {
+      shopContainer.parentNode.insertBefore(container, shopContainer.nextSibling);
+    }
+    loadMoreBtn = document.getElementById("btn-load-more");
+    if (loadMoreBtn) {
+      loadMoreBtn.addEventListener("click", () => {
+        currentPage++;
+        applyFilters(true);
+      });
+    }
+  }
+}
+setTimeout(setupLoadMore, 500);
 
 // Toggle filter bar on mobile
 window.toggleFilterBar = () => {
@@ -159,10 +183,12 @@ window.resetFilters = () => {
   applyFilters();
 };
 
-function applyFilters() {
-  if (window.getListings) {
-    allListings = window.getListings();
+async function applyFilters(isLoadMore = false) {
+  if (!isLoadMore) {
+    currentPage = 1;
+    allListings = [];
   }
+
   const searchText = filterSearch ? filterSearch.value.trim().toLowerCase() : "";
   const school = filterSchool ? filterSchool.value : "";
   const area = filterArea ? filterArea.value : "";
@@ -170,59 +196,55 @@ function applyFilters() {
   const rooms = filterRooms ? filterRooms.value : "";
   const sortBy = sortSelect ? sortSelect.value : "newest";
 
-  const filtered = allListings.filter((listing) => {
-    const location = String(listing.location || "").toLowerCase();
-    const title = String(listing.title || "").toLowerCase();
-    let matches = true;
-
-    // Text search across title, location, area
-    if (searchText) {
-      const searchTerms = searchText.split(' ').filter(Boolean);
-      const matchesSearch = searchTerms.some(term => 
-        title.includes(term) || 
-        location.includes(term) ||
-        String(listing.area || "").toLowerCase().includes(term) ||
-        String(listing.school || "").toLowerCase().includes(term)
-      );
-      if (!matchesSearch) matches = false;
-    }
-
-    if (school && !location.includes(school.toLowerCase())) matches = false;
-    if (area && !location.includes(area.toLowerCase())) matches = false;
-    if (type && listing.type !== type) matches = false;
-    if (rooms) {
-      const listingRooms = Number(listing.rooms) || 1;
-      if (rooms === "4") {
-        if (listingRooms < 4) matches = false; // 4+ rooms
-      } else {
-        if (listingRooms !== Number(rooms)) matches = false;
-      }
-    }
-
-    return matches;
-  });
-
-  // Sort results
-  filtered.sort((a, b) => {
-    switch (sortBy) {
-      case "price-low": return (a.price || 0) - (b.price || 0);
-      case "price-high": return (b.price || 0) - (a.price || 0);
-      case "name-az": return String(a.title || "").localeCompare(String(b.title || ""));
-      case "newest":
-      default: return (new Date(b.created_at || 0)) - (new Date(a.created_at || 0));
-    }
-  });
-
-  // Update results count
-  if (resultsCount) {
-    resultsCount.textContent = filtered.length + " " + (filtered.length === 1 ? "property" : "properties");
-  }
-
-  // Update active filters display
   updateActiveFilters();
 
-  renderShopGridView(filtered);
+  if (!isLoadMore) {
+    setLoadingState(true);
+  } else if (loadMoreBtn) {
+    loadMoreBtn.textContent = "Loading...";
+    loadMoreBtn.disabled = true;
+  }
+
+  const filters = {
+    query: searchText,
+    school,
+    area,
+    type,
+    rooms,
+    sortBy
+  };
+
+  const { data, error } = await window.fetchHousesPaginated(currentPage, ITEMS_PER_PAGE, filters);
+
+  if (!isLoadMore) {
+    setLoadingState(false);
+  } else if (loadMoreBtn) {
+    loadMoreBtn.textContent = "Load More";
+    loadMoreBtn.disabled = false;
+  }
+
+  if (error) {
+    console.error("Pagination fetch error:", error);
+    return;
+  }
+
+  if (isLoadMore) {
+    allListings = [...allListings, ...data];
+  } else {
+    allListings = data;
+  }
+
+  renderShopGridView(allListings);
+
+  if (resultsCount) {
+    resultsCount.textContent = allListings.length + " properties loaded";
+  }
+
+  if (loadMoreBtn) {
+    loadMoreBtn.style.display = data.length === ITEMS_PER_PAGE ? "inline-block" : "none";
+  }
 }
+
 
 function buildCardImageHTML(listing) {
   const photos = listing.photos || [];

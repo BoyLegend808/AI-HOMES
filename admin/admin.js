@@ -27,8 +27,13 @@ async function waitForHousesReady({ timeoutMs = 8000 } = {}) {
   });
 }
 
-function renderDashboard(filter = "") {
-  const allListings = window.getListings();
+async function renderDashboard(filter = "") {
+  let allListings = [];
+  if (window.fetchAdminHouses) {
+    allListings = await window.fetchAdminHouses();
+  } else {
+    allListings = window.getListings ? window.getListings() : [];
+  }
   const searchText = String(filter || "").toLowerCase();
   const statusFilter = document.getElementById("admin-status-filter")?.value || "all";
   const schoolFilter = document.getElementById("admin-school-filter")?.value || "";
@@ -401,12 +406,16 @@ document.addEventListener("DOMContentLoaded", async () => {
   const isAdmin = await window.ensureAdminAccess();
   if (!isAdmin) return;
   setAdminLoading(true);
-  if (window.fetchAllData) await window.fetchAllData();
-  await waitForHousesReady();
-  setAdminLoading(false);
+  try {
+    await waitForHousesReady();
+    await renderDashboard();
+    renderUniversities();
+    renderInquiries();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setAdminLoading(false);
+  }
   window.populateAdminSchoolFilter();
   window.populateAdminTypeFilter();
-  renderDashboard();
-  renderInquiries();
-  renderUniversities();
 });

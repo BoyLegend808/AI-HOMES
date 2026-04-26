@@ -39,10 +39,15 @@ function populateUniFilter() {
   else uniSelect.value = "all";
 }
 
-function renderProperties(searchText = "") {
-  const allListings = window.getListings();
+async function renderProperties(filter = "") {
+  let allListings = [];
+  if (window.fetchAdminHouses) {
+    allListings = await window.fetchAdminHouses();
+  } else {
+    allListings = window.getListings ? window.getListings() : [];
+  }
 
-  const query = String(searchText || "").toLowerCase();
+  const query = String(filter || "").toLowerCase();
   const statusFilter =
     document.getElementById("admin-status-filter")?.value || "all";
   const uniFilter =
@@ -180,11 +185,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   setPropertiesLoading(true);
   if (window.fetchAllData) await window.fetchAllData();
-  await waitForHousesReady();
-
-  populateUniFilter();
-  setPropertiesLoading(false);
-  renderProperties();
+  try {
+    await waitForHousesReady();
+    await renderProperties();
+    populateUniFilter();
+  } catch (e) {
+    console.error(e);
+  } finally {
+    setPropertiesLoading(false);
+  }
 
   const adminSearchEl = document.getElementById("admin-search");
   if (adminSearchEl) {
