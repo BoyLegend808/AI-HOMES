@@ -170,13 +170,11 @@ async function renderProperties(filter = "") {
 }
 
 async function toggleStatus(id, currentStatus) {
-  if (confirm("Toggle visibility for this property?")) {
-    const newStatus = currentStatus === "Active" ? "Hidden" : "Active";
-    const res = await window.updateListing({ id, status: newStatus });
-    if (!res.success) alert("Error toggling: " + res.error?.message);
-    if (window.fetchAllData) await window.fetchAllData();
-    renderProperties(document.getElementById("admin-search")?.value || "");
-  }
+  const newStatus = currentStatus === "Active" ? "Hidden" : "Active";
+  const res = await window.updateListing({ id, status: newStatus });
+  if (!res.success) alert("Error toggling: " + res.error?.message);
+  if (window.fetchAllData) await window.fetchAllData();
+  renderProperties(document.getElementById("admin-search")?.value || "");
 }
 window.toggleStatus = toggleStatus;
 
