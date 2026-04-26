@@ -219,6 +219,7 @@ if (!sb_client) {
       safeCall(sb_client
         .from("houses")
         .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
+        .eq("status", "Active")
         .order("created_at", { ascending: false })
         .limit(20)
       ),
@@ -304,7 +305,8 @@ window.fetchHousesPaginated = async (page = 1, limit = 20, filters = {}) => {
   try {
     let query = sb_client
       .from("houses")
-      .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at");
+      .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
+      .eq("status", "Active");
       
     // Handle sorting
     if (filters.sortBy === 'price-low') {

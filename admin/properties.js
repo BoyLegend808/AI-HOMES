@@ -129,7 +129,7 @@ async function renderProperties(filter = "") {
             </div>
           </td>
           <td>₦${l.price.toLocaleString()}</td>
-          <td><span class="status ${String(l.status || "").toLowerCase()}">${l.status}</span></td>
+          <td><span class="status-badge ${String(l.status || "").toLowerCase()}">${l.status}</span></td>
           <td>
             <div class="actions">
               <button class="btn btn-small" style="background: rgba(255,255,255,0.1); color:white;" onclick="toggleStatus(${l.id}, '${l.status}')">${l.status === "Active" ? "Hide" : "Show"}</button>
@@ -153,7 +153,7 @@ async function renderProperties(filter = "") {
           <div class="listing-card-content">
             <h4>${l.title}</h4>
             <p>${l.location}</p>
-            <div style="font-weight:700; color:var(--accent); margin-bottom:1rem;">₦${l.price.toLocaleString()}</div>
+            <div style="font-weight:700; color:var(--accent); margin-bottom:1rem;">₦${l.price.toLocaleString()} <span class="status-badge ${String(l.status || "").toLowerCase()}" style="margin-left:0.5rem; font-size:0.6rem; padding:0.2rem 0.5rem;">${l.status}</span></div>
             <div class="listing-card-actions">
               <button class="btn btn-small" style="flex:1; background: rgba(255,255,255,0.1); color:white;" onclick="toggleStatus(${l.id}, '${l.status}')">${l.status === "Active" ? "Hide" : "Show"}</button>
               <button class="btn btn-small btn-edit" style="flex:1;" onclick="window.location.href='../admin-form/admin-form.html?edit=${l.id}&back=properties'">Edit</button>
