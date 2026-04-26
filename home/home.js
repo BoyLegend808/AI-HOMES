@@ -39,7 +39,7 @@ const renderCard = (item) => {
   return `
   <article class="card-item" data-id="${item.id}" style="position:relative; ${item.status !== 'Active' ? 'opacity:0.8;' : ''}">
     <div class="card-image-wrapper" style="position:relative;">
-      <img src="${item.photo || item.photos?.[0]}" alt="${item.title}" />
+      <img loading="lazy" decoding="async" src="${item.photo || item.photos?.[0]}" alt="${item.title}" />
       ${item.status !== 'Active' ? `<div style="position:absolute; top:10px; left:10px; background:var(--accent, #f43f5e); color:black; padding:0.3rem 0.6rem; border-radius:4px; font-weight:700; z-index:10; font-size:0.75rem;">${item.status}</div>` : ''}
       <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${item.id}" onclick="event.stopPropagation(); window.toggleFavorite('${item.id}')">
         <span class="IconContainer">
@@ -72,7 +72,7 @@ const refreshLists = () => {
             return `
               <article class="testimonial-card trending-card" style="width:300px; padding:0; overflow:hidden; position:relative; ${item.status !== 'Active' ? 'opacity:0.8;' : ''}" onclick="window.location.href='../details/detail.html?id=${item.id}'">
                 <div style="position:relative; height:180px;">
-                  <img src="${item.photo || (item.photos && item.photos[0]) || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800"}" style="width:100%; height:100%; object-fit:cover;">
+                  <img loading="lazy" decoding="async" src="${item.photo || (item.photos && item.photos[0]) || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800"}" style="width:100%; height:100%; object-fit:cover;">
                   ${item.status !== 'Active' ? `<div style="position:absolute; top:10px; left:10px; background:var(--accent, #f43f5e); color:black; padding:0.3rem 0.6rem; border-radius:4px; font-weight:700; z-index:10; font-size:0.75rem;">${item.status}</div>` : ''}
                   <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${item.id}" onclick="event.stopPropagation(); window.toggleFavorite('${item.id}')">
                     <span class="IconContainer">

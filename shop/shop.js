@@ -232,7 +232,7 @@ function buildCardImageHTML(listing) {
   // If multiple photos, render swipeable gallery on mobile
   if (photos.length > 1) {
     const imagesHTML = photos.slice(0, 5).map((src) =>
-      `<img loading="lazy" src="${src}" alt="${title}">`
+      `<img loading="lazy" decoding="async" src="${src}" alt="${title}">`
     ).join("");
     const dotsHTML = photos.slice(0, 5).map((_, i) =>
       `<span class="dot${i === 0 ? " active" : ""}"></span>`
@@ -243,7 +243,7 @@ function buildCardImageHTML(listing) {
         <div class="card-image-dots">${dotsHTML}</div>
       </div>`;
   }
-  return `<img loading="lazy" src="${mainImage}" alt="${title}">`;
+  return `<img loading="lazy" decoding="async" src="${mainImage}" alt="${title}">`;
 }
 
 function renderShopGridView(listings) {

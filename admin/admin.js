@@ -99,7 +99,7 @@ function renderDashboard(filter = "") {
             <td>
               <div class="prop-cell">
                 <div class="image-container">
-                  <img src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
+                  <img loading="lazy" decoding="async" src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
                   <button class="image-remove-btn" onclick="removeImageCard(event, ${l.id})" title="Remove image">×</button>
                 </div>
                 <div class="prop-titles">
@@ -270,7 +270,7 @@ window.renderUniversities = () => {
       (u) => `
         <div class="uni-card" data-id="${u.id}">
             <div class="uni-logo-box">
-                <img src="${u.logo_url || "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=200&auto=format&fit=crop"}"
+                <img loading="lazy" decoding="async" src="${u.logo_url || "https://images.unsplash.com/photo-1592280771190-3e2e4d571952?q=80&w=200&auto=format&fit=crop"}"
                      style="transform: scale(${u.logo_scale || 1.1});">
             </div>
             <h3>${u.name}</h3>

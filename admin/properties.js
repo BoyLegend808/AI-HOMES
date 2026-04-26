@@ -89,7 +89,7 @@ function renderProperties(searchText = "") {
           <td>
             <div class="property-cell">
               <div class="image-container">
-                <img src="${l.photo || (l.photos && l.photos[0]) || ""}" class="property-thumb" alt="">
+                <img loading="lazy" decoding="async" src="${l.photo || (l.photos && l.photos[0]) || ""}" class="property-thumb" alt="">
                 <button class="image-remove-btn" onclick="removeImageCard(event, ${l.id})" title="Remove image">×</button>
               </div>
               <div class="property-info">
@@ -117,7 +117,7 @@ function renderProperties(searchText = "") {
       (l) => `
         <div class="listing-card">
           <div class="image-container">
-            <img src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
+            <img loading="lazy" decoding="async" src="${l.photo || (l.photos && l.photos[0]) || ""}" alt="">
             <button class="image-remove-btn" onclick="removeImageCard(event, ${l.id})" title="Remove card">×</button>
           </div>
           <div class="listing-card-content">
