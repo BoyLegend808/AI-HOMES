@@ -966,10 +966,10 @@ async function renderGlobalNav() {
           <div class="nav-skel-line is-uni"></div>
         </div>
       </div>`;
-    if (rightZone) {
-      rightZone.insertBefore(idBox, toggle);
-    } else if (centerZone) {
+    if (centerZone) {
       centerZone.appendChild(idBox);
+    } else if (rightZone) {
+      rightZone.insertBefore(idBox, toggle);
     }
   }
 

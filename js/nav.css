@@ -908,16 +908,21 @@ main {
 
   .nav-left {
     flex: 0 0 auto !important;
+    min-width: 60px;
   }
 
   .nav-right {
     flex: 0 0 auto !important;
-    gap: 15px !important;
+    display: flex !important;
+    justify-content: flex-end !important;
+    min-width: 60px;
   }
 
   .nav-center {
     flex: 1 !important;
-    display: block !important;
+    display: flex !important;
+    justify-content: center !important;
+    overflow: hidden;
   }
 
   .mobile-menu-toggle {
