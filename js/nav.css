@@ -685,10 +685,10 @@ body {
   background: rgba(255, 255, 255, 0.08);
   position: relative;
   overflow: hidden;
-  border-radius: 8px;
-  width: 54px;
-  height: 38px;
-  margin-right: -10px;
+  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  margin-right: -4px;
 }
 .mobile-menu-toggle:not(.is-ready)::after {
   content: "";
@@ -927,16 +927,24 @@ main {
 
   .mobile-menu-toggle {
     display: none !important;
-    background: none;
+    background: rgba(255, 255, 255, 0.05);
     border: none;
-    padding: 10px 12px;
-    margin-right: -8px;
+    padding: 0;
+    margin-right: -4px;
     cursor: pointer;
     z-index: 9999;
     align-items: center;
-    gap: 12px;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
     position: relative;
     pointer-events: auto;
+    transition: all 0.3s ease;
+  }
+
+  .mobile-menu-toggle.is-ready {
+    background: transparent;
   }
 
   .nav-right .mobile-menu-toggle {

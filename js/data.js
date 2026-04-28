@@ -1001,6 +1001,10 @@ async function renderGlobalNav() {
       idBox.remove();
     }
 
+    // Mark toggle as ready to transition from skeleton
+    const toggle = document.querySelector(".mobile-menu-toggle");
+    if (toggle) toggle.classList.add("is-ready");
+
     // Final links update (Remove skeleton, show real links)
     if (navLinks) {
       let authLinks = "";
