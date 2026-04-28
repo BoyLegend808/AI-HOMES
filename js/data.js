@@ -1,5 +1,5 @@
 // runing it from ther https://ai-homes.vercel.app/home/home.html
-// StudentHome Global Cloud Engine (v3.0 - Production Balanced)
+// AI HOMES Global Cloud Engine (v3.0 - Production Balanced)
 // Auth is now in-memory only (no localStorage)
 let _currentUser = null;
 const SUPABASE_URL = "https://loapruxjeolxyngmcszf.supabase.co";
@@ -966,10 +966,10 @@ async function renderGlobalNav() {
           <div class="nav-skel-line is-uni"></div>
         </div>
       </div>`;
-    if (centerZone) {
-      centerZone.appendChild(idBox);
-    } else if (rightZone) {
+    if (rightZone) {
       rightZone.insertBefore(idBox, toggle);
+    } else if (centerZone) {
+      centerZone.appendChild(idBox);
     }
   }
 

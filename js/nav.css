@@ -151,18 +151,19 @@ body {
   gap: 10px;
   --nav-pad-x: max(1.5rem, 4vw);
   padding: 0 var(--nav-pad-x);
-  height: 80px;
-  background: #0a0c10;
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
+  height: 85px;
+  background: rgba(10, 12, 16, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
   position: sticky;
   width: 100%;
   top: 0;
   left: 0;
   right: 0;
   z-index: 5000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   font-family: 'Outfit', sans-serif;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .brand-logo {
@@ -243,20 +244,22 @@ body {
   display: flex;
   align-items: center;
   gap: 0.8rem;
-  background: rgba(255, 255, 255, 0.03);
-  padding: 0.4rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.5rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
   font-family: 'Outfit', sans-serif;
   cursor: pointer;
-  transition: all 0.3s ease;
-  max-width: 220px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 240px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .nav-identity-cluster:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(249, 115, 22, 0.5);
-  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(249, 115, 22, 0.15);
 }
 
 .nav-id-inner {
@@ -294,12 +297,13 @@ body {
 .nav-id-uni {
   color: var(--accent);
   font-size: 0.65rem;
-  font-weight: 600;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  opacity: 0.9;
 }
 
 .top-nav.nav-scrolled {
@@ -881,26 +885,24 @@ main {
   }
 
   .brand-logo {
-    max-width: 160px;
+    max-width: 140px;
     height: auto;
   }
 
   #nav-id-box {
     position: relative;
-    padding: 0.35rem 0.6rem;
+    padding: 0.35rem 0;
     background: transparent;
-    border-radius: 999px;
-    max-width: 180px;
+    max-width: 130px;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
     align-items: center;
     display: flex;
-    gap: 0.65rem;
+    gap: 0.5rem;
     border: none;
     box-shadow: none;
     z-index: 5001;
-    margin: 0 auto;
   }
 
   .nav-id-inner {
@@ -917,7 +919,24 @@ main {
   }
 
   .nav-id-uni {
-    font-size: 0.5rem;
+    display: block; /* Show university on mobile but smaller */
+    font-size: 0.55rem;
+  }
+
+  .nav-left {
+    flex: 1 !important;
+    justify-content: flex-start !important;
+  }
+
+  .nav-right {
+    flex: 0 0 auto !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+  }
+
+  .nav-center {
+    display: none !important;
   }
 
   .mobile-menu-toggle {
