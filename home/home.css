@@ -411,39 +411,10 @@ body.no-scroll {
     padding-top: 72px;
   }
 
-  .nav-identity-cluster {
-    display: flex !important;
-    margin: 0;
-    gap: 0.5rem;
-    align-items: center;
-    justify-content: flex-end;
-    text-align: right;
-    max-width: 200px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    padding: 0.35rem 0.5rem;
-    background: transparent;
-    border: none;
-    box-shadow: none;
-    flex: 0 0 auto;
-  }
-
-  .nav-id-inner {
-    gap: 0.5rem;
-  }
-
-  .nav-id-inner img {
-    width: 32px;
-    height: 32px;
-  }
-
-  .nav-id-name {
-    font-size: 0.75rem;
-  }
-
-  .nav-id-uni {
-    font-size: 0.55rem;
+  /* Navigation elements handled by nav.css */
+  .brand-logo {
+    max-width: 140px;
+    height: auto;
   }
 
   .mobile-menu-toggle {
