@@ -44,7 +44,7 @@ A modern, production-level frontend for a student housing platform built with HT
 - Floating "Map View" button
 - Bottom sheet modal for filters
 
-### 4. House Details Page (`details.html`)
+### 4. House Details Page (`details/detail.html`)
 - Image gallery with thumbnails and navigation
 - Property info (price, location, availability)
 - Key specs (beds, bath, distance)
@@ -99,26 +99,30 @@ A modern, production-level frontend for a student housing platform built with HT
 
 ```
 StudentHome/
-├── Onboarding.html      # Landing/onboarding page
-├── home.html            # Home page
-├── listings.html        # Listings page
-├── details.html         # Property details page
-├── admin.html           # Admin dashboard
-├── admin-form.html      # Add/Edit listing form
-├── styles.css           # Main shared styles
-├── home.css             # Home page styles
-├── listings.css         # Listings page styles
-├── details.css          # Details page styles
-├── admin.css            # Admin dashboard styles
-├── admin-form.css       # Form styles
-├── script.js            # Main application logic
-├── home.js              # Home page logic
-├── listings.js          # Listings page logic
-├── details.js           # Details page logic
-├── admin.js             # Admin dashboard logic
-├── admin-form.js        # Form logic
-├── data.js              # Data management
-└── README.md            # This file
+├── about/               # About page
+├── admin/               # Admin dashboard
+├── admin-form/          # Add/Edit listing form
+├── api/                 # API entry point for Vercel
+├── assets/              # Logos and static images
+├── auth/                # Login/Register page
+├── contact/             # Contact and support page
+├── details/             # Property details page
+├── home/                # Home page
+├── js/                  # Shared JS, data management, and common CSS
+├── onboarding/          # Landing/onboarding page
+├── privacy/             # Privacy Policy
+├── reset-password/      # Password reset flow
+├── routes/              # Backend API routes (Auth, Config, Diag)
+├── shop/                # Listings page (Browse Houses)
+├── terms/               # Terms of Service
+├── .env                 # Environment variables (not tracked)
+├── .gitignore           # Git ignore rules
+├── 404.html             # Custom 404 page
+├── package.json         # Dependencies and scripts
+├── README.md            # This file
+├── server.js            # Express server
+├── sitemap.xml          # SEO Sitemap
+└── vercel.json          # Vercel deployment configuration
 ```
 
 ## 🚀 Getting Started

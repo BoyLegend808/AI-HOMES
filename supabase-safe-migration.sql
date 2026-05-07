@@ -30,8 +30,8 @@ alter table public.profiles add column if not exists phone      text;
 alter table public.profiles add column if not exists avatar_url text;
 alter table public.profiles add column if not exists role       text default 'student';
 alter table public.profiles add column if not exists created_at timestamptz default now();
-alter table public.profiles add column if not exists resetToken  text;
-alter table public.profiles add column if not exists resetExpiry bigint;
+alter table public.profiles add column if not exists resettoken  text;
+alter table public.profiles add column if not exists resetexpiry bigint;
 
 -- UNIVERSITIES
 create table if not exists public.universities (
