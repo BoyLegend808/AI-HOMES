@@ -284,15 +284,24 @@ function handleCheckout() {
     return;
   }
 
-  document.getElementById("call-text").textContent =
-    "Call " + (listing.contact?.phone || "Unavailable");
-  document.getElementById("contact-call").href =
-    "tel:" + (listing.contact?.phone || "");
-  document.getElementById("wa-text").textContent =
-    "WhatsApp " + (listing.contact?.whatsapp || "Unavailable");
-  document.getElementById("contact-wa").href =
-    "https://wa.me/" + (listing.contact?.whatsapp || "");
+  // Populate owner card header
+  const ownerNameEl = document.getElementById("owner-name");
+  if (ownerNameEl) ownerNameEl.textContent = listing.contact?.name || listing.owner_name || "Property Owner";
+
+  // Call button
+  const callSub = document.getElementById("call-text");
+  if (callSub) callSub.textContent = listing.contact?.phone || "Unavailable";
+  const callLink = document.getElementById("contact-call");
+  if (callLink) callLink.href = "tel:" + (listing.contact?.phone || "");
+
+  // WhatsApp button
+  const waSub = document.getElementById("wa-text");
+  if (waSub) waSub.textContent = listing.contact?.whatsapp || "Unavailable";
+  const waLink = document.getElementById("contact-wa");
+  if (waLink) waLink.href = "https://wa.me/" + (listing.contact?.whatsapp?.replace(/[^0-9]/g, '') || "");
+
   document.getElementById("contact-modal").style.display = "flex";
+  document.body.style.overflow = "hidden";
 }
 
 async function sendInquiry() {
@@ -307,7 +316,8 @@ async function sendInquiry() {
   }
 
   const btn = document.getElementById("btn-send-inquiry");
-  btn.textContent = "Sending...";
+  const originalHTML = btn.innerHTML;
+  btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="animation:sh-spin 0.7s linear infinite"><circle cx="12" cy="12" r="10" stroke-opacity="0.25"/><path d="M12 2a10 10 0 0 1 10 10" stroke-opacity="1"/></svg> Sending...`;
   btn.disabled = true;
 
   const { data: userData } = await window.sb_client.auth.getUser();
@@ -326,12 +336,13 @@ async function sendInquiry() {
   } else {
     alert("Failed to send message. Please try again.");
   }
-  btn.textContent = "Send Message";
+  btn.innerHTML = originalHTML;
   btn.disabled = false;
 }
 
 function closeModal() {
   document.getElementById("contact-modal").style.display = "none";
+  document.body.style.overflow = "";
 }
 
 async function ensureReviewsRendered() {

@@ -63,6 +63,15 @@
     const moonIcon =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 
+    // --- Wire the nav-level theme toggle (present on every page) ---
+    const navThemeBtn = document.getElementById('nav-theme-toggle');
+    if (navThemeBtn) {
+      navThemeBtn.addEventListener('click', () => {
+        const isLight = document.body.classList.toggle('light-mode');
+        navThemeBtn.innerHTML = isLight ? moonIcon : sunIcon;
+      });
+    }
+
     // Only inject if page doesn't already have a site-footer or onboarding-footer
     const existingFooter = document.querySelector(
       ".site-footer, .onboarding-footer",
@@ -71,8 +80,8 @@
       const footer = document.createElement("footer");
       footer.className = "sh-shared-footer";
 
-      // LEFT ZONE: Theme Toggle
-      const themeToggleHtml = `<button class="sh-theme-toggle" aria-label="Toggle light/dark mode">${document.body.classList.contains("light-mode") ? moonIcon : sunIcon}</button>`;
+      // LEFT ZONE: empty spacer (theme toggle is now in the nav)
+      const leftSpacerHtml = `<div class="sh-footer-spacer"></div>`;
 
       // CENTER ZONE: Nav Links + Copyright
       const centerZoneHtml = `
@@ -94,7 +103,7 @@
 
       footer.innerHTML = `
         <div class="sh-footer-inner">
-          ${themeToggleHtml}
+          ${leftSpacerHtml}
           ${centerZoneHtml}
           ${backToTopHtml}
         </div>
@@ -104,14 +113,6 @@
       const container =
         document.querySelector(".app-container") || document.body;
       container.appendChild(footer);
-
-      // Theme toggle event listener
-      const themeToggle = footer.querySelector(".sh-theme-toggle");
-      themeToggle.addEventListener("click", () => {
-        const isLight = document.body.classList.toggle("light-mode");
-        // No localStorage — toggle is session-only
-        themeToggle.innerHTML = isLight ? moonIcon : sunIcon;
-      });
 
       // Back-to-top button event listener
       const backToTopBtn = footer.querySelector(".sh-back-to-top");

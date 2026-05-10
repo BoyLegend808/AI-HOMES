@@ -234,7 +234,7 @@ body {
 
 .nav-right {
   justify-content: flex-end;
-  gap: 2rem;
+  gap: 0.75rem;
 }
 
 /* User Identity Cluster */
@@ -915,7 +915,9 @@ main {
     flex: 0 0 auto !important;
     display: flex !important;
     justify-content: flex-end !important;
-    min-width: 60px;
+    align-items: center !important;
+    gap: 0.5rem !important;
+    min-width: 0;
   }
 
   .nav-center {
