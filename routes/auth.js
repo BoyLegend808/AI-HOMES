@@ -8,9 +8,20 @@ require("dotenv").config();
 console.log("------------------------------------------");
 console.log("AUTH SERVICE INITIALIZATION:");
 console.log("- EMAIL_USER:", process.env.EMAIL_USER || "MISSING");
-console.log("- SUPABASE_URL:", process.env.SUPABASE_URL ? "SET (ends with " + process.env.SUPABASE_URL.slice(-5) + ")" : "MISSING");
-console.log("- SUPABASE_ANON:", process.env.SUPABASE_ANON_KEY ? "SET" : "MISSING");
-console.log("- SUPABASE_SERVICE:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "MISSING");
+console.log(
+  "- SUPABASE_URL:",
+  process.env.SUPABASE_URL
+    ? "SET (ends with " + process.env.SUPABASE_URL.slice(-5) + ")"
+    : "MISSING",
+);
+console.log(
+  "- SUPABASE_ANON:",
+  process.env.SUPABASE_ANON_KEY ? "SET" : "MISSING",
+);
+console.log(
+  "- SUPABASE_SERVICE:",
+  process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "MISSING",
+);
 console.log("------------------------------------------");
 
 // Initialize Supabase client safely
@@ -29,7 +40,9 @@ const getSupabaseAdmin = () => {
   const url = process.env.SUPABASE_URL?.trim();
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   if (!url || !service) {
-    console.error("CRITICAL: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.");
+    console.error(
+      "CRITICAL: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.",
+    );
     return null;
   }
   return createClient(url, service);
@@ -72,11 +85,15 @@ router.post("/forgot-password", async (req, res) => {
 
     if (!activeAdmin) {
       console.error("FORGOT-PASSWORD: Supabase admin client missing");
-      return res.status(500).json({ error: "Database connection not initialized" });
+      return res
+        .status(500)
+        .json({ error: "Database connection not initialized" });
     }
     if (!activeTransporter) {
       console.error("FORGOT-PASSWORD: Email transporter missing");
-      return res.status(500).json({ error: "Email service not configured on server" });
+      return res
+        .status(500)
+        .json({ error: "Email service not configured on server" });
     }
 
     const { email } = req.body;
@@ -112,13 +129,19 @@ router.post("/forgot-password", async (req, res) => {
           await activeAdmin.auth.admin.listUsers({ page, perPage });
 
         if (usersError) {
-          console.error("FORGOT-PASSWORD: Auth user lookup failed:", usersError.message);
+          console.error(
+            "FORGOT-PASSWORD: Auth user lookup failed:",
+            usersError.message,
+          );
           break;
         }
 
         const users = usersPage?.users || [];
         const authUser = users.find(
-          (u) => String(u.email || "").toLowerCase().trim() === normalizedEmail,
+          (u) =>
+            String(u.email || "")
+              .toLowerCase()
+              .trim() === normalizedEmail,
         );
 
         if (authUser) {
@@ -133,16 +156,22 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     if (!userId) {
-      return res.json({ message: "If this email is registered, you'll get a link shortly." });
+      console.log("FORGOT-PASSWORD: No user found for email:", normalizedEmail);
+      return res.json({
+        success: true,
+        message: "If this email is registered, you'll get a link shortly.",
+      });
     }
 
     // Ensure profile row has email populated for future fast lookups.
-    const { error: profileUpsertError } = await activeAdmin.from("profiles").upsert(
-      { id: userId, email: userEmail },
-      { onConflict: "id" },
-    );
+    const { error: profileUpsertError } = await activeAdmin
+      .from("profiles")
+      .upsert({ id: userId, email: userEmail }, { onConflict: "id" });
     if (profileUpsertError) {
-      console.warn("FORGOT-PASSWORD: profile email sync warning:", profileUpsertError.message);
+      console.warn(
+        "FORGOT-PASSWORD: profile email sync warning:",
+        profileUpsertError.message,
+      );
     }
 
     // Generate token and expiry
@@ -161,9 +190,12 @@ router.post("/forgot-password", async (req, res) => {
     }
 
     // Send reset email
-    const clientUrl = process.env.CLIENT_URL || req.headers.origin || "https://ai-homes.vercel.app";
+    const clientUrl =
+      process.env.CLIENT_URL ||
+      req.headers.origin ||
+      "https://ai-homes.vercel.app";
     const resetLink = `${clientUrl}/reset-password/reset-password.html?token=${token}`;
-    
+
     const mailOptions = {
       from: `"StudentHome Support" <${process.env.EMAIL_USER}>`,
       to: userEmail,
@@ -186,15 +218,17 @@ router.post("/forgot-password", async (req, res) => {
     console.log("Attempting to send email via Gmail...");
     const info = await activeTransporter.sendMail(mailOptions);
     console.log("Reset email sent successfully. SMTP Response:", info.response);
-    if (info.messageId) console.log("Message ID:", info.messageId);
 
-    res.json({ message: "If this email is registered, you'll get a link shortly." });
+    res.json({
+      success: true,
+      message: "If this email is registered, you'll get a link shortly.",
+    });
   } catch (err) {
     console.error("FORGOT-PASSWORD CRITICAL ERROR:", err);
-    res.status(500).json({ 
+    res.status(500).json({
       error: "Internal server error occurred.",
       message: err.message,
-      code: err.code || 'UNKNOWN'
+      code: err.code || "UNKNOWN",
     });
   }
 });
@@ -205,10 +239,15 @@ router.post("/reset-password", async (req, res) => {
     const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
     if (!activeAdmin) {
       console.error("RESET-PASSWORD: Supabase admin client missing");
-      return res.status(500).json({ error: "Database connection not initialized." });
+      return res
+        .status(500)
+        .json({ error: "Database connection not initialized." });
     }
 
-    console.log("Reset password called with token length:", req.body.token?.length);
+    console.log(
+      "Reset password called with token length:",
+      req.body.token?.length,
+    );
     const { token, newPassword } = req.body;
 
     // Validate password format
@@ -236,10 +275,12 @@ router.post("/reset-password", async (req, res) => {
 
     // Update password in Supabase auth using admin client
     console.log("Updating password for user.id:", user.id);
-    const { error: updateError } =
-      await activeAdmin.auth.admin.updateUserById(user.id, {
+    const { error: updateError } = await activeAdmin.auth.admin.updateUserById(
+      user.id,
+      {
         password: newPassword,
-      });
+      },
+    );
 
     if (updateError) {
       console.error("PASSWORD UPDATE ERROR:", updateError);
@@ -263,6 +304,7 @@ router.post("/reset-password", async (req, res) => {
 
     console.log("Password reset successful for:", user.email);
     res.json({
+      success: true,
       message:
         "Password reset successful. You can now log in with your new password.",
     });
@@ -279,7 +321,9 @@ router.post("/verify-reset-token", async (req, res) => {
     const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
     if (!activeAdmin) {
       console.error("VERIFY-TOKEN: Supabase admin client missing");
-      return res.status(500).json({ error: "Database connection not initialized." });
+      return res
+        .status(500)
+        .json({ error: "Database connection not initialized." });
     }
     const { token } = req.body;
 
@@ -298,10 +342,10 @@ router.post("/verify-reset-token", async (req, res) => {
     if (error || !user) {
       return res
         .status(400)
-        .json({ error: "Token is invalid or has expired." });
+        .json({ success: false, error: "Token is invalid or has expired." });
     }
 
-    res.json({ valid: true, email: user.email });
+    res.json({ success: true, valid: true, email: user.email });
   } catch (err) {
     console.error("Token verification error:", err);
     res.status(500).json({ error: "Server error. Please try again." });
@@ -309,4 +353,3 @@ router.post("/verify-reset-token", async (req, res) => {
 });
 
 module.exports = router;
-
