@@ -30,7 +30,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const regHint = document.getElementById("reg-hint");
 
   const setForgotHint = (text, type = "info") => {
-    if (!forgotHint) return;
+    console.log(`Setting forgot hint: "${text}" (${type})`);
+    if (!forgotHint) {
+      console.error("forgot-hint element not found!");
+      return;
+    }
     forgotHint.textContent = text || "";
     forgotHint.style.color =
       type === "error"
@@ -38,6 +42,7 @@ document.addEventListener("DOMContentLoaded", () => {
         : type === "success"
           ? "#34d399"
           : "var(--text-muted)";
+    forgotHint.style.display = text ? "block" : "none";
   };
 
   const setLoginHint = (text, type = "info") => {
@@ -247,22 +252,33 @@ document.addEventListener("DOMContentLoaded", () => {
           );
         }
         const res = await window.resetPasswordForEmail(email);
-        console.log("Reset password response:", res);
+        console.log("Reset password response object:", res);
+        console.log("res.success value:", res.success, typeof res.success);
 
-        if (res.success) {
+        if (res.success === true) {
+          console.log("Success path triggered");
           setForgotHint(
             res.message || "Check your email for the reset link.",
             "success",
           );
+          if (window.showToast)
+            window.showToast(res.message || "Reset link sent!", "success");
+
+          // Reset button after success too
+          forgotButton.disabled = false;
+          forgotButton.textContent = "Send Reset Link";
+
           setTimeout(() => {
-            showLoginView();
-            setForgotHint("", "info");
-          }, 3000);
+            if (!forgotView.classList.contains("hidden")) {
+              showLoginView();
+              setForgotHint("", "info");
+            }
+          }, 6000);
         } else {
-          setForgotHint(
-            res.message || "Error sending reset email. Please try again later.",
-            "error",
-          );
+          const errMsg =
+            res.message || "Error sending reset email. Please try again later.";
+          setForgotHint(errMsg, "error");
+          if (window.showToast) window.showToast(errMsg, "error");
           forgotButton.disabled = false;
           forgotButton.textContent = "Send Reset Link";
         }
