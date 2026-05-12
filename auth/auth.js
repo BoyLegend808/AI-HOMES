@@ -33,21 +33,33 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!forgotHint) return;
     forgotHint.textContent = text || "";
     forgotHint.style.color =
-      type === "error" ? "#f87171" : type === "success" ? "#34d399" : "var(--text-muted)";
+      type === "error"
+        ? "#f87171"
+        : type === "success"
+          ? "#34d399"
+          : "var(--text-muted)";
   };
 
   const setLoginHint = (text, type = "info") => {
     if (!loginHint) return;
     loginHint.textContent = text || "";
     loginHint.style.color =
-      type === "error" ? "#f87171" : type === "success" ? "#34d399" : "var(--text-muted)";
+      type === "error"
+        ? "#f87171"
+        : type === "success"
+          ? "#34d399"
+          : "var(--text-muted)";
   };
 
   const setRegHint = (text, type = "info") => {
     if (!regHint) return;
     regHint.textContent = text || "";
     regHint.style.color =
-      type === "error" ? "#f87171" : type === "success" ? "#34d399" : "var(--text-muted)";
+      type === "error"
+        ? "#f87171"
+        : type === "success"
+          ? "#34d399"
+          : "var(--text-muted)";
   };
 
   const setupPasswordToggle = (inputId, buttonId) => {
@@ -58,7 +70,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const setState = (show) => {
       input.type = show ? "text" : "password";
       button.setAttribute("aria-pressed", String(show));
-      button.setAttribute("aria-label", show ? "Hide password" : "Show password");
+      button.setAttribute(
+        "aria-label",
+        show ? "Hide password" : "Show password",
+      );
       button.title = show ? "Hide password" : "Show password";
       button.innerHTML = show ? eyeOffIcon : eyeIcon;
     };
@@ -169,7 +184,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const university = universityInput ? universityInput.value.trim() : "";
 
     if (!name || !email || !password || !university) {
-      setRegHint("Please fill in all mandatory fields (Name, Email, Password, University)", "error");
+      setRegHint(
+        "Please fill in all mandatory fields (Name, Email, Password, University)",
+        "error",
+      );
       return;
     }
 
@@ -206,11 +224,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (forgotButton) {
     forgotButton.addEventListener("click", async () => {
+      console.log("Forgot password button clicked");
       const emailInput = document.getElementById("forgot-email");
       const email = emailInput ? emailInput.value.trim().toLowerCase() : "";
-      
+
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!email || !emailRegex.test(email)) {
+        console.warn("Invalid email for reset:", email);
         setForgotHint("Please enter a valid email address", "error");
         return;
       }
@@ -219,16 +239,39 @@ document.addEventListener("DOMContentLoaded", () => {
       forgotButton.disabled = true;
       forgotButton.textContent = "Sending...";
 
-      const res = await window.resetPasswordForEmail(email);
-      
-      if (res.success) {
-        setForgotHint(res.message || "Check your email for the reset link.", "success");
-        setTimeout(() => {
-          showLoginView();
-          setForgotHint("", "info");
-        }, 3000);
-      } else {
-        setForgotHint(res.message || "Error sending reset email. Please try again later.", "error");
+      try {
+        console.log("Calling resetPasswordForEmail for:", email);
+        if (typeof window.resetPasswordForEmail !== "function") {
+          throw new Error(
+            "Reset password function is not loaded. Please refresh the page.",
+          );
+        }
+        const res = await window.resetPasswordForEmail(email);
+        console.log("Reset password response:", res);
+
+        if (res.success) {
+          setForgotHint(
+            res.message || "Check your email for the reset link.",
+            "success",
+          );
+          setTimeout(() => {
+            showLoginView();
+            setForgotHint("", "info");
+          }, 3000);
+        } else {
+          setForgotHint(
+            res.message || "Error sending reset email. Please try again later.",
+            "error",
+          );
+          forgotButton.disabled = false;
+          forgotButton.textContent = "Send Reset Link";
+        }
+      } catch (err) {
+        console.error("Forgot password flow error:", err);
+        setForgotHint(
+          "An unexpected error occurred. Please try again.",
+          "error",
+        );
         forgotButton.disabled = false;
         forgotButton.textContent = "Send Reset Link";
       }

@@ -150,140 +150,186 @@ const SYSTEM_ADMINS = [];
 ========================================== */
 async function fetchAllData() {
   if (fetchAllData.inFlight) return fetchAllData.inFlightPromise;
-  
+
   fetchAllData.inFlight = true;
   fetchAllData.inFlightPromise = (async () => {
-  
-  // LAZY INIT CONFIG + CLIENT
-  if (!SUPABASE_CONFIG && !sb_client) {
-    try {
-      console.log('Fetching configuration from /api/config...');
-      const res = await Promise.race([
-        fetch(`/api/config?t=${Date.now()}`),
-        new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')), 5000))
-      ]);
-      
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        console.error('Config Error Details:', errorData);
-        throw new Error(errorData.details || errorData.error || `HTTP error! status: ${res.status}`);
+    // LAZY INIT CONFIG + CLIENT
+    if (!SUPABASE_CONFIG && !sb_client) {
+      try {
+        console.log("Fetching configuration from /api/config...");
+        const res = await Promise.race([
+          fetch(`/api/config?t=${Date.now()}`),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("timeout")), 5000),
+          ),
+        ]);
+
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          console.error("Config Error Details:", errorData);
+          throw new Error(
+            errorData.details ||
+              errorData.error ||
+              `HTTP error! status: ${res.status}`,
+          );
+        }
+
+        const config = await res.json();
+        if (config && config.url && config.key) {
+          SUPABASE_CONFIG = config;
+          // Only re-initialize if different or not already initialized
+          if (!sb_client || sb_client.supabaseUrl !== config.url) {
+            sb_client = window.supabase?.createClient(config.url, config.key);
+            if (sb_client) window.sb_client = sb_client;
+            console.log("Supabase client initialized from server config.");
+          }
+        } else {
+          throw new Error("Server config returned empty URL or Key");
+        }
+      } catch (e) {
+        console.warn(
+          "Config fetch failed, using internal defaults:",
+          e.message,
+        );
+        // Fallback: If we don't have an sb_client yet, use the hardcoded defaults
+        if (!sb_client && SUPABASE_URL && SUPABASE_KEY) {
+          console.log("Initializing Supabase with hardcoded fallback keys...");
+          try {
+            sb_client = window.supabase?.createClient(
+              SUPABASE_URL,
+              SUPABASE_KEY,
+            );
+            if (sb_client) window.sb_client = sb_client;
+          } catch (initErr) {
+            console.error("Hardcoded fallback init failed:", initErr);
+          }
+        }
       }
-      
-      const config = await res.json();
-      if (config && config.url && config.key) {
-        SUPABASE_CONFIG = config;
-        // Only re-initialize if different or not already initialized
-        if (!sb_client || sb_client.supabaseUrl !== config.url) {
-          sb_client = window.supabase?.createClient(config.url, config.key);
-          if (sb_client) window.sb_client = sb_client;
-          console.log('Supabase client initialized from server config.');
+    }
+
+    if (!sb_client) {
+      console.warn("Using fallback data - no Supabase");
+      useFallbackData();
+      window.hasFetchedHouses = true;
+      refreshAllPages();
+      return;
+    }
+
+    console.log("Cloud fetch START");
+    try {
+      // REDUCED TIMEOUT (15s instead of 8s - allow slow connections)
+      const TIMEOUT = 15000;
+      const safeCall = (p) =>
+        Promise.race([
+          p,
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("timeout")), TIMEOUT),
+          ),
+        ]);
+
+      // OPTIMIZED: Select only needed columns instead of SELECT *
+      const results = await Promise.allSettled([
+        // Houses: Only fetch columns actually used in UI
+        safeCall(
+          sb_client
+            .from("houses")
+            .select(
+              "id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at",
+            )
+            .eq("status", "Active")
+            .order("created_at", { ascending: false })
+            .limit(20),
+        ),
+        // Reviews: Only fetch recent reviews (last 50)
+        safeCall(
+          sb_client
+            .from("reviews")
+            .select("id, name, text, school, avatar, house_id, created_at")
+            .order("created_at", { ascending: false })
+            .limit(50),
+        ),
+        // Universities: All columns needed (small table)
+        safeCall(
+          sb_client
+            .from("universities")
+            .select("id, name, locations, logo_url, logo_scale"),
+        ),
+        // Favorites: Only if user is logged in
+        ...(window.CACHED_FAVORITES?.length
+          ? [
+              safeCall(
+                sb_client
+                  .from("favorites")
+                  .select("house_id")
+                  .eq("user_id", getCurrentUser()?.id),
+              ),
+            ]
+          : []),
+      ]);
+
+      // ROBUST PROCESSING WITH FALLBACKS
+      const [listingsRes, reviewsRes, unisRes, favsRes] = results;
+
+      // HOUSES: Fallback to DEFAULT if failed
+      if (listingsRes.status === "fulfilled" && !listingsRes.value?.error) {
+        CACHED_LISTINGS = (listingsRes.value.data || []).map(normalizeListing);
+      } else {
+        console.warn(
+          "Houses fetch failed → DEFAULT_LISTINGS",
+          listingsRes.reason || listingsRes.value?.error,
+        );
+        CACHED_LISTINGS = DEFAULT_LISTINGS.map(normalizeListing);
+      }
+      window.hasFetchedHouses = true;
+
+      // REVIEWS: Keep existing if new fetch fails
+      if (
+        reviewsRes.status === "fulfilled" &&
+        reviewsRes.value.data?.length > 0
+      ) {
+        CACHED_REVIEWS = reviewsRes.value.data;
+      }
+
+      // UNIS: Fallback to DEFAULT_UNIVERSITIES
+      if (unisRes.status === "fulfilled" && !unisRes.value?.error) {
+        window.CLOUD_UNIVERSITIES_DATA = unisRes.value.data || [];
+        console.log(
+          "Universities fetched:",
+          window.CLOUD_UNIVERSITIES_DATA.length,
+          "universities",
+        );
+        console.log("Universities data:", window.CLOUD_UNIVERSITIES_DATA);
+        const transformed = {};
+        (unisRes.value.data || []).forEach(
+          (u) => (transformed[u.name] = u.locations),
+        );
+        if (Object.keys(transformed).length > 0) {
+          CLOUD_UNIVERSITIES = transformed;
         }
       } else {
-        throw new Error('Server config returned empty URL or Key');
+        console.warn(
+          "Unis fetch failed:",
+          unisRes.reason || unisRes.value?.error,
+        );
+        window.CLOUD_UNIVERSITIES_DATA = [];
       }
-    } catch(e) {
-      console.warn('Config fetch failed, using internal defaults:', e.message);
-      // Fallback: If we don't have an sb_client yet, use the hardcoded defaults
-      if (!sb_client && SUPABASE_URL && SUPABASE_KEY) {
-        console.log('Initializing Supabase with hardcoded fallback keys...');
-        try {
-          sb_client = window.supabase?.createClient(SUPABASE_URL, SUPABASE_KEY);
-          if (sb_client) window.sb_client = sb_client;
-        } catch (initErr) {
-          console.error('Hardcoded fallback init failed:', initErr);
-        }
+
+      // FAVORITES: Merge safely (in-memory only)
+      if (favsRes?.status === "fulfilled" && favsRes.value.data) {
+        const cloudIds = favsRes.value.data.map((f) => String(f.house_id));
+        CACHED_FAVORITES = [
+          ...new Set([...CACHED_FAVORITES.map(String), ...cloudIds]),
+        ];
       }
+    } catch (e) {
+      console.error("Cloud batch failed:", e);
+      useFallbackData();
+    } finally {
+      window.hasFetchedHouses = true;
+      fetchAllData.inFlight = false;
+      fetchAllData.inFlightPromise = null;
+      refreshAllPages();
     }
-  }
-  
-if (!sb_client) {
-    console.warn('Using fallback data - no Supabase');
-    useFallbackData();
-    window.hasFetchedHouses = true;
-    refreshAllPages();
-    return;
-  }
-  
-  console.log('Cloud fetch START');
-  try {
-    // REDUCED TIMEOUT (15s instead of 8s - allow slow connections)
-    const TIMEOUT = 15000;
-    const safeCall = (p) => Promise.race([
-      p, 
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')), TIMEOUT))
-    ]);
-    
-    // OPTIMIZED: Select only needed columns instead of SELECT *
-    const results = await Promise.allSettled([
-      // Houses: Only fetch columns actually used in UI
-      safeCall(sb_client
-        .from("houses")
-        .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
-        .eq("status", "Active")
-        .order("created_at", { ascending: false })
-        .limit(20)
-      ),
-      // Reviews: Only fetch recent reviews (last 50)
-      safeCall(sb_client
-        .from("reviews")
-        .select("id, name, text, school, avatar, house_id, created_at")
-        .order("created_at", { ascending: false })
-        .limit(50)
-      ),
-      // Universities: All columns needed (small table)
-      safeCall(sb_client.from("universities").select("id, name, locations, logo_url, logo_scale")),
-      // Favorites: Only if user is logged in
-      ...(window.CACHED_FAVORITES?.length ? [safeCall(sb_client.from("favorites").select("house_id").eq("user_id", getCurrentUser()?.id))] : [])
-    ]);
-
-    // ROBUST PROCESSING WITH FALLBACKS
-    const [listingsRes, reviewsRes, unisRes, favsRes] = results;
-    
-    // HOUSES: Fallback to DEFAULT if failed
-    if (listingsRes.status === "fulfilled" && !listingsRes.value?.error) {
-      CACHED_LISTINGS = (listingsRes.value.data || []).map(normalizeListing);
-    } else {
-      console.warn('Houses fetch failed → DEFAULT_LISTINGS', listingsRes.reason || listingsRes.value?.error);
-      CACHED_LISTINGS = DEFAULT_LISTINGS.map(normalizeListing);
-    }
-    window.hasFetchedHouses = true;
-
-    // REVIEWS: Keep existing if new fetch fails
-    if (reviewsRes.status === "fulfilled" && reviewsRes.value.data?.length > 0) {
-      CACHED_REVIEWS = reviewsRes.value.data;
-    }
-
-    // UNIS: Fallback to DEFAULT_UNIVERSITIES
-    if (unisRes.status === "fulfilled" && !unisRes.value?.error) {
-      window.CLOUD_UNIVERSITIES_DATA = unisRes.value.data || [];
-      console.log('Universities fetched:', window.CLOUD_UNIVERSITIES_DATA.length, 'universities');
-      console.log('Universities data:', window.CLOUD_UNIVERSITIES_DATA);
-      const transformed = {};
-      (unisRes.value.data || []).forEach((u) => transformed[u.name] = u.locations);
-      if (Object.keys(transformed).length > 0) {
-        CLOUD_UNIVERSITIES = transformed;
-      }
-    } else {
-      console.warn('Unis fetch failed:', unisRes.reason || unisRes.value?.error);
-      window.CLOUD_UNIVERSITIES_DATA = [];
-    }
-
-
-    // FAVORITES: Merge safely (in-memory only)
-    if (favsRes?.status === "fulfilled" && favsRes.value.data) {
-      const cloudIds = favsRes.value.data.map(f => String(f.house_id));
-      CACHED_FAVORITES = [...new Set([...CACHED_FAVORITES.map(String), ...cloudIds])];
-    }
-
-  } catch (e) {
-    console.error('Cloud batch failed:', e);
-    useFallbackData();
-  } finally {
-    window.hasFetchedHouses = true;
-    fetchAllData.inFlight = false;
-    fetchAllData.inFlightPromise = null;
-    refreshAllPages();
-  }
   })();
   return fetchAllData.inFlightPromise;
 }
@@ -298,29 +344,31 @@ function useFallbackData() {
 // PAGINATED FETCH (for loading more houses on demand)
 window.fetchHousesPaginated = async (page = 1, limit = 20, filters = {}) => {
   if (!sb_client) {
-    console.warn('No Supabase client for paginated fetch');
-    return { data: [], error: 'No client' };
+    console.warn("No Supabase client for paginated fetch");
+    return { data: [], error: "No client" };
   }
-  
+
   try {
     let query = sb_client
       .from("houses")
-      .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at")
+      .select(
+        "id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, description, contact, amenities, views, created_at",
+      )
       .eq("status", "Active");
-      
+
     // Handle sorting
-    if (filters.sortBy === 'price-low') {
+    if (filters.sortBy === "price-low") {
       query = query.order("price", { ascending: true });
-    } else if (filters.sortBy === 'price-high') {
+    } else if (filters.sortBy === "price-high") {
       query = query.order("price", { ascending: false });
-    } else if (filters.sortBy === 'name-az') {
+    } else if (filters.sortBy === "name-az") {
       query = query.order("title", { ascending: true });
     } else {
       query = query.order("created_at", { ascending: false }); // newest
     }
 
     query = query.range((page - 1) * limit, page * limit - 1);
-    
+
     // Apply filters
     if (filters.school) query = query.ilike("school", `%${filters.school}%`);
     if (filters.area) query = query.ilike("area", `%${filters.area}%`);
@@ -335,15 +383,17 @@ window.fetchHousesPaginated = async (page = 1, limit = 20, filters = {}) => {
     if (filters.minPrice) query = query.gte("price", filters.minPrice);
     if (filters.maxPrice) query = query.lte("price", filters.maxPrice);
     if (filters.query) {
-      query = query.or(`title.ilike.%${filters.query}%,location.ilike.%${filters.query}%,area.ilike.%${filters.query}%,school.ilike.%${filters.query}%`);
+      query = query.or(
+        `title.ilike.%${filters.query}%,location.ilike.%${filters.query}%,area.ilike.%${filters.query}%,school.ilike.%${filters.query}%`,
+      );
     }
-    
+
     const { data, error } = await query;
-    
+
     if (error) throw error;
     return { data: (data || []).map(normalizeListing), error: null };
   } catch (e) {
-    console.error('Paginated fetch error:', e);
+    console.error("Paginated fetch error:", e);
     return { data: [], error: e.message };
   }
 };
@@ -353,7 +403,9 @@ window.fetchAdminHouses = async () => {
   try {
     const { data, error } = await sb_client
       .from("houses")
-      .select("id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, views, created_at")
+      .select(
+        "id, title, school, area, exactLocation, location, type, price, rooms, status, photo, photos, views, created_at",
+      )
       .order("created_at", { ascending: false })
       .limit(1000);
     if (error) throw error;
@@ -368,24 +420,26 @@ window.fetchAdminHouses = async () => {
 const searchDebounce = { timer: null };
 window.debouncedSearch = async (query, callback, delay = 300) => {
   if (searchDebounce.timer) clearTimeout(searchDebounce.timer);
-  
+
   searchDebounce.timer = setTimeout(async () => {
     if (!query || query.trim().length < 2) {
       callback([]);
       return;
     }
-    
+
     try {
       const { data, error } = await sb_client
         .from("houses")
         .select("id, title, school, area, location, type, price, photo, status")
-        .or(`title.ilike.%${query}%,area.ilike.%${query}%,school.ilike.%${query}%`)
+        .or(
+          `title.ilike.%${query}%,area.ilike.%${query}%,school.ilike.%${query}%`,
+        )
         .limit(20);
-      
+
       if (error) throw error;
       callback((data || []).map(normalizeListing));
     } catch (e) {
-      console.error('Search error:', e);
+      console.error("Search error:", e);
       callback([]);
     }
   }, delay);
@@ -394,12 +448,17 @@ window.debouncedSearch = async (query, callback, delay = 300) => {
 function refreshAllPages() {
   requestAnimationFrame(() => {
     syncUniversitiesCache();
-    ['populateSchoolOptions','renderHome','renderShopGrid','renderDashboard','renderDetailsPage'].forEach(fn => {
+    [
+      "populateSchoolOptions",
+      "renderHome",
+      "renderShopGrid",
+      "renderDashboard",
+      "renderDetailsPage",
+    ].forEach((fn) => {
       if (window[fn]) window[fn]();
     });
   });
 }
-
 
 // FAVORITES — in-memory only, synced to Supabase per session
 
@@ -467,7 +526,9 @@ async function initFavorites() {
   const user = await fetchSessionUser();
   if (user && sb_client) {
     try {
-      const { data: { user: authUser } } = await sb_client.auth.getUser();
+      const {
+        data: { user: authUser },
+      } = await sb_client.auth.getUser();
       if (authUser) {
         const { data: favs } = await sb_client
           .from("favorites")
@@ -575,7 +636,8 @@ window.addUniversity = async (name) => {
       .from("universities")
       .insert([{ name, locations: [], logo_url: "", logo_scale: 1.1 }]);
     if (!error) {
-      if (typeof CLOUD_UNIVERSITIES !== 'undefined') CLOUD_UNIVERSITIES[name] = [];
+      if (typeof CLOUD_UNIVERSITIES !== "undefined")
+        CLOUD_UNIVERSITIES[name] = [];
       if (window.NIGERIA_UNIVERSITIES) window.NIGERIA_UNIVERSITIES[name] = [];
       if (window.fetchAllData) window.fetchAllData();
       return { success: true };
@@ -595,23 +657,30 @@ window.addAreaToUniversity = async (schoolName, areaName) => {
       .select("id, locations")
       .eq("name", schoolName)
       .single();
-    
-    if (!data) return { success: false, error: { message: "University not found" } };
-    
+
+    if (!data)
+      return { success: false, error: { message: "University not found" } };
+
     const currentAreas = data.locations || [];
     if (currentAreas.includes(areaName)) return { success: true }; // Already exists
-    
+
     const { error } = await sb_client
       .from("universities")
       .update({ locations: [...currentAreas, areaName] })
       .eq("id", data.id);
-      
+
     if (!error) {
       const newLocations = [...currentAreas, areaName];
-      if (typeof CLOUD_UNIVERSITIES !== 'undefined' && CLOUD_UNIVERSITIES[schoolName]) {
+      if (
+        typeof CLOUD_UNIVERSITIES !== "undefined" &&
+        CLOUD_UNIVERSITIES[schoolName]
+      ) {
         CLOUD_UNIVERSITIES[schoolName] = newLocations;
       }
-      if (window.NIGERIA_UNIVERSITIES && window.NIGERIA_UNIVERSITIES[schoolName]) {
+      if (
+        window.NIGERIA_UNIVERSITIES &&
+        window.NIGERIA_UNIVERSITIES[schoolName]
+      ) {
         window.NIGERIA_UNIVERSITIES[schoolName] = newLocations;
       }
       if (window.fetchAllData) window.fetchAllData();
@@ -622,8 +691,6 @@ window.addAreaToUniversity = async (schoolName, areaName) => {
     return { success: false, error: e };
   }
 };
-
-
 
 /* ==========================================
    PRODUCTION AUTH
@@ -673,22 +740,22 @@ async function fetchSessionUser() {
 
 async function ensureAdminAccess() {
   console.log("Admin security check initializing...");
-  
+
   // Wait up to 3 seconds for Supabase client to initialize if it hasn't yet
   for (let i = 0; i < 15; i++) {
     if (window.sb_client) break;
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise((r) => setTimeout(r, 200));
   }
 
   try {
     const user = await fetchSessionUser();
     console.log("Session User Resolved:", user?.email, "| Role:", user?.role);
-    
+
     if (user && user.role === "admin") {
       console.log("Access Granted: Admin confirmed.");
       return true;
     }
-    
+
     // Safety net: fresh local check
     const localUser = getCurrentUser();
     if (localUser && localUser.role === "admin") {
@@ -785,35 +852,47 @@ async function logoutUser() {
 
 // RE-ENABLED Forgot Password with DEBOUNCE (1 call/min)
 const resetDebounce = { lastCall: 0, pending: null };
-window.resetPasswordForEmail = async (email) => {
+async function resetPasswordForEmail(email) {
   const now = Date.now();
   if (now - resetDebounce.lastCall < 60000) {
+    console.warn("Reset password debounced. Please wait.");
     return { success: false, message: "Please wait 1 minute between requests" };
   }
-  
+
   if (resetDebounce.pending) clearTimeout(resetDebounce.pending);
-  
+
   return new Promise((resolve) => {
+    console.log("Setting timeout for reset request...");
     resetDebounce.pending = setTimeout(async () => {
       try {
+        console.log(
+          "Sending POST request to /api/auth/forgot-password for:",
+          email,
+        );
         const response = await Promise.race([
           fetch("/api/auth/forgot-password", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email: email.toLowerCase().trim() }),
           }),
-          new Promise((_,reject) => setTimeout(() => reject(new Error('timeout')), 10000))
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("timeout")), 10000),
+          ),
         ]);
+
+        console.log("API response status:", response.status);
         const data = await response.json();
+        console.log("API response data:", data);
+
         resetDebounce.lastCall = Date.now();
         resolve({ success: response.ok, message: data.message || data.error });
-      } catch(e) {
+      } catch (e) {
+        console.error("Fetch error in resetPasswordForEmail:", e);
         resolve({ success: false, message: "Network error" });
       }
     }, 500);
   });
-};
-
+}
 
 /* ==========================================
    NAVIGATION
@@ -1119,10 +1198,20 @@ window.compressImage = (file, maxWidth = 1024) => {
         const canvas = document.createElement("canvas");
         const ratio = maxWidth / img.width;
         canvas.width = Math.min(img.width, maxWidth);
-        canvas.height = canvas.width !== img.width ? img.height * ratio : img.height;
+        canvas.height =
+          canvas.width !== img.width ? img.height * ratio : img.height;
         const ctx = canvas.getContext("2d");
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        canvas.toBlob((blob) => resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", { type: "image/jpeg" })), "image/jpeg", 0.8);
+        canvas.toBlob(
+          (blob) =>
+            resolve(
+              new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".jpg", {
+                type: "image/jpeg",
+              }),
+            ),
+          "image/jpeg",
+          0.8,
+        );
       };
     };
   });
@@ -1133,15 +1222,15 @@ window.uploadPhotoToStorage = async (file) => {
   // Compress massively large phone photos natively via Canvas before network transit!
   let uploadFile = file;
   if (file.type.startsWith("image/")) {
-     uploadFile = await window.compressImage(file, 1080);
+    uploadFile = await window.compressImage(file, 1080);
   }
   const fileName = `house_${Math.random().toString(36).slice(2)}_${Date.now()}.jpg`;
   const { error } = await sb_client.storage
     .from("house-photos")
     .upload(`public/${fileName}`, uploadFile, { contentType: "image/jpeg" });
   if (error) {
-     console.error("Storage upload error:", error);
-     return null;
+    console.error("Storage upload error:", error);
+    return null;
   }
   const { data } = sb_client.storage
     .from("house-photos")
@@ -1153,21 +1242,23 @@ window.logAudit = async (action, entity_type, entity_id, details = {}) => {
   if (!sb_client) return;
   const user = await window.fetchSessionUser();
   if (user) {
-    await sb_client.from("audit_logs").insert([{
-      admin_id: user.id,
-      admin_name: user.name || user.email || 'Unknown',
-      action,
-      entity_type,
-      entity_id: String(entity_id),
-      details
-    }]);
+    await sb_client.from("audit_logs").insert([
+      {
+        admin_id: user.id,
+        admin_name: user.name || user.email || "Unknown",
+        action,
+        entity_type,
+        entity_id: String(entity_id),
+        details,
+      },
+    ]);
   }
 };
 
 window.addListing = async (h) => {
   if (!sb_client) return { success: false };
   const payload = normalizeListing(h);
-  if (typeof CACHED_LISTINGS !== 'undefined') {
+  if (typeof CACHED_LISTINGS !== "undefined") {
     CACHED_LISTINGS.unshift({ ...payload, id: Date.now() });
   }
   const { data, error } = await sb_client
@@ -1175,19 +1266,22 @@ window.addListing = async (h) => {
     .insert([payload])
     .select();
   if (!error) {
-    if (data && data[0]) window.logAudit('CREATE', 'HOUSE', data[0].id, { title: payload.title });
+    if (data && data[0])
+      window.logAudit("CREATE", "HOUSE", data[0].id, { title: payload.title });
     fetchAllData();
   }
   return { success: !error };
 };
 window.deleteListing = async (id) => {
   if (!sb_client) return { success: false };
-  if (typeof CACHED_LISTINGS !== 'undefined') {
-    CACHED_LISTINGS = CACHED_LISTINGS.filter(l => String(l.id) !== String(id));
+  if (typeof CACHED_LISTINGS !== "undefined") {
+    CACHED_LISTINGS = CACHED_LISTINGS.filter(
+      (l) => String(l.id) !== String(id),
+    );
   }
   const { error } = await sb_client.from("houses").delete().eq("id", id);
   if (!error) {
-    window.logAudit('DELETE', 'HOUSE', id, {});
+    window.logAudit("DELETE", "HOUSE", id, {});
     fetchAllData();
   }
   return { success: !error };
@@ -1208,15 +1302,17 @@ window.showToast = showToast;
 window.updateListing = async (h) => {
   if (!sb_client) return { success: false };
   const { id, ...updates } = h;
-  if (typeof CACHED_LISTINGS !== 'undefined') {
-    const idx = CACHED_LISTINGS.findIndex(l => String(l.id) === String(id));
+  if (typeof CACHED_LISTINGS !== "undefined") {
+    const idx = CACHED_LISTINGS.findIndex((l) => String(l.id) === String(id));
     if (idx !== -1) {
       CACHED_LISTINGS[idx] = { ...CACHED_LISTINGS[idx], ...updates };
     }
   }
   const { error } = await sb_client.from("houses").update(updates).eq("id", id);
   if (!error) {
-    window.logAudit('UPDATE', 'HOUSE', id, { updated_keys: Object.keys(updates) });
+    window.logAudit("UPDATE", "HOUSE", id, {
+      updated_keys: Object.keys(updates),
+    });
     fetchAllData();
   }
   return { success: !error, error };
