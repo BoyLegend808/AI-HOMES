@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const regHint = document.getElementById("reg-hint");
 
   const setForgotHint = (text, type = "info") => {
-    console.log(`Setting forgot hint: "${text}" (${type})`);
+    console.log(`Setting forgot hint (v2): "${text}" (${type})`);
     if (!forgotHint) {
       console.error("forgot-hint element not found!");
       return;
@@ -42,7 +42,9 @@ document.addEventListener("DOMContentLoaded", () => {
         : type === "success"
           ? "#34d399"
           : "var(--text-muted)";
-    forgotHint.style.display = text ? "block" : "none";
+    forgotHint.style.display = "block";
+    forgotHint.style.visibility = "visible";
+    forgotHint.style.opacity = "1";
   };
 
   const setLoginHint = (text, type = "info") => {
