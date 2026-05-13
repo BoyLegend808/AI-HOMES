@@ -462,63 +462,75 @@ function refreshAllPages() {
 
 // FAVORITES — in-memory only, synced to Supabase per session
 
+let __isTogglingFavorite = new Set();
 window.toggleFavorite = async (houseId) => {
-  // 1. Instantly Calculate New State (Zero Latency)
-  const isCurrentlyFav = CACHED_FAVORITES.some(
-    (id) => String(id) === String(houseId),
-  );
-  const newStatus = !isCurrentlyFav;
+  // Prevent double-clicks causing multiple notifications or weird states
+  if (__isTogglingFavorite.has(houseId)) return { success: false };
+  __isTogglingFavorite.add(houseId);
 
-  // 2. IMMEDIATE FEEDBACK (Optimistic UI)
-  if (window.showToast) {
-    window.showToast(
-      newStatus ? "Added to favorites" : "Removed from favorites",
-      "success",
+  try {
+    // 1. Calculate state BEFORE showing toast to ensure text accuracy
+    const isCurrentlyFav = CACHED_FAVORITES.some(
+      (id) => String(id) === String(houseId),
     );
-  }
+    const newStatus = !isCurrentlyFav;
 
-  // Update Cache Mutation
-  if (newStatus) {
-    if (!isCurrentlyFav) CACHED_FAVORITES.push(String(houseId));
-  } else {
-    CACHED_FAVORITES = CACHED_FAVORITES.filter(
-      (id) => String(id) !== String(houseId),
-    );
-  }
+    // 2. Update Cache Mutation IMMEDIATELY
+    if (newStatus) {
+      if (!isCurrentlyFav) CACHED_FAVORITES.push(String(houseId));
+    } else {
+      CACHED_FAVORITES = CACHED_FAVORITES.filter(
+        (id) => String(id) !== String(houseId),
+      );
+    }
 
-  // Update all matching icons on the current page instantly
-  document
-    .querySelectorAll(`.bookmarkBtn[data-house-id="${houseId}"]`)
-    .forEach((btn) => {
-      btn.classList.toggle("active", newStatus);
-      const ariaLabel = newStatus ? "Remove from variants" : "Save property";
-      btn.setAttribute("aria-label", ariaLabel);
-    });
+    // 3. IMMEDIATE FEEDBACK (UI & Notification)
+    if (window.showToast) {
+      window.showToast(
+        newStatus ? "Added to favorites" : "Removed from favorites",
+        "success",
+      );
+    }
 
-  // 3. BACKGROUND SYNC: Sync to Supabase in the background (Non-blocking)
-  (async () => {
-    try {
-      const user = await fetchSessionUser();
-      if (user && sb_client) {
-        const { data: userData } = await sb_client.auth.getUser();
-        if (userData?.user) {
-          if (newStatus) {
-            await sb_client
-              .from("favorites")
-              .insert([{ house_id: houseId, user_id: userData.user.id }]);
-          } else {
-            await sb_client
-              .from("favorites")
-              .delete()
-              .eq("house_id", houseId)
-              .eq("user_id", userData.user.id);
+    // Update all matching icons on the current page instantly
+    document
+      .querySelectorAll(`.bookmarkBtn[data-house-id="${houseId}"]`)
+      .forEach((btn) => {
+        btn.classList.toggle("active", newStatus);
+        const ariaLabel = newStatus ? "Remove from variants" : "Save property";
+        btn.setAttribute("aria-label", ariaLabel);
+      });
+
+    // 4. BACKGROUND SYNC: Sync to Supabase in the background (Non-blocking)
+    (async () => {
+      try {
+        const user = await fetchSessionUser();
+        if (user && sb_client) {
+          const { data: userData } = await sb_client.auth.getUser();
+          if (userData?.user) {
+            if (newStatus) {
+              await sb_client
+                .from("favorites")
+                .insert([{ house_id: houseId, user_id: userData.user.id }]);
+            } else {
+              await sb_client
+                .from("favorites")
+                .delete()
+                .eq("house_id", houseId)
+                .eq("user_id", userData.user.id);
+            }
           }
         }
+      } catch (e) {
+        console.warn("Silent background sync failed:", e);
+      } finally {
+        // Unlock this houseId after background sync or error
+        setTimeout(() => __isTogglingFavorite.delete(houseId), 500);
       }
-    } catch (e) {
-      console.warn("Silent background sync failed:", e);
-    }
-  })();
+    })();
+  } catch (err) {
+    __isTogglingFavorite.delete(houseId);
+  }
 
   return { success: true };
 };
