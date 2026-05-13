@@ -27,24 +27,25 @@ window.renderSavedProperties = async () => {
         return;
     }
 
-    const session = await window.sb_client.auth.getUser();
-    if(!session.data.user) return;
-
-    const { data: favs, error } = await window.sb_client
-        .from('favorites')
-        .select('house_id')
-        .eq('user_id', session.data.user.id);
+    // Use local cache instead of direct Supabase query to prevent "remove twice" bug
+    // (since background sync might not be finished yet)
+    const favIds = window.CACHED_FAVORITES || [];
     
-    if(error || !favs || favs.length === 0) {
+    if(!favIds || favIds.length === 0) {
         container.innerHTML = `<div class="empty-state"><h3>No saved houses yet.</h3><p>Browse our shop to find your next home.</p><br><a href="../shop/shop.html" class="hero-btn">Browse Shop</a></div>`;
         return;
     }
 
     // Load available listings
     const listings = window.getListings ? window.getListings() : [];
-    const savedListings = listings.filter(l => favs.some(f => String(f.house_id) === String(l.id)));
+    const savedListings = listings.filter(l => favIds.some(id => String(id) === String(l.id)));
 
     if(savedListings.length === 0) {
+        // If we have IDs but no matching listings, we might still be fetching houses
+        if (!window.hasFetchedHouses) {
+            setTimeout(window.renderSavedProperties, 1000);
+            return;
+        }
         container.innerHTML = `<div class="empty-state"><h3>No saved houses yet.</h3><p>Browse our shop to find your next home.</p><br><a href="../shop/shop.html" class="hero-btn">Browse Shop</a></div>`;
         return;
     }

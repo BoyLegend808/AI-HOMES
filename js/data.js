@@ -1391,6 +1391,12 @@ window.incrementViews = async (id) => {
 };
 window.fetchSessionUser = fetchSessionUser;
 window.fetchAllData = fetchAllData;
+Object.defineProperty(window, "CACHED_FAVORITES", {
+  get: () => CACHED_FAVORITES,
+  set: (val) => {
+    CACHED_FAVORITES = val;
+  },
+});
 window.formatPrice = formatPrice;
 window.getEmptyStateHTML = getEmptyStateHTML;
 window.showToast = showToast;
