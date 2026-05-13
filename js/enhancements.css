@@ -172,15 +172,6 @@ body.light-mode .nav-identity-cluster:hover {
   background: rgba(0, 0, 0, 0.08);
 }
 
-body.light-mode .brand-logo {
-  filter: brightness(0);
-}
-
-body.light-mode .brand-logo:hover {
-  filter: brightness(0);
-  opacity: 0.8;
-}
-
 /* Nav theme toggle in light mode */
 body.light-mode .nav-theme-btn {
   background: rgba(0, 0, 0, 0.06);
