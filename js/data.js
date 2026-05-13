@@ -490,7 +490,7 @@ window.toggleFavorite = async (houseId) => {
       window.showToast(
         newStatus ? "Added to favorites" : "Removed from favorites",
         "success",
-        2000,
+        3500,
       );
     }
 
@@ -984,35 +984,6 @@ function formatPrice(price, withPeriod = false) {
   return withPeriod ? `${formatted}/mo` : formatted;
 }
 
-function showToast(message, type = "info") {
-  let container = document.getElementById("toast-container");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "toast-container";
-    document.body.appendChild(container);
-  }
-
-  // Prevent duplicate toasts with the same message appearing at once
-  const existingToasts = Array.from(container.querySelectorAll(".toast"));
-  if (existingToasts.some((t) => t.textContent === message)) return;
-
-  const toast = document.createElement("div");
-  toast.className = `toast toast--${type}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-
-  // Smooth entrance
-  requestAnimationFrame(() => {
-    setTimeout(() => toast.classList.add("toast--show"), 50);
-  });
-
-  // Auto-remove after 3 seconds
-  setTimeout(() => {
-    toast.classList.remove("toast--show");
-    setTimeout(() => toast.remove(), 500);
-  }, 3000);
-}
-
 function getEmptyStateHTML(title, message) {
   return `<div class="empty-state">
     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--accent, #F97316)" stroke-width="1.5" style="margin-bottom:1rem;opacity:0.6"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/><line x1="8" y1="11" x2="14" y2="11"/></svg>
@@ -1403,7 +1374,7 @@ Object.defineProperty(window, "CACHED_FAVORITES", {
 window.formatPrice = formatPrice;
 window.normalizeListing = normalizeListing;
 window.getEmptyStateHTML = getEmptyStateHTML;
-window.showToast = showToast;
+// Removed window.showToast shadowing
 window.updateListing = async (h) => {
   if (!sb_client) return { success: false };
   const { id, ...updates } = h;
