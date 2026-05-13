@@ -77,6 +77,7 @@ let CACHED_LISTINGS = [];
 let CACHED_REVIEWS = [...DEFAULT_REVIEWS];
 let CLOUD_UNIVERSITIES = {};
 let CACHED_FAVORITES = [];
+window.hasFetchedFavorites = false;
 window.hasFetchedHouses = false;
 
 // No localStorage cache — all data is fetched fresh from Supabase each session.
@@ -554,6 +555,7 @@ async function initFavorites() {
       }
     } catch (e) {}
   }
+  window.hasFetchedFavorites = true;
 }
 
 window.isFavorited = (houseId) =>
@@ -1398,6 +1400,7 @@ Object.defineProperty(window, "CACHED_FAVORITES", {
   },
 });
 window.formatPrice = formatPrice;
+window.normalizeListing = normalizeListing;
 window.getEmptyStateHTML = getEmptyStateHTML;
 window.showToast = showToast;
 window.updateListing = async (h) => {

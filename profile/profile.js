@@ -1,57 +1,86 @@
 document.addEventListener("DOMContentLoaded", async () => {
-    // wait for auth
-    const user = await window.fetchSessionUser();
-    if(!user) {
-        window.location.href = "../auth/auth.html";
-        return;
-    }
+  // wait for auth
+  const user = await window.fetchSessionUser();
+  if (!user) {
+    window.location.href = "../auth/auth.html";
+    return;
+  }
 
-    document.getElementById("user-name").textContent = user.name;
-    document.getElementById("user-email").textContent = user.email;
-    document.getElementById("user-uni").textContent = user.university;
-    
-    if(user.avatar_url) {
-        document.getElementById("header-avatar").innerHTML = `<img src="${user.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
-    }
+  document.getElementById("user-name").textContent = user.name;
+  document.getElementById("user-email").textContent = user.email;
+  document.getElementById("user-uni").textContent = user.university;
 
-    window.renderSavedProperties();
+  if (user.avatar_url) {
+    document.getElementById("header-avatar").innerHTML =
+      `<img src="${user.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
+  }
+
+  window.renderSavedProperties();
 });
 
 window.renderSavedProperties = async () => {
-    const container = document.getElementById("saved-container");
-    if(!container) return;
-    container.innerHTML = "<div class='empty-state'>Loading...</div>";
+  const container = document.getElementById("saved-container");
+  if (!container) return;
+  container.innerHTML = "<div class='empty-state'>Loading...</div>";
 
-    if(!window.sb_client) {
-        container.innerHTML = "<div class='empty-state'><p>Cloud offline. Cannot load favorites.</p></div>";
-        return;
+  if (!window.sb_client) {
+    container.innerHTML =
+      "<div class='empty-state'><p>Cloud offline. Cannot load favorites.</p></div>";
+    return;
+  }
+
+  // Use local cache instead of direct Supabase query to prevent "remove twice" bug
+  // (since background sync might not be finished yet)
+  const favIds = window.CACHED_FAVORITES || [];
+
+  // If we haven't fetched favorites from cloud yet, wait a bit and retry
+  if (!window.hasFetchedFavorites) {
+    setTimeout(window.renderSavedProperties, 800);
+    return;
+  }
+
+  if (!favIds || favIds.length === 0) {
+    container.innerHTML = `<div class="empty-state"><h3>No saved houses yet.</h3><p>Browse our shop to find your next home.</p><br><a href="../shop/shop.html" class="hero-btn">Browse Shop</a></div>`;
+    return;
+  }
+
+  // Load available listings
+  const listings = window.getListings ? window.getListings() : [];
+  let savedListings = listings.filter((l) =>
+    favIds.some((id) => String(id) === String(l.id)),
+  );
+
+  // If we have favorites but they aren't in the top 20 latest cache, fetch them specifically
+  if (favIds.length > 0 && savedListings.length < favIds.length) {
+    if (!window.sb_client) {
+      // Wait for client and retry
+      setTimeout(window.renderSavedProperties, 1000);
+      return;
     }
 
-    // Use local cache instead of direct Supabase query to prevent "remove twice" bug
-    // (since background sync might not be finished yet)
-    const favIds = window.CACHED_FAVORITES || [];
-    
-    if(!favIds || favIds.length === 0) {
-        container.innerHTML = `<div class="empty-state"><h3>No saved houses yet.</h3><p>Browse our shop to find your next home.</p><br><a href="../shop/shop.html" class="hero-btn">Browse Shop</a></div>`;
-        return;
+    try {
+      const { data: missingHouses, error } = await window.sb_client
+        .from("houses")
+        .select("*")
+        .in("id", favIds);
+
+      if (!error && missingHouses) {
+        savedListings = missingHouses.map((h) =>
+          window.normalizeListing ? window.normalizeListing(h) : h,
+        );
+      }
+    } catch (e) {
+      console.error("Error fetching missing favorites:", e);
     }
+  }
 
-    // Load available listings
-    const listings = window.getListings ? window.getListings() : [];
-    const savedListings = listings.filter(l => favIds.some(id => String(id) === String(l.id)));
+  if (savedListings.length === 0) {
+    container.innerHTML = `<div class="empty-state"><h3>No saved houses yet.</h3><p>Browse our shop to find your next home.</p><br><a href="../shop/shop.html" class="hero-btn">Browse Shop</a></div>`;
+    return;
+  }
 
-    if(savedListings.length === 0) {
-        // If we have IDs but no matching listings, we might still be fetching houses
-        if (!window.hasFetchedHouses) {
-            setTimeout(window.renderSavedProperties, 1000);
-            return;
-        }
-        container.innerHTML = `<div class="empty-state"><h3>No saved houses yet.</h3><p>Browse our shop to find your next home.</p><br><a href="../shop/shop.html" class="hero-btn">Browse Shop</a></div>`;
-        return;
-    }
-
-    container.innerHTML = savedListings.map(renderPropertyCard).join("");
-}
+  container.innerHTML = savedListings.map(renderPropertyCard).join("");
+};
 
 const renderPropertyCard = (item) => `
   <article class="list-card" onclick="window.location.href='../details/detail.html?id=${encodeURIComponent(item.id)}'" style="position:relative;">
@@ -63,7 +92,7 @@ const renderPropertyCard = (item) => `
         </span>
         <p class="text">Save</p>
     </button>
-    <img loading="lazy" src="${item.photo || item.photos?.[0] || 'https://via.placeholder.com/400x300?text=No+Image'}" alt="${item.title}">
+    <img loading="lazy" src="${item.photo || item.photos?.[0] || "https://via.placeholder.com/400x300?text=No+Image"}" alt="${item.title}">
     <div class="list-info">
       <h3>${item.title}</h3>
       <div class="list-meta">${item.location}</div>
@@ -76,110 +105,124 @@ const renderPropertyCard = (item) => `
 `;
 
 window.openEditModal = async () => {
-    const user = await window.fetchSessionUser();
-    if(!user) return;
+  const user = await window.fetchSessionUser();
+  if (!user) return;
 
-    document.getElementById("edit-name").value = user.name || "";
-    document.getElementById("edit-phone").value = user.phone || "";
-    
-    if(user.avatar_url) {
-        document.getElementById("edit-avatar-preview").innerHTML = `<img src="${user.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
-    }
+  document.getElementById("edit-name").value = user.name || "";
+  document.getElementById("edit-phone").value = user.phone || "";
 
-    const uniSelect = document.getElementById("edit-uni");
-    if(uniSelect && window.getUniversities) {
-        const unis = Object.keys(window.getUniversities());
-        uniSelect.innerHTML = '<option value="">Select University</option>' + 
-            unis.map(u => `<option value="${u}" ${u === user.university ? 'selected' : ''}>${u}</option>`).join("");
-    }
+  if (user.avatar_url) {
+    document.getElementById("edit-avatar-preview").innerHTML =
+      `<img src="${user.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
+  }
 
-    document.getElementById("edit-modal").style.display = "flex";
+  const uniSelect = document.getElementById("edit-uni");
+  if (uniSelect && window.getUniversities) {
+    const unis = Object.keys(window.getUniversities());
+    uniSelect.innerHTML =
+      '<option value="">Select University</option>' +
+      unis
+        .map(
+          (u) =>
+            `<option value="${u}" ${u === user.university ? "selected" : ""}>${u}</option>`,
+        )
+        .join("");
+  }
+
+  document.getElementById("edit-modal").style.display = "flex";
 };
 
 window.previewAvatar = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            document.getElementById("edit-avatar-preview").innerHTML = `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
-        };
-        reader.readAsDataURL(file);
-    }
+  const file = event.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      document.getElementById("edit-avatar-preview").innerHTML =
+        `<img src="${e.target.result}" style="width:100%; height:100%; object-fit:cover;">`;
+    };
+    reader.readAsDataURL(file);
+  }
 };
 
 window.closeEditModal = () => {
-    document.getElementById("edit-modal").style.display = "none";
+  document.getElementById("edit-modal").style.display = "none";
 };
 
 async function uploadAvatar(file, userId) {
-    if(!window.sb_client) return null;
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${userId}/${Math.random()}.${fileExt}`;
-    const filePath = `${fileName}`;
+  if (!window.sb_client) return null;
+  const fileExt = file.name.split(".").pop();
+  const fileName = `${userId}/${Math.random()}.${fileExt}`;
+  const filePath = `${fileName}`;
 
-    const { error: uploadError, data } = await window.sb_client.storage
-        .from('avatars')
-        .upload(filePath, file);
+  const { error: uploadError, data } = await window.sb_client.storage
+    .from("avatars")
+    .upload(filePath, file);
 
-    if (uploadError) throw uploadError;
+  if (uploadError) throw uploadError;
 
-    const { data: { publicUrl } } = window.sb_client.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
+  const {
+    data: { publicUrl },
+  } = window.sb_client.storage.from("avatars").getPublicUrl(filePath);
 
-    return publicUrl;
+  return publicUrl;
 }
 
 window.saveProfile = async () => {
-    if(!window.sb_client) return;
-    const name = document.getElementById("edit-name").value.trim();
-    const uni = document.getElementById("edit-uni").value;
-    const phone = document.getElementById("edit-phone").value.trim();
-    const avatarFile = document.getElementById("edit-avatar-input").files[0];
+  if (!window.sb_client) return;
+  const name = document.getElementById("edit-name").value.trim();
+  const uni = document.getElementById("edit-uni").value;
+  const phone = document.getElementById("edit-phone").value.trim();
+  const avatarFile = document.getElementById("edit-avatar-input").files[0];
 
-    if(!name) {
-        if(window.showToast) window.showToast("Name is required", "error");
-        return;
+  if (!name) {
+    if (window.showToast) window.showToast("Name is required", "error");
+    return;
+  }
+
+  try {
+    const {
+      data: { user },
+    } = await window.sb_client.auth.getUser();
+    if (!user) return;
+
+    let avatarUrl = null;
+    if (avatarFile) {
+      if (window.showToast) window.showToast("Uploading picture...", "info");
+      avatarUrl = await uploadAvatar(avatarFile, user.id);
     }
 
-    try {
-        const { data: { user } } = await window.sb_client.auth.getUser();
-        if(!user) return;
+    const updates = {
+      full_name: name,
+      university: uni,
+      phone: phone,
+    };
 
-        let avatarUrl = null;
-        if(avatarFile) {
-            if(window.showToast) window.showToast("Uploading picture...", "info");
-            avatarUrl = await uploadAvatar(avatarFile, user.id);
-        }
+    if (avatarUrl) updates.avatar_url = avatarUrl;
 
-        const updates = {
-            full_name: name,
-            university: uni,
-            phone: phone
-        };
+    const { error } = await window.sb_client
+      .from("profiles")
+      .update(updates)
+      .eq("id", user.id);
 
-        if(avatarUrl) updates.avatar_url = avatarUrl;
-
-        const { error } = await window.sb_client
-            .from('profiles')
-            .update(updates)
-            .eq('id', user.id);
-
-        if(!error) {
-            if(window.showToast) window.showToast("Profile updated successfully!", "success");
-            closeEditModal();
-            // Refresh UI
-            const updated = await window.fetchSessionUser();
-            document.getElementById("user-name").textContent = updated.name;
-            document.getElementById("user-uni").textContent = updated.university;
-            if(updated.avatar_url) {
-                document.getElementById("header-avatar").innerHTML = `<img src="${updated.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
-                document.getElementById("edit-avatar-preview").innerHTML = `<img src="${updated.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
-            }
-        } else {
-            throw error;
-        }
-    } catch (err) {
-        if(window.showToast) window.showToast("Update failed: " + err.message, "error");
+    if (!error) {
+      if (window.showToast)
+        window.showToast("Profile updated successfully!", "success");
+      closeEditModal();
+      // Refresh UI
+      const updated = await window.fetchSessionUser();
+      document.getElementById("user-name").textContent = updated.name;
+      document.getElementById("user-uni").textContent = updated.university;
+      if (updated.avatar_url) {
+        document.getElementById("header-avatar").innerHTML =
+          `<img src="${updated.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
+        document.getElementById("edit-avatar-preview").innerHTML =
+          `<img src="${updated.avatar_url}" style="width:100%; height:100%; object-fit:cover;">`;
+      }
+    } else {
+      throw error;
     }
+  } catch (err) {
+    if (window.showToast)
+      window.showToast("Update failed: " + err.message, "error");
+  }
 };
