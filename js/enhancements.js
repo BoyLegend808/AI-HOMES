@@ -118,11 +118,10 @@
       });
     });
     observer.observe(document.body, { childList: true, subtree: true });
-  }
 
-  // =========================================
-  // 4. SHARED FOOTER WITH 3-ZONE LAYOUT
-  // =========================================
+    // =========================================
+    // 4. SHARED FOOTER WITH 3-ZONE LAYOUT
+    // =========================================
 
     // Only inject if page doesn't already have a site-footer or onboarding-footer
     const existingFooter = document.querySelector(
@@ -185,7 +184,6 @@
       });
     }
   }
-
   // =========================================
   // 5. SERVICE WORKER REGISTRATION
   // =========================================
