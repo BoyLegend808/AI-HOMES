@@ -1004,8 +1004,8 @@ async function renderGlobalNav() {
     };
   }
 
-  // 2. SYNCHRONOUS PRE-RENDER (No Wait)
-  let baseLinks = `
+  // 2. IMMEDIATE BASE RENDER (No Skeleton)
+  const baseLinks = `
     <li><a href="../home/home.html" class="${currentPage === "home.html" ? "active" : ""}">Home</a></li>
     <li><a href="../shop/shop.html" class="${currentPage === "shop.html" ? "active" : ""}">Browse Houses</a></li>
     <li><a href="../about/about.html" class="${currentPage === "about.html" ? "active" : ""}">About</a></li>
@@ -1013,9 +1013,9 @@ async function renderGlobalNav() {
   `;
 
   if (navLinks) {
-    // Show Unified Big Skeleton initially
-    navLinks.classList.add("is-loading-total");
-    navLinks.innerHTML = `<div class="full-nav-skeleton"></div>`;
+    // Render standard guest nav immediately to prevent skeleton flickering
+    navLinks.innerHTML = baseLinks + `<li><a href="../auth/auth.html">Login</a></li>`;
+    navLinks.classList.remove("is-loading-total");
 
     const navPanel = document.querySelector(".nav-links");
     if (navPanel && !navPanel.querySelector(".nav-mobile-header")) {
@@ -1031,82 +1031,54 @@ async function renderGlobalNav() {
     }
   }
 
-  // 3. SYNCHRONOUS SKELETON (Identity area)
-  let idBox = document.getElementById("nav-id-box");
-  if (!idBox && rightZone) {
-    idBox = document.createElement("div");
-    idBox.id = "nav-id-box";
-    idBox.className = "nav-identity-cluster skeleton-state";
-    idBox.innerHTML = `
-      <div class="nav-identity-skeleton">
-        <div class="nav-skel-avatar"></div>
-        <div class="nav-skel-lines" style="width: 80px;">
-          <div class="nav-skel-line is-name"></div>
-          <div class="nav-skel-line is-uni"></div>
-        </div>
-      </div>`;
-    if (centerZone) {
-      centerZone.appendChild(idBox);
-    } else if (rightZone) {
-      rightZone.insertBefore(idBox, toggle);
-    }
-  }
-
-  // 4. OPTIMIZED ASYNC AUTH RESOLUTION (Parallel & Single-Call)
+  // 3. ASYNC AUTH RESOLUTION (No UI Block)
   try {
     const user = await fetchSessionUser();
-    // Cache the role immediately to avoid a second DB hit
     const isAdmin = user?.role === "admin";
 
-    // Final identity update
-    if (user && idBox) {
-      idBox.classList.remove("skeleton-state");
-      const uniName = String(user.university || "").trim();
-      const logoUrl =
-        user.avatar_url ||
-        (window.getUniversityLogo ? getUniversityLogo(uniName) : "") ||
-        "";
-      idBox.innerHTML = `
-        <div class="nav-id-inner" onclick="window.location.href='../profile/profile.html'">
-           <img src="${logoUrl}" alt="${uniName} Logo" style="border-radius: 50%; object-fit: cover;">
-           <div class="nav-id-text">
-             <div class="nav-id-name">${user.name}</div>
-             <div class="nav-id-uni">${uniName}</div>
-           </div>
-        </div>`;
-      idBox.style.opacity = "1";
-      idBox.style.pointerEvents = "auto";
-    } else if (idBox) {
-      idBox.remove();
-    }
+    // Only update if we have a user
+    if (user) {
+      // Update Identity Area
+      let idBox = document.getElementById("nav-id-box");
+      if (!idBox && rightZone) {
+        idBox = document.createElement("div");
+        idBox.id = "nav-id-box";
+        idBox.className = "nav-identity-cluster";
+        if (centerZone) {
+          centerZone.appendChild(idBox);
+        } else if (rightZone) {
+          rightZone.insertBefore(idBox, toggle);
+        }
+      }
 
-    // Mark toggle as ready to transition from skeleton
-    const toggle = document.querySelector(".mobile-menu-toggle");
-    if (toggle) toggle.classList.add("is-ready");
+      if (idBox) {
+        const uniName = String(user.university || "").trim();
+        const logoUrl = user.avatar_url || (window.getUniversityLogo ? getUniversityLogo(uniName) : "") || "";
+        idBox.innerHTML = `
+          <div class="nav-id-inner" onclick="window.location.href='../profile/profile.html'">
+             <img src="${logoUrl}" alt="${uniName} Logo" style="border-radius: 50%; object-fit: cover;">
+             <div class="nav-id-text">
+               <div class="nav-id-name">${user.name}</div>
+               <div class="nav-id-uni">${uniName}</div>
+             </div>
+          </div>`;
+        idBox.style.opacity = "1";
+        idBox.style.pointerEvents = "auto";
+      }
 
-    // Final links update (Remove skeleton, show real links)
-    if (navLinks) {
-      let authLinks = "";
-      if (user) {
+      // Update Nav Links
+      if (navLinks) {
+        let authLinks = "";
         if (isAdmin) {
           authLinks += `<li><a href="../admin/admin.html" class="${currentPage.includes("admin") ? "active" : ""}">Dashboard</a></li>`;
         }
         authLinks += `<li><a href="../profile/profile.html" class="${currentPage === "profile.html" ? "active" : ""}">Profile</a></li>`;
         authLinks += `<li><a href="#" onclick="logoutUser(); return false;">Logout</a></li>`;
-      } else {
-        authLinks += `<li><a href="../auth/auth.html">Login</a></li>`;
+        navLinks.innerHTML = baseLinks + authLinks;
       }
-      navLinks.classList.remove("is-loading-total");
-      navLinks.innerHTML = baseLinks + authLinks;
     }
   } catch (err) {
     console.error("Navigation load failed:", err);
-    if (navLinks) {
-      navLinks.classList.remove("is-loading-total");
-      navLinks.innerHTML =
-        baseLinks + `<li><a href="../auth/auth.html">Login</a></li>`;
-    }
-    if (idBox) idBox.remove();
   }
 }
 
