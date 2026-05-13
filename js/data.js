@@ -988,11 +988,22 @@ function showToast(message, type = "info") {
     container.id = "toast-container";
     document.body.appendChild(container);
   }
+
+  // Prevent duplicate toasts with the same message appearing at once
+  const existingToasts = Array.from(container.querySelectorAll(".toast"));
+  if (existingToasts.some((t) => t.textContent === message)) return;
+
   const toast = document.createElement("div");
   toast.className = `toast toast--${type}`;
   toast.textContent = message;
   container.appendChild(toast);
-  setTimeout(() => toast.classList.add("toast--show"), 10);
+
+  // Smooth entrance
+  requestAnimationFrame(() => {
+    setTimeout(() => toast.classList.add("toast--show"), 50);
+  });
+
+  // Auto-remove after 3 seconds
   setTimeout(() => {
     toast.classList.remove("toast--show");
     setTimeout(() => toast.remove(), 500);
