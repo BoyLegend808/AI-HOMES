@@ -1048,6 +1048,15 @@ async function renderGlobalNav() {
     // Re-wire the theme toggle since we just created it
     if (window.wireThemeToggle) {
       window.wireThemeToggle(themeBtn);
+    } else {
+      // Fallback if enhancements.js isn't fully ready yet
+      document.addEventListener(
+        "themeSystemReady",
+        () => {
+          if (window.wireThemeToggle) window.wireThemeToggle(themeBtn);
+        },
+        { once: true },
+      );
     }
   }
 

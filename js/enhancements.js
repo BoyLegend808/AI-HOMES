@@ -86,7 +86,7 @@
 
     // Event delegation for all current and future toggles
     document.addEventListener("click", (e) => {
-      const btn = e.target.closest(".sh-theme-toggle");
+      const btn = e.target.closest(".sh-theme-toggle, .nav-theme-btn");
       if (btn) {
         const currentlyLight = document.body.classList.contains("light-mode");
         applyTheme(!currentlyLight);
@@ -95,6 +95,14 @@
 
     // Retroactive wiring for existing buttons on load
     document.querySelectorAll(".sh-theme-toggle").forEach(window.wireThemeToggle);
+
+    const navThemeBtn = document.getElementById("nav-theme-toggle");
+    if (navThemeBtn) {
+      window.wireThemeToggle(navThemeBtn);
+    }
+
+    // Signal that the theme system is ready for any dynamically added buttons
+    document.dispatchEvent(new CustomEvent("themeSystemReady"));
 
     // Watch for new toggles added dynamically (MutationObserver)
     const observer = new MutationObserver((mutations) => {
