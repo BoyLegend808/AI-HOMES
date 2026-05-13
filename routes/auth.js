@@ -201,17 +201,99 @@ router.post("/forgot-password", async (req, res) => {
       to: userEmail,
       subject: "Reset Your StudentHome Password",
       html: `
-        <div style="font-family: sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
-          <h2 style="color: #4CAF50;">Password Reset Request</h2>
-          <p>Hello,</p>
-          <p>We received a request to reset your password for StudentHome. Click the button below to proceed:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetLink}" style="background-color: #4CAF50; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">Reset Password</a>
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            .email-container {
+              font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              max-width: 600px;
+              margin: 0 auto;
+              background-color: #ffffff;
+              border-radius: 16px;
+              overflow: hidden;
+              box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+              border: 1px solid #e2e8f0;
+            }
+            .header {
+              background-color: #0F172A;
+              padding: 40px 20px;
+              text-align: center;
+            }
+            .content {
+              padding: 40px 30px;
+              color: #1e293b;
+              line-height: 1.6;
+            }
+            .footer {
+              background-color: #f8fafc;
+              padding: 20px;
+              text-align: center;
+              font-size: 12px;
+              color: #64748b;
+              border-top: 1px solid #e2e8f0;
+            }
+            .button {
+              display: inline-block;
+              padding: 14px 32px;
+              background-color: #F97316;
+              color: #ffffff !important;
+              text-decoration: none;
+              border-radius: 10px;
+              font-weight: 700;
+              font-size: 16px;
+              margin: 30px 0;
+              box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+            }
+            .logo-img {
+              max-height: 50px;
+              width: auto;
+            }
+            h1 {
+              margin: 0;
+              font-size: 24px;
+              font-weight: 800;
+              color: #1e293b;
+            }
+            .expiry-note {
+              font-size: 13px;
+              color: #94a3b8;
+              font-style: italic;
+              margin-top: 20px;
+            }
+          </style>
+        </head>
+        <body style="background-color: #f1f5f9; padding: 20px; margin: 0;">
+          <div class="email-container">
+            <div class="header">
+              <img src="https://ai-homes.vercel.app/assets/logo.png" alt="StudentHome" class="logo-img">
+            </div>
+            <div class="content">
+              <h1>Password Reset Request</h1>
+              <p style="margin-top: 20px;">Hello,</p>
+              <p>We received a request to reset the password for your StudentHome account. Click the button below to set a new password:</p>
+              
+              <div style="text-align: center;">
+                <a href="${resetLink}" class="button">Reset Password</a>
+              </div>
+              
+              <p>If the button doesn't work, copy and paste this link into your browser:</p>
+              <p style="word-break: break-all; font-size: 12px; color: #F97316;">${resetLink}</p>
+              
+              <p class="expiry-note">This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+            </div>
+            <div class="footer">
+              <p>&copy; 2026 StudentHome Nigeria Limited. All Rights Reserved.</p>
+              <p>Secure Student Housing Platform</p>
+              <div style="margin-top: 10px;">
+                <a href="https://ai-homes.vercel.app" style="color: #F97316; text-decoration: none; margin: 0 10px;">Website</a>
+                <a href="https://ai-homes.vercel.app/contact/contact.html" style="color: #F97316; text-decoration: none; margin: 0 10px;">Support</a>
+              </div>
+            </div>
           </div>
-          <p>This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
-          <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
-          <p style="font-size: 12px; color: #777;">StudentHome Platform - Secure Student Housing</p>
-        </div>
+        </body>
+        </html>
       `,
     };
 
