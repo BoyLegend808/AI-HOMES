@@ -631,6 +631,35 @@ body.no-scroll {
   overflow: hidden;
 }
 
+/* Theme Toggle Button */
+.sh-theme-toggle {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  width: 42px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+}
+
+.sh-theme-toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.sh-theme-toggle svg {
+  width: 20px;
+  height: 20px;
+  stroke: currentColor;
+}
+
 /* Hero Button (used on multiple pages) */
 .hero-btn {
   background: var(--accent);
