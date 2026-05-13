@@ -495,28 +495,30 @@ window.toggleFavorite = async (houseId) => {
       btn.setAttribute("aria-label", ariaLabel);
     });
 
-  // 3. BACKGROUND SYNC: Verify user and sync to Supabase without blocking the UI
-  try {
-    const user = await fetchSessionUser();
-    if (user && sb_client) {
-      const { data: userData } = await sb_client.auth.getUser();
-      if (userData?.user) {
-        if (newStatus) {
-          await sb_client
-            .from("favorites")
-            .insert([{ house_id: houseId, user_id: userData.user.id }]);
-        } else {
-          await sb_client
-            .from("favorites")
-            .delete()
-            .eq("house_id", houseId)
-            .eq("user_id", userData.user.id);
+  // 3. BACKGROUND SYNC: Sync to Supabase in the background (Non-blocking)
+  (async () => {
+    try {
+      const user = await fetchSessionUser();
+      if (user && sb_client) {
+        const { data: userData } = await sb_client.auth.getUser();
+        if (userData?.user) {
+          if (newStatus) {
+            await sb_client
+              .from("favorites")
+              .insert([{ house_id: houseId, user_id: userData.user.id }]);
+          } else {
+            await sb_client
+              .from("favorites")
+              .delete()
+              .eq("house_id", houseId)
+              .eq("user_id", userData.user.id);
+          }
         }
       }
+    } catch (e) {
+      console.warn("Silent background sync failed:", e);
     }
-  } catch (e) {
-    console.warn("Silent background sync failed:", e);
-  }
+  })();
 
   return { success: true };
 };
@@ -723,14 +725,27 @@ async function fetchSessionUser() {
       .eq("id", data.user.id)
       .single();
 
+    const meta = data.user.user_metadata || {};
     _currentUser = {
       id: data.user.id,
       name: profile?.full_name || meta.full_name || "Student",
       email: data.user.email,
       university: profile?.university || meta.university || "Lagos",
       role: profile?.role || meta.role || "student",
-      avatar_url: data.user.user_metadata?.avatar_url || "",
+      avatar_url: meta.avatar_url || "",
     };
+
+    // Update Persistent Cache
+    localStorage.setItem(
+      "sh_cached_user",
+      JSON.stringify({
+        role: _currentUser.role,
+        name: _currentUser.name,
+        university: _currentUser.university,
+        avatar_url: _currentUser.avatar_url,
+      }),
+    );
+
     return _currentUser;
   } catch (err) {
     console.warn("Session Recovery: Using local cache due to latency/error.");
