@@ -64,9 +64,25 @@
 
     const applyTheme = (isLight) => {
       document.body.classList.toggle("light-mode", isLight);
+      
+      // Update theme toggle icons
       document.querySelectorAll(".sh-theme-toggle").forEach((btn) => {
         btn.innerHTML = isLight ? moonIcon : sunIcon;
       });
+      
+      // Swap logo for light mode
+      document.querySelectorAll(".brand-logo").forEach((img) => {
+        const currentSrc = img.src;
+        if (isLight) {
+          if (currentSrc.includes("logo.png") || currentSrc.includes("logo%20new.png")) {
+            img.dataset.darkSrc = currentSrc;
+            img.src = currentSrc.replace(/logo(%20new)?\.png/, "logo-light.png");
+          }
+        } else if (img.dataset.darkSrc) {
+          img.src = img.dataset.darkSrc;
+        }
+      });
+
       localStorage.setItem("sh_theme_mode", isLight ? "light" : "dark");
     };
 
