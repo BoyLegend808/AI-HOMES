@@ -150,20 +150,29 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 30px;
-  padding: 0 5%;
+  gap: 10px;
+  --nav-pad-x: max(1.5rem, 4vw);
+  padding: 0 var(--nav-pad-x) 0 0;
   height: 80px;
-  background: rgba(10, 12, 16, 0.8);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  background: #0a0c10;
+  backdrop-filter: blur(15px);
+  -webkit-backdrop-filter: blur(15px);
   position: sticky;
   width: 100%;
   top: 0;
   left: 0;
   right: 0;
   z-index: 5000;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  font-family: 'Outfit', sans-serif;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.nav-left,
+.nav-center,
+.nav-right {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  flex: 1 1 0;
 }
 
 .brand-logo {
@@ -216,104 +225,21 @@ body {
 }
 
 .nav-left {
-  flex: 0 0 auto;
-  min-width: 150px;
+  flex: 1;
+  justify-content: flex-start;
 }
 
 .nav-center {
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
+  flex: 1;
   justify-content: center;
 }
 
 .nav-right {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
   justify-content: flex-end;
-  gap: 20px;
-  min-width: 150px;
+  gap: 0.75rem;
 }
 
 /* User Identity Cluster */
-.nav-identity-cluster {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  background: rgba(255, 255, 255, 0.05);
-  padding: 8px 16px;
-  border-radius: 50px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-  white-space: nowrap;
-  max-width: 300px;
-}
-
-.nav-identity-cluster:hover {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: var(--accent);
-}
-
-.nav-id-inner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-width: 0;
-}
-
-.nav-id-inner img {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  object-fit: contain;
-  background: #fff;
-  border: 1.5px solid var(--accent);
-  flex-shrink: 0;
-}
-
-.nav-id-text {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-  min-width: 0;
-}
-
-.nav-id-name {
-  color: #fff;
-  font-weight: 700;
-  font-size: 0.8rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.nav-id-uni {
-  color: var(--accent);
-  font-size: 0.6rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  opacity: 0.9;
-}
-
-.top-nav.nav-scrolled {
-  width: 100%;
-  left: 0;
-  right: 0;
-  z-index: 5000;
-  background: rgba(10, 12, 16, 0.94);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  padding: 0.7rem 2.5rem;
-  border-bottom: 1px solid rgba(217, 108, 66, 0.15);
-}
-
 .nav-identity-cluster {
   display: flex;
   align-items: center;
@@ -325,15 +251,78 @@ body {
   min-width: 0;
   max-width: 260px;
   flex: 0 0 auto;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  background: transparent;
+  padding: 0;
 }
 
-/* Remove any visual borders/rings around the user identity cluster */
-.nav-identity-cluster,
-#nav-id-box,
-#nav-id-box>div {
-  border: none !important;
-  box-shadow: none !important;
-  outline: none !important;
+#nav-id-box {
+  min-width: 0;
+  max-width: 260px;
+}
+
+#nav-id-box > div {
+  min-width: 0;
+}
+
+.nav-id-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.nav-id-inner img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: contain;
+  background: #fff;
+  border: 2px solid var(--accent);
+  flex: 0 0 auto;
+}
+
+.nav-id-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+  line-height: 1.1;
+}
+
+.nav-id-name {
+  font-weight: 700;
+  font-size: 0.75rem;
+  color: #fff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.nav-id-uni {
+  font-size: 0.65rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Top Nav Scrolled */
+.top-nav.nav-scrolled {
+  width: 100%;
+  left: 0;
+  right: 0;
+  z-index: 5000;
+  background: rgba(10, 12, 16, 0.94);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  padding: 0.7rem 2.5rem;
+  border-bottom: 1px solid rgba(217, 108, 66, 0.15);
 }
 
 /* Glassmorphism Utility Classes */

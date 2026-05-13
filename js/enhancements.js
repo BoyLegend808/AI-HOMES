@@ -18,11 +18,9 @@
       "enhancements.css",
     ) || "../js/enhancements.css";
   // Resolve path relative to current page
-  const basePath =
-    document
-      .querySelector('link[href*="nav.css"]')
-      ?.href?.replace("nav.css", "") || "../js/";
-  cssLink.href = basePath + "enhancements.css?v=5";
+  const navLink = document.querySelector('link[href*="nav.css"]');
+  const basePath = navLink ? navLink.href.split("nav.css")[0] : "../js/";
+  cssLink.href = basePath + "enhancements.css?v=6";
   document.head.appendChild(cssLink);
 
   // =========================================
