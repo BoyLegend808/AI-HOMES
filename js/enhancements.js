@@ -164,6 +164,12 @@
   const showToast = (message, type = "info", duration = 4000) => {
     const container = createToastContainer();
 
+    // Prevent duplicate toasts with the same message appearing at once
+    const existingToasts = Array.from(
+      container.querySelectorAll(".toast-message"),
+    );
+    if (existingToasts.some((t) => t.textContent === message)) return;
+
     const toast = document.createElement("div");
     toast.className = `toast toast-${type}`;
 

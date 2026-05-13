@@ -490,6 +490,7 @@ window.toggleFavorite = async (houseId) => {
       window.showToast(
         newStatus ? "Added to favorites" : "Removed from favorites",
         "success",
+        2000,
       );
     }
 
