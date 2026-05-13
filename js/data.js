@@ -469,7 +469,15 @@ window.toggleFavorite = async (houseId) => {
   );
   const newStatus = !isCurrentlyFav;
 
-  // 2. Optimistic UI Update & Cache Mutation
+  // 2. IMMEDIATE FEEDBACK (Optimistic UI)
+  if (window.showToast) {
+    window.showToast(
+      newStatus ? "Added to favorites" : "Removed from favorites",
+      "success",
+    );
+  }
+
+  // Update Cache Mutation
   if (newStatus) {
     if (!isCurrentlyFav) CACHED_FAVORITES.push(String(houseId));
   } else {
@@ -508,14 +516,6 @@ window.toggleFavorite = async (houseId) => {
     }
   } catch (e) {
     console.warn("Silent background sync failed:", e);
-  }
-
-  // 4. Toast Notification
-  if (window.showToast) {
-    window.showToast(
-      newStatus ? "Added to favorites" : "Removed from favorites",
-      "success",
-    );
   }
 
   return { success: true };
@@ -793,6 +793,17 @@ async function loginUser(email, password) {
         role: profile?.role || "student",
       };
       _currentUser = user;
+
+      // PERSISTENT CACHE for instant nav rendering
+      localStorage.setItem(
+        "sh_cached_user",
+        JSON.stringify({
+          role: user.role,
+          name: user.name,
+          university: user.university,
+        }),
+      );
+
       return { success: true, user };
     }
   }
@@ -801,6 +812,14 @@ async function loginUser(email, password) {
   );
   if (admin) {
     _currentUser = admin;
+    localStorage.setItem(
+      "sh_cached_user",
+      JSON.stringify({
+        role: admin.role,
+        name: admin.name,
+        university: admin.university,
+      }),
+    );
     return { success: true, user: admin };
   }
   return { success: false, message: "Invalid credentials or cloud offline." };
@@ -826,6 +845,7 @@ async function registerUser(data) {
 function resetSystemData() {
   if (confirm("Reset session and return to home?")) {
     _currentUser = null;
+    localStorage.removeItem("sh_cached_user");
     CACHED_LISTINGS = [];
     CACHED_REVIEWS = [...DEFAULT_REVIEWS];
     CLOUD_UNIVERSITIES = {};
@@ -840,6 +860,7 @@ async function logoutUser() {
   if (__isLoggingOut) return false;
   __isLoggingOut = true;
   try {
+    localStorage.removeItem("sh_cached_user");
     if (sb_client) await sb_client.auth.signOut();
   } catch (e) {
     console.warn("Logout failed (continuing):", e);
@@ -1012,13 +1033,19 @@ async function renderGlobalNav() {
     <li><a href="../contact/contact.html" class="${currentPage === "contact.html" ? "active" : ""}">Contact</a></li>
   `;
 
-  // Pre-fetch user session if it's already in memory to avoid flickering
-  const cachedUser = _currentUser;
+  // PRE-FETCH: Check localStorage first for zero-latency rendering
+  let cachedUser = _currentUser;
+  if (!cachedUser) {
+    try {
+      const stored = localStorage.getItem("sh_cached_user");
+      if (stored) cachedUser = JSON.parse(stored);
+    } catch (e) {}
+  }
 
   if (navLinks) {
     let initialAuthLinks = `<li><a href="../auth/auth.html">Login</a></li>`;
 
-    // If we already have a user in memory, use it immediately to avoid "Guest then User" jump
+    // INSTANT RENDER: Use cached user if available
     if (cachedUser) {
       const isAdmin = cachedUser.role === "admin";
       initialAuthLinks = "";
@@ -1031,6 +1058,23 @@ async function renderGlobalNav() {
 
     navLinks.innerHTML = baseLinks + initialAuthLinks;
     navLinks.classList.remove("is-loading-total");
+
+    // Optional: Render identity box if cached
+    if (cachedUser && !document.getElementById("nav-id-box") && rightZone) {
+      const idBox = document.createElement("div");
+      idBox.id = "nav-id-box";
+      idBox.className = "nav-identity-cluster";
+      const uniName = cachedUser.university || "";
+      idBox.innerHTML = `
+        <div class="nav-id-inner" onclick="window.location.href='../profile/profile.html'">
+           <div class="nav-id-text">
+             <div class="nav-id-name">${cachedUser.name || "User"}</div>
+             <div class="nav-id-uni">${uniName}</div>
+           </div>
+        </div>`;
+      if (centerZone) centerZone.appendChild(idBox);
+      else rightZone.insertBefore(idBox, toggle);
+    }
 
     const navPanel = document.querySelector(".nav-links");
     if (navPanel && !navPanel.querySelector(".nav-mobile-header")) {
@@ -1046,24 +1090,20 @@ async function renderGlobalNav() {
     }
   }
 
-  // 3. ASYNC AUTH RESOLUTION (No UI Block)
+  // 3. ASYNC AUTH RESOLUTION (Background refresh)
   try {
     const user = await fetchSessionUser();
     const isAdmin = user?.role === "admin";
 
-    // Only update if we have a user and it's different from what we might have rendered
     if (user) {
-      // Update Identity Area
+      // Update Identity Area with full data (avatar, etc.)
       let idBox = document.getElementById("nav-id-box");
       if (!idBox && rightZone) {
         idBox = document.createElement("div");
         idBox.id = "nav-id-box";
         idBox.className = "nav-identity-cluster";
-        if (centerZone) {
-          centerZone.appendChild(idBox);
-        } else if (rightZone) {
-          rightZone.insertBefore(idBox, toggle);
-        }
+        if (centerZone) centerZone.appendChild(idBox);
+        else rightZone.insertBefore(idBox, toggle);
       }
 
       if (idBox) {
@@ -1074,18 +1114,17 @@ async function renderGlobalNav() {
           "";
         idBox.innerHTML = `
           <div class="nav-id-inner" onclick="window.location.href='../profile/profile.html'">
-             <img src="${logoUrl}" alt="${uniName} Logo" style="border-radius: 50%; object-fit: cover;">
+             ${logoUrl ? `<img src="${logoUrl}" alt="Logo" style="border-radius: 50%; object-fit: cover;">` : ""}
              <div class="nav-id-text">
                <div class="nav-id-name">${user.name}</div>
                <div class="nav-id-uni">${uniName}</div>
              </div>
           </div>`;
         idBox.style.opacity = "1";
-        idBox.style.pointerEvents = "auto";
       }
 
-      // Re-render nav links if the user state changed (e.g. from Guest to User)
-      if (navLinks && !cachedUser) {
+      // Re-render nav links if the state changed or to ensure active states are correct
+      if (navLinks) {
         let authLinks = "";
         if (isAdmin) {
           authLinks += `<li><a href="../admin/admin.html" class="${currentPage.includes("admin") ? "active" : ""}">Dashboard</a></li>`;
@@ -1095,12 +1134,10 @@ async function renderGlobalNav() {
         navLinks.innerHTML = baseLinks + authLinks;
       }
     } else {
-      // If user is null but we were showing idBox, remove it
+      // User logged out or session expired
       const idBox = document.getElementById("nav-id-box");
       if (idBox) idBox.remove();
-
-      // If we were showing user links but now we are guest, revert
-      if (navLinks && cachedUser) {
+      if (navLinks) {
         navLinks.innerHTML =
           baseLinks + `<li><a href="../auth/auth.html">Login</a></li>`;
       }
