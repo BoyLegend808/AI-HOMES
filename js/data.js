@@ -1012,9 +1012,24 @@ async function renderGlobalNav() {
     <li><a href="../contact/contact.html" class="${currentPage === "contact.html" ? "active" : ""}">Contact</a></li>
   `;
 
+  // Pre-fetch user session if it's already in memory to avoid flickering
+  const cachedUser = _currentUser;
+
   if (navLinks) {
-    // Render standard guest nav immediately to prevent skeleton flickering
-    navLinks.innerHTML = baseLinks + `<li><a href="../auth/auth.html">Login</a></li>`;
+    let initialAuthLinks = `<li><a href="../auth/auth.html">Login</a></li>`;
+
+    // If we already have a user in memory, use it immediately to avoid "Guest then User" jump
+    if (cachedUser) {
+      const isAdmin = cachedUser.role === "admin";
+      initialAuthLinks = "";
+      if (isAdmin) {
+        initialAuthLinks += `<li><a href="../admin/admin.html" class="${currentPage.includes("admin") ? "active" : ""}">Dashboard</a></li>`;
+      }
+      initialAuthLinks += `<li><a href="../profile/profile.html" class="${currentPage === "profile.html" ? "active" : ""}">Profile</a></li>`;
+      initialAuthLinks += `<li><a href="#" onclick="logoutUser(); return false;">Logout</a></li>`;
+    }
+
+    navLinks.innerHTML = baseLinks + initialAuthLinks;
     navLinks.classList.remove("is-loading-total");
 
     const navPanel = document.querySelector(".nav-links");
@@ -1036,7 +1051,7 @@ async function renderGlobalNav() {
     const user = await fetchSessionUser();
     const isAdmin = user?.role === "admin";
 
-    // Only update if we have a user
+    // Only update if we have a user and it's different from what we might have rendered
     if (user) {
       // Update Identity Area
       let idBox = document.getElementById("nav-id-box");
@@ -1053,7 +1068,10 @@ async function renderGlobalNav() {
 
       if (idBox) {
         const uniName = String(user.university || "").trim();
-        const logoUrl = user.avatar_url || (window.getUniversityLogo ? getUniversityLogo(uniName) : "") || "";
+        const logoUrl =
+          user.avatar_url ||
+          (window.getUniversityLogo ? getUniversityLogo(uniName) : "") ||
+          "";
         idBox.innerHTML = `
           <div class="nav-id-inner" onclick="window.location.href='../profile/profile.html'">
              <img src="${logoUrl}" alt="${uniName} Logo" style="border-radius: 50%; object-fit: cover;">
@@ -1066,8 +1084,8 @@ async function renderGlobalNav() {
         idBox.style.pointerEvents = "auto";
       }
 
-      // Update Nav Links
-      if (navLinks) {
+      // Re-render nav links if the user state changed (e.g. from Guest to User)
+      if (navLinks && !cachedUser) {
         let authLinks = "";
         if (isAdmin) {
           authLinks += `<li><a href="../admin/admin.html" class="${currentPage.includes("admin") ? "active" : ""}">Dashboard</a></li>`;
@@ -1075,6 +1093,16 @@ async function renderGlobalNav() {
         authLinks += `<li><a href="../profile/profile.html" class="${currentPage === "profile.html" ? "active" : ""}">Profile</a></li>`;
         authLinks += `<li><a href="#" onclick="logoutUser(); return false;">Logout</a></li>`;
         navLinks.innerHTML = baseLinks + authLinks;
+      }
+    } else {
+      // If user is null but we were showing idBox, remove it
+      const idBox = document.getElementById("nav-id-box");
+      if (idBox) idBox.remove();
+
+      // If we were showing user links but now we are guest, revert
+      if (navLinks && cachedUser) {
+        navLinks.innerHTML =
+          baseLinks + `<li><a href="../auth/auth.html">Login</a></li>`;
       }
     }
   } catch (err) {

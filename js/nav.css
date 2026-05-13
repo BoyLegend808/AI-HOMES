@@ -19,7 +19,9 @@
 }
 
 /* Global form input fix - prevent overflow */
-input, select, textarea {
+input,
+select,
+textarea {
   box-sizing: border-box;
   max-width: 100%;
 }
@@ -213,28 +215,23 @@ body {
   }
 }
 
-.nav-left,
-.nav-center,
-.nav-right {
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  flex: 1 1 0;
-}
-
 .nav-left {
-  flex: 1;
-  justify-content: flex-start;
+  flex: 0 0 auto;
 }
 
 .nav-center {
-  flex: 1;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
   justify-content: center;
 }
 
 .nav-right {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
   justify-content: flex-end;
-  gap: 0.75rem;
+  gap: 1.5rem;
 }
 
 /* User Identity Cluster */
@@ -243,12 +240,14 @@ body {
   align-items: center;
   gap: 0.75rem;
   background: rgba(255, 255, 255, 0.05);
-  padding: 6px 12px;
-  border-radius: 12px;
+  padding: 8px 16px;
+  border-radius: 50px;
   border: 1px solid rgba(255, 255, 255, 0.1);
   cursor: pointer;
   transition: all 0.3s ease;
-  max-width: 260px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  max-width: 300px;
 }
 
 .nav-identity-cluster:hover {
@@ -264,11 +263,12 @@ body {
 }
 
 .nav-id-inner img {
-  width: 34px;
-  height: 34px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   object-fit: contain;
-  background: rgba(0, 0, 0, 0.2);
+  background: #fff;
+  border: 1.5px solid var(--accent);
   flex-shrink: 0;
 }
 
@@ -282,7 +282,7 @@ body {
 .nav-id-name {
   color: #fff;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -290,10 +290,10 @@ body {
 
 .nav-id-uni {
   color: var(--accent);
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.05em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -393,7 +393,8 @@ body {
   cursor: pointer;
   transition: 0.3s;
   overflow: hidden;
-  position: absolute; /* Keep position absolute for overlay over property images */
+  position: absolute;
+  /* Keep position absolute for overlay over property images */
   top: 12px;
   right: 12px;
   z-index: 20;
@@ -451,9 +452,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  flex: 0 1 auto;
   height: 100%;
-  min-width: 0;
 }
 
 .nav-list {
@@ -529,6 +528,7 @@ body {
 .mobile-menu-toggle:not(.is-ready) .hamburger-box {
   opacity: 0;
 }
+
 .mobile-menu-toggle:not(.is-ready) {
   background: rgba(255, 255, 255, 0.08);
   position: relative;
@@ -538,6 +538,7 @@ body {
   height: 48px;
   margin-right: -4px;
 }
+
 .mobile-menu-toggle:not(.is-ready)::after {
   content: "";
   position: absolute;
@@ -751,7 +752,8 @@ main {
   }
 
   .nav-id-uni {
-    display: none !important; /* Hide uni on mobile to prevent arrangement issues */
+    display: none !important;
+    /* Hide uni on mobile to prevent arrangement issues */
   }
 
   .nav-left {
