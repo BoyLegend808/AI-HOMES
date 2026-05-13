@@ -54,28 +54,67 @@
   // Button created after footer injection below
 
   // =========================================
-  // 3. DARK/LIGHT MODE TOGGLE + 4. SHARED FOOTER WITH 3-ZONE LAYOUT
+  // 3. DARK/LIGHT MODE TOGGLE + THEME PERSISTENCE
   // =========================================
   if (!isOnboarding) {
-    // No localStorage — theme defaults to dark on every load
     const sunIcon =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>';
     const moonIcon =
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
 
-    // --- Wire the nav-level theme toggle (present on every page) ---
-    window.wireThemeToggle = (btn) => {
-      if (!btn) return;
-      btn.addEventListener("click", () => {
-        const isLight = document.body.classList.toggle("light-mode");
+    const applyTheme = (isLight) => {
+      document.body.classList.toggle("light-mode", isLight);
+      document.querySelectorAll(".sh-theme-toggle").forEach((btn) => {
         btn.innerHTML = isLight ? moonIcon : sunIcon;
       });
+      localStorage.setItem("sh_theme_mode", isLight ? "light" : "dark");
     };
 
-    const navThemeBtn = document.getElementById("nav-theme-toggle");
-    if (navThemeBtn) {
-      window.wireThemeToggle(navThemeBtn);
+    // Initial theme load
+    const savedTheme = localStorage.getItem("sh_theme_mode");
+    const initialIsLight = savedTheme === "light";
+    if (initialIsLight) {
+      applyTheme(true);
     }
+
+    // Export wiring function for manual use (though delegation handles most)
+    window.wireThemeToggle = (btn) => {
+      if (!btn) return;
+      const isLight = document.body.classList.contains("light-mode");
+      btn.innerHTML = isLight ? moonIcon : sunIcon;
+    };
+
+    // Event delegation for all current and future toggles
+    document.addEventListener("click", (e) => {
+      const btn = e.target.closest(".sh-theme-toggle");
+      if (btn) {
+        const currentlyLight = document.body.classList.contains("light-mode");
+        applyTheme(!currentlyLight);
+      }
+    });
+
+    // Retroactive wiring for existing buttons on load
+    document.querySelectorAll(".sh-theme-toggle").forEach(window.wireThemeToggle);
+
+    // Watch for new toggles added dynamically (MutationObserver)
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node.nodeType === 1) {
+            if (node.classList.contains("sh-theme-toggle")) {
+              window.wireThemeToggle(node);
+            }
+            node.querySelectorAll(".sh-theme-toggle").forEach(window.wireThemeToggle);
+          }
+        });
+      });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  // =========================================
+  // 4. SHARED FOOTER WITH 3-ZONE LAYOUT
+  // =========================================
 
     // Only inject if page doesn't already have a site-footer or onboarding-footer
     const existingFooter = document.querySelector(
