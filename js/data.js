@@ -77,6 +77,10 @@ let CACHED_LISTINGS = [];
 let CACHED_REVIEWS = [...DEFAULT_REVIEWS];
 let CLOUD_UNIVERSITIES = {};
 let CACHED_FAVORITES = [];
+try {
+  const localFavs = localStorage.getItem("sh_cached_favorites");
+  if (localFavs) CACHED_FAVORITES = JSON.parse(localFavs);
+} catch (e) {}
 window.hasFetchedFavorites = false;
 window.hasFetchedHouses = false;
 
@@ -315,12 +319,13 @@ async function fetchAllData() {
         window.CLOUD_UNIVERSITIES_DATA = [];
       }
 
-      // FAVORITES: Merge safely (in-memory only)
+      // FAVORITES: Merge safely (in-memory and local cache)
       if (favsRes?.status === "fulfilled" && favsRes.value.data) {
         const cloudIds = favsRes.value.data.map((f) => String(f.house_id));
         CACHED_FAVORITES = [
           ...new Set([...CACHED_FAVORITES.map(String), ...cloudIds]),
         ];
+        localStorage.setItem("sh_cached_favorites", JSON.stringify(CACHED_FAVORITES));
       }
     } catch (e) {
       console.error("Cloud batch failed:", e);
@@ -498,6 +503,7 @@ window.toggleFavorite = async (houseId) => {
         (id) => String(id) !== String(houseId),
       );
     }
+    localStorage.setItem("sh_cached_favorites", JSON.stringify(CACHED_FAVORITES));
 
     // 3. IMMEDIATE FEEDBACK (UI & Notification)
     if (window.showToast) {
@@ -566,6 +572,7 @@ async function initFavorites() {
           .eq("user_id", authUser.id);
         if (favs) {
           CACHED_FAVORITES = favs.map((f) => String(f.house_id));
+          localStorage.setItem("sh_cached_favorites", JSON.stringify(CACHED_FAVORITES));
           // Update UI state for all favorites across the current page
           CACHED_FAVORITES.forEach(houseId => {
             document
@@ -914,6 +921,7 @@ async function logoutUser() {
   __isLoggingOut = true;
   try {
     localStorage.removeItem("sh_cached_user");
+    localStorage.removeItem("sh_cached_favorites");
     if (sb_client) await sb_client.auth.signOut();
   } catch (e) {
     console.warn("Logout failed (continuing):", e);
