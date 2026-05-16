@@ -716,18 +716,18 @@ main {
   #nav-id-box {
     display: flex;
     align-items: center;
-    max-width: 150px;
-    border-left: none;
-    padding-left: 0;
+    max-width: 160px;
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    padding-left: 0.5rem;
   }
 
   .nav-id-inner {
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .nav-id-inner img {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
   }
 
   .nav-id-name {
@@ -735,8 +735,11 @@ main {
   }
 
   .nav-id-uni {
-    display: none !important;
-    /* Hide uni on mobile to prevent arrangement issues */
+    display: block;
+    font-size: 0.55rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .nav-left {
