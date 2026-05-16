@@ -14,27 +14,7 @@ let searchDebounceTimer = null;
 let currentPage = 1;
 const ITEMS_PER_PAGE = 20;
 
-// Load More Button
-let loadMoreBtn = null;
-function setupLoadMore() {
-  if (!document.getElementById("load-more-container")) {
-    const container = document.createElement("div");
-    container.id = "load-more-container";
-    container.style = "text-align:center; padding: 2rem 0; width: 100%; grid-column: 1 / -1;";
-    container.innerHTML = `<button id="btn-load-more" class="btn btn-secondary" style="padding: 0.8rem 2rem; border-radius: 30px;">Load More</button>`;
-    if (shopContainer && shopContainer.parentNode) {
-      shopContainer.parentNode.insertBefore(container, shopContainer.nextSibling);
-    }
-    loadMoreBtn = document.getElementById("btn-load-more");
-    if (loadMoreBtn) {
-      loadMoreBtn.addEventListener("click", () => {
-        currentPage++;
-        applyFilters(true);
-      });
-    }
-  }
-}
-setTimeout(setupLoadMore, 500);
+
 
 // Toggle filter bar on mobile
 window.toggleFilterBar = () => {
@@ -183,11 +163,9 @@ window.resetFilters = () => {
   applyFilters();
 };
 
-async function applyFilters(isLoadMore = false) {
-  if (!isLoadMore) {
-    currentPage = 1;
-    allListings = [];
-  }
+async function applyFilters() {
+  currentPage = 1;
+  allListings = [];
 
   const searchText = filterSearch ? filterSearch.value.trim().toLowerCase() : "";
   const school = filterSchool ? filterSchool.value : "";
@@ -198,12 +176,7 @@ async function applyFilters(isLoadMore = false) {
 
   updateActiveFilters();
 
-  if (!isLoadMore) {
-    setLoadingState(true);
-  } else if (loadMoreBtn) {
-    loadMoreBtn.textContent = "Loading...";
-    loadMoreBtn.disabled = true;
-  }
+  setLoadingState(true);
 
   const filters = {
     query: searchText,
@@ -216,32 +189,19 @@ async function applyFilters(isLoadMore = false) {
 
   const { data, error } = await window.fetchHousesPaginated(currentPage, ITEMS_PER_PAGE, filters);
 
-  if (!isLoadMore) {
-    setLoadingState(false);
-  } else if (loadMoreBtn) {
-    loadMoreBtn.textContent = "Load More";
-    loadMoreBtn.disabled = false;
-  }
+  setLoadingState(false);
 
   if (error) {
     console.error("Pagination fetch error:", error);
     return;
   }
 
-  if (isLoadMore) {
-    allListings = [...allListings, ...data];
-  } else {
-    allListings = data;
-  }
+  allListings = data;
 
   renderShopGridView(allListings);
 
   if (resultsCount) {
     resultsCount.textContent = allListings.length + " properties loaded";
-  }
-
-  if (loadMoreBtn) {
-    loadMoreBtn.style.display = data.length === ITEMS_PER_PAGE ? "inline-block" : "none";
   }
 }
 
