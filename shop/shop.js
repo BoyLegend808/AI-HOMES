@@ -363,28 +363,21 @@ function initCardSwipe() {
 function waitForDataAndRender(maxWait = 15000) {
   setLoadingState(true);
 
-  if (window.fetchAllData) {
-    window.fetchAllData();
+  if (window.hasFetchedHouses && window.renderShopGrid) {
+    window.renderShopGrid();
+    return;
   }
 
+  // Fallback timeout in case fetchAllData never finishes or completes silently
   const start = Date.now();
   const poll = setInterval(() => {
-    if (window.getListings) {
-      allListings = window.getListings();
-
-      if (
-        window.hasFetchedHouses ||
-        allListings.length >= 4 ||
-        Date.now() - start > maxWait
-      ) {
-        clearInterval(poll);
-        setLoadingState(false);
-        allListings = window.getListings ? window.getListings() : [];
-        applyFilters();
-        renderRecentlyViewed();
+    if (window.hasFetchedHouses || Date.now() - start > maxWait) {
+      clearInterval(poll);
+      if (document.querySelector('.shop-loading')) {
+         if (window.renderShopGrid) window.renderShopGrid();
       }
     }
-  }, 500);
+  }, 1000);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
