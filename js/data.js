@@ -256,7 +256,7 @@ async function fetchAllData() {
             .select("id, name, locations, logo_url, logo_scale"),
         ),
         // Favorites: Only if user is logged in
-        ...(window.CACHED_FAVORITES?.length
+        ...(getCurrentUser()
           ? [
               safeCall(
                 sb_client
@@ -510,7 +510,7 @@ window.toggleFavorite = async (houseId) => {
 
     // Update all matching icons on the current page instantly
     document
-      .querySelectorAll(`.bookmarkBtn[data-house-id="${houseId}"]`)
+      .querySelectorAll(`.bookmarkBtn[data-house-id="${houseId}"], .bookmark-btn[data-house-id="${houseId}"]`)
       .forEach((btn) => {
         btn.classList.toggle("active", newStatus);
         const ariaLabel = newStatus ? "Remove from variants" : "Save property";
@@ -566,6 +566,15 @@ async function initFavorites() {
           .eq("user_id", authUser.id);
         if (favs) {
           CACHED_FAVORITES = favs.map((f) => String(f.house_id));
+          // Update UI state for all favorites across the current page
+          CACHED_FAVORITES.forEach(houseId => {
+            document
+              .querySelectorAll(`.bookmarkBtn[data-house-id="${houseId}"], .bookmark-btn[data-house-id="${houseId}"]`)
+              .forEach((btn) => {
+                btn.classList.add("active");
+                btn.setAttribute("aria-label", "Remove from variants");
+              });
+          });
         }
       }
     } catch (e) {}
