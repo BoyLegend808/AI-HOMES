@@ -26,6 +26,19 @@ textarea {
   max-width: 100%;
 }
 
+/* Fix for invisible text in dropdowns (white text on default white background) */
+select option {
+  background-color: #1a1a1a !important; /* Force a dark background in dark mode */
+  color: #ffffff !important;           /* Force white text in dark mode */
+  padding: 8px !important;
+}
+
+/* Light mode specific dropdown colors */
+body.light-mode select option {
+  background-color: #ffffff !important; /* Force white background in light mode */
+  color: #1a1a1a !important;           /* Force dark text in light mode */
+}
+
 /* ==========================================================================
    #11 — SKIP-TO-CONTENT LINK (accessibility)
    Visually hidden until focused by keyboard users

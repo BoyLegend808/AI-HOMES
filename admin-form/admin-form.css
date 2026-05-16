@@ -117,6 +117,11 @@ select.search-wrapper {
   background-size: 1.2rem;
 }
 
+select option {
+  background-color: #12161b !important;
+  color: #ffffff !important;
+}
+
 /* Photo Upload Zone */
 .upload-zone {
   border: 2px dashed var(--card-border);

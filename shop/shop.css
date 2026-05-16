@@ -219,8 +219,8 @@
 }
 
 .filter-select option {
-  background: var(--bg-dark);
-  color: var(--text-main);
+  background: var(--bg-dark) !important;
+  color: var(--text-main) !important;
   padding: 0.5rem;
 }
 
