@@ -465,6 +465,20 @@ function refreshAllPages() {
 
 let __isTogglingFavorite = new Set();
 window.toggleFavorite = async (houseId) => {
+  // Check if user is logged in
+  const user = getCurrentUser();
+  if (!user) {
+    if (window.showToast) {
+      window.showToast("Login to save house", "error", 3500);
+    } else {
+      alert("Login to save house");
+    }
+    setTimeout(() => {
+      window.location.href = "../auth/auth.html";
+    }, 1500);
+    return { success: false };
+  }
+
   // Prevent double-clicks causing multiple notifications or weird states
   if (__isTogglingFavorite.has(houseId)) return { success: false };
   __isTogglingFavorite.add(houseId);
