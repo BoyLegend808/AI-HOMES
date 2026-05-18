@@ -949,7 +949,15 @@ async function resetPasswordForEmail(email) {
         console.log("API response status resolved.");
 
         resetDebounce.lastCall = Date.now();
-        resolve({ success: response.ok, message: data.message || data.error });
+        resolve({
+          success: response.ok,
+          message:
+            data.message ||
+            data.error ||
+            (response.ok
+              ? "If this email is registered, you'll receive a reset link shortly."
+              : "Could not send reset email. Please try again later."),
+        });
       } catch (e) {
         console.error("Fetch error in resetPasswordForEmail:", e);
         resolve({ success: false, message: "Network error" });

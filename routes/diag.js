@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const path = require("path");
 const { requireAdminSecret } = require("../middleware/security");
+const { isEmailConfigured, verifyEmailTransport } = require("../utils/mail");
 
 /**
  * GET /api/diag
@@ -23,9 +24,21 @@ router.get("/", requireAdminSecret, async (req, res) => {
     supabase_service: process.env.SUPABASE_SERVICE_ROLE_KEY ? "PRESENT" : "MISSING",
     email_user:       process.env.EMAIL_USER                ? "PRESENT" : "MISSING",
     email_pass:       process.env.EMAIL_PASS                ? "PRESENT" : "MISSING",
+    email_from:       process.env.EMAIL_FROM                ? "PRESENT" : "MISSING",
+    smtp_host:        process.env.SMTP_HOST                 ? "PRESENT" : "default (smtp.gmail.com)",
     admin_secret:     process.env.ADMIN_SECRET              ? "PRESENT" : "MISSING",
+    email_check:      null,
     database_check:   null,
   };
+
+  if (!isEmailConfigured()) {
+    info.email_check = "MISSING — set EMAIL_USER and EMAIL_PASS in Vercel";
+  } else {
+    const emailStatus = await verifyEmailTransport(true);
+    info.email_check = emailStatus.ok
+      ? "OK — SMTP login verified"
+      : `FAILED — ${emailStatus.reason}`;
+  }
 
   try {
     const { createClient } = require("@supabase/supabase-js");

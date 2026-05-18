@@ -1,10 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
 const { createClient } = require("@supabase/supabase-js");
 const path = require("path");
 require("dotenv").config({ path: path.join(__dirname, "../.env") });
+const {
+  isEmailConfigured,
+  verifyEmailTransport,
+  sendMail,
+  mapSendError,
+} = require("../utils/mail");
 
 const {
   sanitizeEmail,
@@ -18,6 +23,8 @@ const IS_PROD = process.env.NODE_ENV === "production";
 // ─── Safe startup check (no key values logged) ───────────────────────────────
 console.log("AUTH SERVICE INIT:");
 console.log("  EMAIL_USER:", process.env.EMAIL_USER ? "SET" : "MISSING");
+console.log("  EMAIL_PASS:", process.env.EMAIL_PASS ? "SET" : "MISSING");
+console.log("  SMTP_HOST:", process.env.SMTP_HOST ? "SET" : "default (smtp.gmail.com)");
 console.log("  SUPABASE_URL:", process.env.SUPABASE_URL ? "SET" : "MISSING");
 console.log("  SUPABASE_ANON_KEY:", process.env.SUPABASE_ANON_KEY ? "SET" : "MISSING");
 console.log("  SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "MISSING");
@@ -41,32 +48,37 @@ const getSupabaseAdmin = () => {
 const supabase      = getSupabase();
 const supabaseAdmin = getSupabaseAdmin();
 
-// ─── Email transporter ───────────────────────────────────────────────────────
-let transporter = null;
-try {
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
-    transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    });
-  } else {
-    console.warn("EMAIL credentials missing — email features disabled.");
-  }
-} catch (e) {
-  console.error("Email transporter init failed:", e.message);
+if (!isEmailConfigured()) {
+  console.warn("EMAIL credentials missing — password reset emails disabled.");
+} else {
+  verifyEmailTransport().then((v) => {
+    if (v.ok) console.log("  EMAIL_SMTP: verified OK");
+    else console.error("  EMAIL_SMTP:", v.reason);
+  });
 }
 
 // ─── POST /api/auth/forgot-password ──────────────────────────────────────────
 router.post("/forgot-password", async (req, res) => {
   try {
-    const activeAdmin       = getSupabaseAdmin() || supabaseAdmin;
-    const activeTransporter = transporter;
+    const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
 
     if (!activeAdmin) {
       return res.status(500).json({ error: "Database service unavailable." });
     }
-    if (!activeTransporter) {
-      return res.status(500).json({ error: "Email service not configured." });
+    if (!isEmailConfigured()) {
+      return res.status(503).json({
+        error:
+          "Password reset email is not configured. Please contact support or try again later.",
+      });
+    }
+
+    const emailCheck = await verifyEmailTransport();
+    if (!emailCheck.ok) {
+      console.error("EMAIL_SMTP verify failed:", emailCheck.reason);
+      return res.status(503).json({
+        error:
+          "Password reset email is temporarily unavailable. Please try again later or contact support.",
+      });
     }
 
     // ── Input validation & sanitization ──────────────────────────────────────
@@ -140,10 +152,20 @@ router.post("/forgot-password", async (req, res) => {
     const baseUrl   = process.env.CLIENT_URL || "https://ai-homes.vercel.app";
     const resetLink = `${baseUrl}/reset-password/reset-password.html?token=${token}`;
 
-    const mailOptions = {
-      from: `"AI HOMES Support" <${process.env.EMAIL_USER}>`,
+    const resetText = [
+      "Password Reset Request",
+      "",
+      "We received a request to reset your AI HOMES password.",
+      "Open this link within 1 hour:",
+      resetLink,
+      "",
+      "If you did not request this, ignore this email.",
+    ].join("\n");
+
+    await sendMail({
       to: userEmail,
       subject: "Reset Your AI HOMES Password",
+      text: resetText,
       html: `
         <!DOCTYPE html>
         <html>
@@ -187,9 +209,8 @@ router.post("/forgot-password", async (req, res) => {
         </body>
         </html>
       `,
-    };
+    });
 
-    await activeTransporter.sendMail(mailOptions);
     console.log("Reset email dispatched for user:", userId.slice(0, 8) + "...");
 
     return res.json({
@@ -197,7 +218,17 @@ router.post("/forgot-password", async (req, res) => {
       message: "If this email is registered, you'll receive a reset link shortly.",
     });
   } catch (err) {
-    console.error("FORGOT-PASSWORD ERROR:", IS_PROD ? err.code || "INTERNAL" : err);
+    const mapped = mapSendError(err);
+    console.error(
+      "FORGOT-PASSWORD ERROR:",
+      IS_PROD ? mapped.code : mapped.message,
+    );
+    if (err.code === "NOT_CONFIGURED" || err.code === "EAUTH") {
+      return res.status(503).json({
+        error:
+          "Password reset email is temporarily unavailable. Please try again later or contact support.",
+      });
+    }
     return res.status(500).json({ error: "An internal error occurred. Please try again." });
   }
 });
