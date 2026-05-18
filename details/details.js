@@ -147,7 +147,7 @@ function renderDetails() {
         ` : ''}
         
         <h3 class="section-title">Description</h3>
-        <p class="desc">${listing.description || "Verified property listing connected to StudentHome."}</p>
+        <p class="desc">${window.Security ? window.Security.escapeHtml(listing.description) : (listing.description || "Verified property listing connected to StudentHome.")}</p>
 
         <h3 class="section-title">Reviews & Ratings</h3>
         <div id="reviews-container" style="margin-bottom: 2rem;"></div>
@@ -162,8 +162,8 @@ function renderDetails() {
       <div class="right-col">
         <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:1rem;">
           <h1 class="details-title" style="flex:1;">
-             ${listing.status !== 'Active' ? `<span style="background:var(--accent, #f43f5e); color:black; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700; font-size:0.8rem; vertical-align:middle; margin-right:10px;">${listing.status}</span>` : ''}
-             ${listing.title}
+             ${listing.status !== 'Active' ? `<span style="background:var(--accent, #f43f5e); color:black; padding:0.2rem 0.5rem; border-radius:4px; font-weight:700; font-size:0.8rem; vertical-align:middle; margin-right:10px;">${window.Security ? window.Security.escapeHtml(listing.status) : listing.status}</span>` : ''}
+             ${window.Security ? window.Security.escapeHtml(listing.title) : listing.title}
           </h1>
           <button class="bookmarkBtn ${window.isFavorited(listing.id) ? "active" : ""}" 
             data-house-id="${listing.id}"
@@ -177,13 +177,13 @@ function renderDetails() {
         </div>
         <div style="font-weight: 700; color: var(--accent); margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-            ${listing.exactLocation || "Street Details Not Provided"}
+            ${window.Security ? window.Security.escapeHtml(listing.exactLocation) : (listing.exactLocation || "Street Details Not Provided")}
         </div>
-        <div class="details-meta">${listing.school || "Unknown"} • ${listing.area || "Unknown"}</div>
+        <div class="details-meta">${window.Security ? window.Security.escapeHtml(listing.school) : (listing.school || "Unknown")} • ${window.Security ? window.Security.escapeHtml(listing.area) : (listing.area || "Unknown")}</div>
         
         <div class="features">
           <div class="feature-tag">🛏️ ${listing.rooms || 1} Bedroom</div>
-          <div class="feature-tag">🏠 ${listing.type || "Standard"}</div>
+          <div class="feature-tag">🏠 ${window.Security ? window.Security.escapeHtml(listing.type) : (listing.type || "Standard")}</div>
           <div class="feature-tag">✅ Verified</div>
           <div class="feature-tag">📍 Near Campus</div>
         </div>
@@ -220,15 +220,18 @@ function renderSimilarProperties() {
   container.innerHTML = `
     <h3 class="section-title">Similar Properties Nearby</h3>
     <div style="display:flex; flex-direction:column; gap:1rem;">
-      ${similar.map(item => `
+      ${similar.map(item => {
+        const safeTitle = window.Security ? window.Security.escapeHtml(item.title) : item.title;
+        return `
         <div style="display:flex; gap:1rem; background:rgba(255,255,255,0.02); padding:0.75rem; border-radius:12px; border:1px solid rgba(255,255,255,0.05); cursor:pointer; align-items:center;" onclick="window.location.href='../details/detail.html?id=${item.id}'">
           <img loading="lazy" src="${item.photo || item.photos?.[0] || ''}" style="width:80px; height:60px; border-radius:8px; object-fit:cover;">
           <div style="flex:1;">
-            <h4 style="font-size:0.9rem; margin-bottom:0.25rem;">${item.title}</h4>
+            <h4 style="font-size:0.9rem; margin-bottom:0.25rem;">${safeTitle}</h4>
             <div style="color:var(--accent); font-weight:700; font-size:0.85rem;">₦${item.price.toLocaleString()}</div>
           </div>
         </div>
-      `).join('')}
+      `;
+      }).join('')}
     </div>
   `;
 }
@@ -305,13 +308,21 @@ function handleCheckout() {
 }
 
 async function sendInquiry() {
-  const msg = document.getElementById("inquiry-message").value.trim();
+  const rawMsg = document.getElementById("inquiry-message")?.value || "";
+  const msg = window.Security ? window.Security.sanitizeInput(rawMsg, 1000) : rawMsg.trim();
   if (!msg) return alert("Please enter a message.");
+  if (msg.length < 5) return alert("Message must be at least 5 characters.");
 
   const user = await window.fetchSessionUser();
   if (!user) {
     alert("You must be logged in to send a message.");
     window.location.href = "../auth/auth.html";
+    return;
+  }
+
+  // Client-side submit guard
+  if (window.Security && !window.Security.canSubmit("send-inquiry", 3000)) {
+    alert("Please wait before sending another inquiry.");
     return;
   }
 
@@ -362,27 +373,39 @@ async function ensureReviewsRendered() {
 
   container.innerHTML = houseReviews
     .map(
-      (r) => `
+      (r) => {
+        const safeName = window.Security ? window.Security.escapeHtml(r.name) : r.name;
+        const safeText = window.Security ? window.Security.escapeHtml(r.text) : r.text;
+        return `
     <div style="background: rgba(255,255,255,0.03); padding: 1.2rem; border-radius: 12px; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.05);">
       <div style="font-weight:700; color:var(--text-main); margin-bottom:0.4rem; display:flex; align-items:center; gap:0.5rem;">
-        <div style="width:24px; height:24px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:0.75rem;">${r.name.charAt(0)}</div>
-        ${r.name}
+        <div style="width:24px; height:24px; border-radius:50%; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:0.75rem;">${safeName.charAt(0)}</div>
+        ${safeName}
       </div>
-      <div style="color:var(--text-muted); font-size:0.95rem; line-height:1.5;">${r.text}</div>
+      <div style="color:var(--text-muted); font-size:0.95rem; line-height:1.5;">${safeText}</div>
     </div>
-  `,
+  `;
+      }
     )
     .join("");
 }
 
 async function submitReview() {
-  const text = document.getElementById("review-text").value.trim();
+  const rawText = document.getElementById("review-text")?.value || "";
+  const text = window.Security ? window.Security.sanitizeInput(rawText, 1000) : rawText.trim();
   if (!text) return alert("Please enter a review.");
+  if (text.length < 5) return alert("Review must be at least 5 characters.");
 
   const user = await window.fetchSessionUser();
   if (!user) {
     alert("You must be logged in to leave a review.");
     window.location.href = "../auth/auth.html";
+    return;
+  }
+
+  // Client-side submit guard
+  if (window.Security && !window.Security.canSubmit("submit-review", 5000)) {
+    alert("Please wait before posting another review.");
     return;
   }
 

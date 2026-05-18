@@ -54,8 +54,17 @@ const populateAreas = (schoolName) => {
 };
 
 async function addNewSchool() {
-  const name = prompt("Enter University Name:");
-  if (!name) return;
+  const rawName = prompt("Enter University Name:");
+  if (rawName === null) return;
+  const name = window.Security ? window.Security.sanitizeInput(rawName, 100) : rawName.trim();
+  if (!name || name.length < 2) {
+    return notify("Invalid school name (must be at least 2 characters).", "error");
+  }
+  // Sanity check for allowed characters
+  if (!/^[a-zA-Z0-9\s().,\-&]+$/.test(name)) {
+    return notify("Invalid characters in school name.", "error");
+  }
+
   const res = await window.addUniversity(name);
   if (res?.success) {
     populateUnis();
@@ -69,8 +78,15 @@ async function addNewArea() {
   const school = document.getElementById("add-school").value;
   if (!school) return notify("Select a school first.", "error");
 
-  const area = prompt(`New area for ${school}:`);
-  if (!area) return;
+  const rawArea = prompt(`New area for ${school}:`);
+  if (rawArea === null) return;
+  const area = window.Security ? window.Security.sanitizeInput(rawArea, 100) : rawArea.trim();
+  if (!area || area.length < 2) {
+    return notify("Invalid area name (must be at least 2 characters).", "error");
+  }
+  if (!/^[a-zA-Z0-9\s().,\-&]+$/.test(area)) {
+    return notify("Invalid characters in area name.", "error");
+  }
 
   const res = await window.addAreaToUniversity(school, area);
   if (res?.success) {
@@ -251,8 +267,17 @@ const removePreviewItem = (id) => {
 
 const handleFileUpload = (e) => {
   const files = Array.from(e.target.files);
+  const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+  const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
   files.forEach((file) => {
+    if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+      return notify(`Only JPEG, PNG, WebP, and GIF images are allowed. "${file.name}" was rejected.`, "error");
+    }
+    if (file.size > MAX_IMAGE_SIZE) {
+      return notify(`Image too large (max 10MB). "${file.name}" was rejected.`, "error");
+    }
+
     const reader = new FileReader();
     reader.onload = (event) => {
       addPreviewItem(event.target.result, file, "", false);

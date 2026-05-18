@@ -2,6 +2,7 @@
 // AI HOMES Global Cloud Engine (v3.0 - Production Balanced)
 // Auth is now in-memory only (no localStorage)
 let _currentUser = null;
+// PUBLIC ANON KEY ONLY - NEVER SERVICE ROLE KEY. SAFE FOR VERSION CONTROL.
 const SUPABASE_URL = "https://loapruxjeolxyngmcszf.supabase.co";
 const SUPABASE_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYXBydXhqZW9seHluZ21jc3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NDY4MzQsImV4cCI6MjA5MDMyMjgzNH0.t5H3u-L4M8lODuwWre4NHjKtR_qDboZBBwwzmEXXZh8";
@@ -809,17 +810,10 @@ async function ensureAdminAccess() {
 
   try {
     const user = await fetchSessionUser();
-    console.log("Session User Resolved:", user?.email, "| Role:", user?.role);
+    console.log("Session User Resolved | Role:", user?.role);
 
     if (user && user.role === "admin") {
       console.log("Access Granted: Admin confirmed.");
-      return true;
-    }
-
-    // Safety net: fresh local check
-    const localUser = getCurrentUser();
-    if (localUser && localUser.role === "admin") {
-      console.log("Access Granted: Local admin session found.");
       return true;
     }
   } catch (e) {
@@ -947,10 +941,7 @@ async function resetPasswordForEmail(email) {
     console.log("Setting timeout for reset request...");
     resetDebounce.pending = setTimeout(async () => {
       try {
-        console.log(
-          "Sending POST request to /api/auth/forgot-password for:",
-          email,
-        );
+        console.log("Sending POST request to /api/auth/forgot-password...");
         const response = await Promise.race([
           fetch("/api/auth/forgot-password", {
             method: "POST",
@@ -964,7 +955,7 @@ async function resetPasswordForEmail(email) {
 
         console.log("API response status:", response.status);
         const data = await response.json();
-        console.log("API response data:", data);
+        console.log("API response status resolved.");
 
         resetDebounce.lastCall = Date.now();
         resolve({ success: response.ok, message: data.message || data.error });

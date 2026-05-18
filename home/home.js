@@ -36,11 +36,16 @@ navLinks.forEach((link) => {
 // Render Card Template
 const renderCard = (item) => {
   const isFav = window.isFavorited ? window.isFavorited(item.id) : false;
+  const safeTitle = window.Security ? window.Security.escapeHtml(item.title) : item.title;
+  const safeLocation = window.Security ? window.Security.escapeHtml(item.location) : item.location;
+  const safeType = window.Security ? window.Security.escapeHtml(item.type) : item.type;
+  const safeStatus = window.Security ? window.Security.escapeHtml(item.status) : item.status;
+
   return `
   <article class="card-item" data-id="${item.id}" style="position:relative; ${item.status !== 'Active' ? 'opacity:0.8;' : ''}">
     <div class="card-image-wrapper" style="position:relative;">
-      <img loading="lazy" decoding="async" src="${item.photo || item.photos?.[0]}" alt="${item.title}" />
-      ${item.status !== 'Active' ? `<div style="position:absolute; top:10px; left:10px; background:var(--accent, #f43f5e); color:black; padding:0.3rem 0.6rem; border-radius:4px; font-weight:700; z-index:10; font-size:0.75rem;">${item.status}</div>` : ''}
+      <img loading="lazy" decoding="async" src="${item.photo || item.photos?.[0]}" alt="${safeTitle}" />
+      ${item.status !== 'Active' ? `<div style="position:absolute; top:10px; left:10px; background:var(--accent, #f43f5e); color:black; padding:0.3rem 0.6rem; border-radius:4px; font-weight:700; z-index:10; font-size:0.75rem;">${safeStatus}</div>` : ''}
       <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${item.id}" onclick="event.stopPropagation(); window.toggleFavorite('${item.id}')">
         <span class="IconContainer">
           <svg viewBox="0 0 384 512" height="0.9em" class="icon"><path d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"></path></svg>
@@ -49,8 +54,8 @@ const renderCard = (item) => {
       </button>
     </div>
     <div class="card-body">
-      <h3>${item.title}</h3>
-      <p class="muted">${item.location} • ${item.type}</p>
+      <h3>${safeTitle}</h3>
+      <p class="muted">${safeLocation} • ${safeType}</p>
       <p class="price">${window.formatPrice(item.price, true)}</p>
       <button class="btn action-btn" data-action="view" data-id="${item.id}">Open</button>
     </div>
@@ -69,11 +74,14 @@ const refreshLists = () => {
         .map(
           (item) => {
             const isFav = window.isFavorited ? window.isFavorited(item.id) : false;
+            const safeTitle = window.Security ? window.Security.escapeHtml(item.title) : item.title;
+            const safeLocation = window.Security ? window.Security.escapeHtml(item.location) : item.location;
+            const safeStatus = window.Security ? window.Security.escapeHtml(item.status) : item.status;
             return `
               <article class="testimonial-card trending-card" style="width:300px; padding:0; overflow:hidden; position:relative; ${item.status !== 'Active' ? 'opacity:0.8;' : ''}" onclick="window.location.href='../details/detail.html?id=${item.id}'">
                 <div style="position:relative; height:180px;">
                   <img loading="lazy" decoding="async" src="${item.photo || (item.photos && item.photos[0]) || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?auto=format&fit=crop&q=80&w=800"}" style="width:100%; height:100%; object-fit:cover;">
-                  ${item.status !== 'Active' ? `<div style="position:absolute; top:10px; left:10px; background:var(--accent, #f43f5e); color:black; padding:0.3rem 0.6rem; border-radius:4px; font-weight:700; z-index:10; font-size:0.75rem;">${item.status}</div>` : ''}
+                  ${item.status !== 'Active' ? `<div style="position:absolute; top:10px; left:10px; background:var(--accent, #f43f5e); color:black; padding:0.3rem 0.6rem; border-radius:4px; font-weight:700; z-index:10; font-size:0.75rem;">${safeStatus}</div>` : ''}
                   <button class="bookmarkBtn ${isFav ? "active" : ""}" data-house-id="${item.id}" onclick="event.stopPropagation(); window.toggleFavorite('${item.id}')">
                     <span class="IconContainer">
                       <svg viewBox="0 0 384 512" height="0.9em" class="icon"><path d="M0 48V487.7C0 501.1 10.9 512 24.3 512c5 0 9.9-1.5 14-4.4L192 400 345.7 507.6c4.1 2.9 9 4.4 14 4.4c13.4 0 24.3-10.9 24.3-24.3V48c0-26.5-21.5-48-48-48H48C21.5 0 0 21.5 0 48z"></path></svg>
@@ -82,9 +90,9 @@ const refreshLists = () => {
                   </button>
                 </div>
                 <div style="padding:1.5rem;">
-                  <h4 style="margin-bottom:0.5rem; color:white;">${item.title}</h4>
+                  <h4 style="margin-bottom:0.5rem; color:white;">${safeTitle}</h4>
                   <p style="color:var(--accent); font-weight:700;">₦${item.price.toLocaleString()}</p>
-                  <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">${item.location}</p>
+                  <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">${safeLocation}</p>
                 </div>
               </article>
             `;
@@ -107,24 +115,29 @@ const refreshLists = () => {
     if (reviews.length > 0) {
       reviewsTrack.innerHTML = reviews
         .map(
-          (rev) => `
+          (rev) => {
+            const safeText = window.Security ? window.Security.escapeHtml(rev.text) : rev.text;
+            const safeName = window.Security ? window.Security.escapeHtml(rev.name) : rev.name;
+            const safeSchool = window.Security ? window.Security.escapeHtml(rev.school) : (rev.school || "Verified Student");
+            return `
         <div class="testimonial-card">
           <div class="testimonial-header">
             <div class="rating-stars">★★★★★</div>
             <span class="verified-badge">Verified</span>
           </div>
-          <p class="testimonial-text">"${rev.text}"</p>
+          <p class="testimonial-text">"${safeText}"</p>
           <div class="client-profile">
             <div class="client-img-wrapper">
-               <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--accent); color:black; font-weight:bold; font-size:1.2rem;">${rev.name.charAt(0)}</div>
+               <div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--accent); color:black; font-weight:bold; font-size:1.2rem;">${safeName.charAt(0)}</div>
             </div>
             <div class="client-info">
-              <cite>${rev.name}</cite>
-              <span class="client-role">${rev.school || "Verified Student"}</span>
+              <cite>${safeName}</cite>
+              <span class="client-role">${safeSchool}</span>
             </div>
           </div>
         </div>
-      `,
+      `;
+          }
         )
         .join("");
     } else if (window.CLOUD_ENGINE_READY) {
@@ -150,7 +163,8 @@ const refreshLists = () => {
 };
 
 window.submitReview = async () => {
-  const text = document.getElementById("rev-text")?.value.trim();
+  const rawText = document.getElementById("rev-text")?.value || "";
+  const text = window.Security ? window.Security.sanitizeInput(rawText, 1000) : rawText.trim();
   const user = window.getCurrentUser ? window.getCurrentUser() : null;
 
   if (!user) {
@@ -161,6 +175,17 @@ window.submitReview = async () => {
 
   if (!text) {
     alert("Please write something first!");
+    return;
+  }
+
+  if (text.length < 5) {
+    alert("Review must be at least 5 characters.");
+    return;
+  }
+
+  // Rate-limiting check
+  if (window.Security && !window.Security.canSubmit("submit-home-review", 5000)) {
+    alert("Please wait 5 seconds between reviews.");
     return;
   }
 
