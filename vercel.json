@@ -37,7 +37,7 @@
         { "key": "X-Powered-By",               "value": "" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://loapruxjeolxyngmcszf.supabase.co https://ai-homes.vercel.app https://images.unsplash.com https://via.placeholder.com; connect-src 'self' https://loapruxjeolxyngmcszf.supabase.co wss://loapruxjeolxyngmcszf.supabase.co https://api.openai.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https://loapruxjeolxyngmcszf.supabase.co https://ai-homes.vercel.app https://images.unsplash.com https://via.placeholder.com; connect-src 'self' https://loapruxjeolxyngmcszf.supabase.co wss://loapruxjeolxyngmcszf.supabase.co; frame-ancestors 'none'; base-uri 'self'; form-action 'self';"
         }
       ]
     }
