@@ -1,5 +1,5 @@
-// Service Worker - Version 4 (JS = Network-First)
-const CACHE_NAME = "studenthome-v4";
+// Service Worker - Version 5 (JS = Network-First, bust stale deploy cache)
+const CACHE_NAME = "studenthome-v5";
 const STATIC_ASSETS = [
   "/js/nav.css",
   "/js/enhancements.css",
@@ -8,7 +8,7 @@ const STATIC_ASSETS = [
 
 // Install: cache ONLY truly static assets (no JS — they change with every deploy)
 self.addEventListener("install", (event) => {
-  console.log('[SW] Installing new service worker v4');
+  console.log('[SW] Installing new service worker v5');
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('[SW] Caching static assets');
@@ -22,7 +22,7 @@ self.addEventListener("install", (event) => {
 
 // Activate: clean up ALL old caches
 self.addEventListener("activate", (event) => {
-  console.log('[SW] Activating service worker v4');
+  console.log('[SW] Activating service worker v5');
   event.waitUntil(
     caches.keys().then((keys) =>
       Promise.all(

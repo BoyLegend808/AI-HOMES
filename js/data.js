@@ -2,10 +2,6 @@
 // AI HOMES Global Cloud Engine (v3.0 - Production Balanced)
 // Auth is now in-memory only (no localStorage)
 let _currentUser = null;
-// PUBLIC ANON KEY ONLY - NEVER SERVICE ROLE KEY. SAFE FOR VERSION CONTROL.
-const SUPABASE_URL = "https://loapruxjeolxyngmcszf.supabase.co";
-const SUPABASE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxvYXBydXhqZW9seHluZ21jc3pmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ3NDY4MzQsImV4cCI6MjA5MDMyMjgzNH0.t5H3u-L4M8lODuwWre4NHjKtR_qDboZBBwwzmEXXZh8";
 let SUPABASE_CONFIG = null;
 
 const DEFAULT_LISTINGS = [];
@@ -50,12 +46,47 @@ const DEFAULT_REVIEWS = [
 ];
 
 let sb_client = null;
-try {
-  if (window.supabase)
-    sb_client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  if (sb_client) window.sb_client = sb_client;
-} catch (e) {
-  console.warn("Cloud Shield: SDK initialization failed.");
+
+/** Load Supabase URL + anon key from /api/config (matches Vercel env vars). */
+async function ensureSupabaseClient() {
+  if (SUPABASE_CONFIG && sb_client) return sb_client;
+
+  try {
+    const res = await Promise.race([
+      fetch(`/api/config?t=${Date.now()}`),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 8000),
+      ),
+    ]);
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}));
+      throw new Error(
+        errorData.details ||
+          errorData.error ||
+          `HTTP error! status: ${res.status}`,
+      );
+    }
+
+    const config = await res.json();
+    if (!config?.url || !config?.key) {
+      throw new Error("Server config returned empty URL or Key");
+    }
+
+    const urlChanged = !sb_client || sb_client.supabaseUrl !== config.url;
+    const keyChanged =
+      !SUPABASE_CONFIG || SUPABASE_CONFIG.key !== config.key;
+
+    SUPABASE_CONFIG = config;
+    if (!sb_client || urlChanged || keyChanged) {
+      sb_client = window.supabase?.createClient(config.url, config.key);
+      if (sb_client) window.sb_client = sb_client;
+    }
+    return sb_client;
+  } catch (e) {
+    console.warn("Supabase config fetch failed:", e.message);
+    return null;
+  }
 }
 
 /* ==========================================
@@ -159,59 +190,7 @@ async function fetchAllData() {
 
   fetchAllData.inFlight = true;
   fetchAllData.inFlightPromise = (async () => {
-    // LAZY INIT CONFIG + CLIENT
-    if (!SUPABASE_CONFIG && !sb_client) {
-      try {
-        console.log("Fetching configuration from /api/config...");
-        const res = await Promise.race([
-          fetch(`/api/config?t=${Date.now()}`),
-          new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("timeout")), 5000),
-          ),
-        ]);
-
-        if (!res.ok) {
-          const errorData = await res.json().catch(() => ({}));
-          console.error("Config Error Details:", errorData);
-          throw new Error(
-            errorData.details ||
-              errorData.error ||
-              `HTTP error! status: ${res.status}`,
-          );
-        }
-
-        const config = await res.json();
-        if (config && config.url && config.key) {
-          SUPABASE_CONFIG = config;
-          // Only re-initialize if different or not already initialized
-          if (!sb_client || sb_client.supabaseUrl !== config.url) {
-            sb_client = window.supabase?.createClient(config.url, config.key);
-            if (sb_client) window.sb_client = sb_client;
-            console.log("Supabase client initialized from server config.");
-          }
-        } else {
-          throw new Error("Server config returned empty URL or Key");
-        }
-      } catch (e) {
-        console.warn(
-          "Config fetch failed, using internal defaults:",
-          e.message,
-        );
-        // Fallback: If we don't have an sb_client yet, use the hardcoded defaults
-        if (!sb_client && SUPABASE_URL && SUPABASE_KEY) {
-          console.log("Initializing Supabase with hardcoded fallback keys...");
-          try {
-            sb_client = window.supabase?.createClient(
-              SUPABASE_URL,
-              SUPABASE_KEY,
-            );
-            if (sb_client) window.sb_client = sb_client;
-          } catch (initErr) {
-            console.error("Hardcoded fallback init failed:", initErr);
-          }
-        }
-      }
-    }
+    await ensureSupabaseClient();
 
     if (!sb_client) {
       console.warn("Using fallback data - no Supabase");
@@ -748,6 +727,7 @@ function getCurrentUser() {
 }
 
 async function fetchSessionUser() {
+  if (!sb_client) await ensureSupabaseClient();
   if (!sb_client) return getCurrentUser();
 
   // High-Performance Timeout Race
@@ -801,12 +781,7 @@ async function fetchSessionUser() {
 
 async function ensureAdminAccess() {
   console.log("Admin security check initializing...");
-
-  // Wait up to 3 seconds for Supabase client to initialize if it hasn't yet
-  for (let i = 0; i < 15; i++) {
-    if (window.sb_client) break;
-    await new Promise((r) => setTimeout(r, 200));
-  }
+  await ensureSupabaseClient();
 
   try {
     const user = await fetchSessionUser();
@@ -827,6 +802,7 @@ async function ensureAdminAccess() {
 
 async function loginUser(email, password) {
   const checkEmail = email.toLowerCase().trim();
+  await ensureSupabaseClient();
   if (sb_client) {
     const { data, error } = await sb_client.auth.signInWithPassword({
       email: checkEmail,
@@ -881,6 +857,7 @@ async function loginUser(email, password) {
 
 async function registerUser(data) {
   const email = data.email.toLowerCase().trim();
+  await ensureSupabaseClient();
   if (!sb_client) return { success: false, message: "Cloud offline" };
   const { error } = await sb_client.auth.signUp({
     email,
@@ -1396,6 +1373,7 @@ window.incrementViews = async (id) => {
 };
 window.fetchSessionUser = fetchSessionUser;
 window.fetchAllData = fetchAllData;
+window.ensureSupabaseClient = ensureSupabaseClient;
 Object.defineProperty(window, "CACHED_FAVORITES", {
   get: () => CACHED_FAVORITES,
   set: (val) => {
