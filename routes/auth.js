@@ -3,292 +3,184 @@ const router = express.Router();
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
 const { createClient } = require("@supabase/supabase-js");
-require("dotenv").config();
+const path = require("path");
+require("dotenv").config({ path: path.join(__dirname, "../.env") });
 
-console.log("------------------------------------------");
-console.log("AUTH SERVICE INITIALIZATION:");
-console.log("- EMAIL_USER:", process.env.EMAIL_USER || "MISSING");
-console.log(
-  "- SUPABASE_URL:",
-  process.env.SUPABASE_URL
-    ? "SET (ends with " + process.env.SUPABASE_URL.slice(-5) + ")"
-    : "MISSING",
-);
-console.log(
-  "- SUPABASE_ANON:",
-  process.env.SUPABASE_ANON_KEY ? "SET" : "MISSING",
-);
-console.log(
-  "- SUPABASE_SERVICE:",
-  process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "MISSING",
-);
-console.log("------------------------------------------");
+const {
+  sanitizeEmail,
+  isValidEmail,
+  isValidToken,
+  validatePassword,
+} = require("../middleware/security");
 
-// Initialize Supabase client safely
+const IS_PROD = process.env.NODE_ENV === "production";
+
+// ─── Safe startup check (no key values logged) ───────────────────────────────
+console.log("AUTH SERVICE INIT:");
+console.log("  EMAIL_USER:", process.env.EMAIL_USER ? "SET" : "MISSING");
+console.log("  SUPABASE_URL:", process.env.SUPABASE_URL ? "SET" : "MISSING");
+console.log("  SUPABASE_ANON_KEY:", process.env.SUPABASE_ANON_KEY ? "SET" : "MISSING");
+console.log("  SUPABASE_SERVICE_ROLE_KEY:", process.env.SUPABASE_SERVICE_ROLE_KEY ? "SET" : "MISSING");
+
+// ─── Supabase client factory (lazy, no caching of bad state) ─────────────────
 const getSupabase = () => {
-  const url = process.env.SUPABASE_URL?.trim();
+  const url  = process.env.SUPABASE_URL?.trim();
   const anon = process.env.SUPABASE_ANON_KEY?.trim();
-  if (!url || !anon) {
-    console.error("CRITICAL: SUPABASE_URL or SUPABASE_ANON_KEY is missing.");
-    return null;
-  }
+  if (!url || !anon) { console.error("CRITICAL: Supabase anon credentials missing."); return null; }
   return createClient(url, anon);
 };
 
-// Initialize Supabase admin client safely
 const getSupabaseAdmin = () => {
-  const url = process.env.SUPABASE_URL?.trim();
+  const url     = process.env.SUPABASE_URL?.trim();
   const service = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  if (!url || !service) {
-    console.error(
-      "CRITICAL: SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is missing.",
-    );
-    return null;
-  }
+  if (!url || !service) { console.error("CRITICAL: Supabase service credentials missing."); return null; }
   return createClient(url, service);
 };
 
-const supabase = getSupabase();
+// Cache clients (env vars don't change at runtime)
+const supabase      = getSupabase();
 const supabaseAdmin = getSupabaseAdmin();
 
-// Email sender setup safely
+// ─── Email transporter ───────────────────────────────────────────────────────
 let transporter = null;
 try {
   if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
     transporter = nodemailer.createTransport({
       service: "gmail",
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
+      auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
     });
-
-    /* 
-    transporter.verify((error) => {
-      if (error) console.error("Email transporter ERROR:", error);
-      else console.log("Email transporter ready");
-    });
-    */
   } else {
-    console.warn("EMAIL_USER or EMAIL_PASS missing. Email features will fail.");
+    console.warn("EMAIL credentials missing — email features disabled.");
   }
 } catch (e) {
-  console.error("Failed to initialize email transporter:", e);
+  console.error("Email transporter init failed:", e.message);
 }
 
-// POST /api/auth/forgot-password
+// ─── POST /api/auth/forgot-password ──────────────────────────────────────────
 router.post("/forgot-password", async (req, res) => {
   try {
-    // Re-verify client initialization on each request to be safe
-    const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
+    const activeAdmin       = getSupabaseAdmin() || supabaseAdmin;
     const activeTransporter = transporter;
 
     if (!activeAdmin) {
-      console.error("FORGOT-PASSWORD: Supabase admin client missing");
-      return res
-        .status(500)
-        .json({ error: "Database connection not initialized" });
+      return res.status(500).json({ error: "Database service unavailable." });
     }
     if (!activeTransporter) {
-      console.error("FORGOT-PASSWORD: Email transporter missing");
-      return res
-        .status(500)
-        .json({ error: "Email service not configured on server" });
+      return res.status(500).json({ error: "Email service not configured." });
     }
 
-    const { email } = req.body;
-    console.log("Forgot password request for:", email);
+    // ── Input validation & sanitization ──────────────────────────────────────
+    const rawEmail = req.body?.email;
+    const email    = sanitizeEmail(rawEmail);
 
-    if (!email) {
-      return res.status(400).json({ error: "Email is required" });
+    if (!email || !isValidEmail(email)) {
+      return res.status(400).json({ error: "A valid email address is required." });
     }
 
-    const normalizedEmail = String(email).toLowerCase().trim();
-
-    // First try lookup in profiles by email.
+    // ── Lookup profile ────────────────────────────────────────────────────────
     const { data: profileUser, error: queryError } = await activeAdmin
       .from("profiles")
       .select("id, email")
-      .eq("email", normalizedEmail)
+      .eq("email", email)
       .maybeSingle();
 
     if (queryError) {
-      console.warn("Profile lookup error:", queryError.message);
+      console.warn("Profile lookup warning:", queryError.message);
     }
 
-    let userId = profileUser?.id || null;
-    let userEmail = profileUser?.email || normalizedEmail;
+    let userId    = profileUser?.id   || null;
+    let userEmail = profileUser?.email || email;
 
-    // Fallback: find user in Supabase Auth (covers accounts where profiles.email is empty/missing).
+    // Fallback: search Supabase Auth (capped at 5 pages for safety)
     if (!userId) {
-      let page = 1;
       const perPage = 200;
-
-      while (page <= 10 && !userId) {
+      for (let page = 1; page <= 5 && !userId; page++) {
         const { data: usersPage, error: usersError } =
           await activeAdmin.auth.admin.listUsers({ page, perPage });
 
         if (usersError) {
-          console.error(
-            "FORGOT-PASSWORD: Auth user lookup failed:",
-            usersError.message,
-          );
+          console.error("Auth user lookup error:", usersError.message);
           break;
         }
-
-        const users = usersPage?.users || [];
-        const authUser = users.find(
-          (u) =>
-            String(u.email || "")
-              .toLowerCase()
-              .trim() === normalizedEmail,
-        );
-
-        if (authUser) {
-          userId = authUser.id;
-          userEmail = authUser.email || normalizedEmail;
-          break;
-        }
-
+        const users    = usersPage?.users || [];
+        const authUser = users.find((u) => u.email?.toLowerCase().trim() === email);
+        if (authUser) { userId = authUser.id; userEmail = authUser.email || email; }
         if (users.length < perPage) break;
-        page += 1;
       }
     }
 
+    // Always respond identically — never reveal whether an email exists
     if (!userId) {
-      console.log("FORGOT-PASSWORD: No user found for email:", normalizedEmail);
       return res.json({
         success: true,
-        message: "If this email is registered, you'll get a link shortly.",
+        message: "If this email is registered, you'll receive a reset link shortly.",
       });
     }
 
-    // Ensure profile row has email populated for future fast lookups.
-    const { error: profileUpsertError } = await activeAdmin
+    // Sync email into profile row for future fast lookups
+    await activeAdmin
       .from("profiles")
       .upsert({ id: userId, email: userEmail }, { onConflict: "id" });
-    if (profileUpsertError) {
-      console.warn(
-        "FORGOT-PASSWORD: profile email sync warning:",
-        profileUpsertError.message,
-      );
-    }
 
-    // Generate token and expiry
-    const token = crypto.randomBytes(32).toString("hex");
+    // Generate cryptographically secure token
+    const token  = crypto.randomBytes(32).toString("hex");
     const expiry = Date.now() + 3600000; // 1 hour
 
-    // Store token in database using admin client (bypass RLS)
     const { error: updateError } = await activeAdmin
       .from("profiles")
       .update({ resettoken: token, resetexpiry: expiry })
       .eq("id", userId);
 
     if (updateError) {
-      console.error("FORGOT-PASSWORD: DB UPDATE ERROR:", updateError);
-      return res.status(500).json({ error: "Failed to generate reset token" });
+      console.error("Token store error:", updateError.message);
+      return res.status(500).json({ error: "Failed to generate reset token." });
     }
 
-    // Send reset email
-    const clientUrl =
-      process.env.CLIENT_URL ||
-      req.headers.origin ||
-      "https://ai-homes.vercel.app";
-    const resetLink = `${clientUrl}/reset-password/reset-password.html?token=${token}`;
+    // Build reset link from trusted env var only
+    const baseUrl   = process.env.CLIENT_URL || "https://ai-homes.vercel.app";
+    const resetLink = `${baseUrl}/reset-password/reset-password.html?token=${token}`;
 
     const mailOptions = {
-      from: `"StudentHome Support" <${process.env.EMAIL_USER}>`,
+      from: `"AI HOMES Support" <${process.env.EMAIL_USER}>`,
       to: userEmail,
-      subject: "Reset Your StudentHome Password",
+      subject: "Reset Your AI HOMES Password",
       html: `
         <!DOCTYPE html>
         <html>
         <head>
           <meta charset="utf-8">
           <style>
-            .email-container {
-              font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-              max-width: 600px;
-              margin: 0 auto;
-              background-color: #ffffff;
-              border-radius: 16px;
-              overflow: hidden;
-              box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-              border: 1px solid #e2e8f0;
-            }
-            .header {
-              background-color: #0F172A;
-              padding: 40px 20px;
-              text-align: center;
-            }
-            .content {
-              padding: 40px 30px;
-              color: #1e293b;
-              line-height: 1.6;
-            }
-            .footer {
-              background-color: #f8fafc;
-              padding: 20px;
-              text-align: center;
-              font-size: 12px;
-              color: #64748b;
-              border-top: 1px solid #e2e8f0;
-            }
-            .button {
-              display: inline-block;
-              padding: 14px 32px;
-              background-color: #F97316;
-              color: #ffffff !important;
-              text-decoration: none;
-              border-radius: 10px;
-              font-weight: 700;
-              font-size: 16px;
-              margin: 30px 0;
-              box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
-            }
-            .logo-img {
-              max-height: 50px;
-              width: auto;
-            }
-            h1 {
-              margin: 0;
-              font-size: 24px;
-              font-weight: 800;
-              color: #1e293b;
-            }
-            .expiry-note {
-              font-size: 13px;
-              color: #94a3b8;
-              font-style: italic;
-              margin-top: 20px;
-            }
+            .email-container { font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; }
+            .header { background: #0F172A; padding: 40px 20px; text-align: center; }
+            .content { padding: 40px 30px; color: #1e293b; line-height: 1.6; }
+            .footer { background: #f8fafc; padding: 20px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #e2e8f0; }
+            .button { display: inline-block; padding: 14px 32px; background: #F97316; color: #ffffff !important; text-decoration: none; border-radius: 10px; font-weight: 700; font-size: 16px; margin: 30px 0; }
+            .logo-img { max-height: 50px; width: auto; }
+            h1 { margin: 0; font-size: 24px; font-weight: 800; color: #1e293b; }
+            .expiry-note { font-size: 13px; color: #94a3b8; font-style: italic; margin-top: 20px; }
           </style>
         </head>
-        <body style="background-color: #f1f5f9; padding: 20px; margin: 0;">
+        <body style="background:#f1f5f9; padding:20px; margin:0;">
           <div class="email-container">
             <div class="header">
-              <img src="https://ai-homes.vercel.app/assets/logo.png" alt="StudentHome" class="logo-img">
+              <img src="https://ai-homes.vercel.app/assets/logo.png" alt="AI HOMES" class="logo-img">
             </div>
             <div class="content">
               <h1>Password Reset Request</h1>
-              <p style="margin-top: 20px;">Hello,</p>
-              <p>We received a request to reset the password for your StudentHome account. Click the button below to set a new password:</p>
-              
-              <div style="text-align: center;">
+              <p style="margin-top:20px;">Hello,</p>
+              <p>We received a request to reset the password for your AI HOMES account. Click the button below to set a new password:</p>
+              <div style="text-align:center;">
                 <a href="${resetLink}" class="button">Reset Password</a>
               </div>
-              
               <p>If the button doesn't work, copy and paste this link into your browser:</p>
-              <p style="word-break: break-all; font-size: 12px; color: #F97316;">${resetLink}</p>
-              
-              <p class="expiry-note">This link will expire in 1 hour. If you didn't request this, you can safely ignore this email.</p>
+              <p style="word-break:break-all; font-size:12px; color:#F97316;">${resetLink}</p>
+              <p class="expiry-note">This link expires in 1 hour. If you didn't request this, you can safely ignore this email.</p>
             </div>
             <div class="footer">
-              <p>&copy; 2026 StudentHome Nigeria Limited. All Rights Reserved.</p>
-              <p>Secure Student Housing Platform</p>
-              <div style="margin-top: 10px;">
-                <a href="https://ai-homes.vercel.app" style="color: #F97316; text-decoration: none; margin: 0 10px;">Website</a>
-                <a href="https://ai-homes.vercel.app/contact/contact.html" style="color: #F97316; text-decoration: none; margin: 0 10px;">Support</a>
+              <p>&copy; 2026 AI HOMES Nigeria Limited. All Rights Reserved.</p>
+              <div style="margin-top:10px;">
+                <a href="https://ai-homes.vercel.app" style="color:#F97316; text-decoration:none; margin:0 10px;">Website</a>
+                <a href="https://ai-homes.vercel.app/contact/contact.html" style="color:#F97316; text-decoration:none; margin:0 10px;">Support</a>
               </div>
             </div>
           </div>
@@ -297,140 +189,110 @@ router.post("/forgot-password", async (req, res) => {
       `,
     };
 
-    console.log("Attempting to send email via Gmail...");
-    const info = await activeTransporter.sendMail(mailOptions);
-    console.log("Reset email sent successfully. SMTP Response:", info.response);
+    await activeTransporter.sendMail(mailOptions);
+    console.log("Reset email dispatched for user:", userId.slice(0, 8) + "...");
 
-    res.json({
+    return res.json({
       success: true,
-      message: "If this email is registered, you'll get a link shortly.",
+      message: "If this email is registered, you'll receive a reset link shortly.",
     });
   } catch (err) {
-    console.error("FORGOT-PASSWORD CRITICAL ERROR:", err);
-    res.status(500).json({
-      error: "Internal server error occurred.",
-      message: err.message,
-      code: err.code || "UNKNOWN",
-    });
+    console.error("FORGOT-PASSWORD ERROR:", IS_PROD ? err.code || "INTERNAL" : err);
+    return res.status(500).json({ error: "An internal error occurred. Please try again." });
   }
 });
 
-// POST /api/auth/reset-password
+// ─── POST /api/auth/reset-password ───────────────────────────────────────────
 router.post("/reset-password", async (req, res) => {
   try {
     const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
     if (!activeAdmin) {
-      console.error("RESET-PASSWORD: Supabase admin client missing");
-      return res
-        .status(500)
-        .json({ error: "Database connection not initialized." });
+      return res.status(500).json({ error: "Database service unavailable." });
     }
 
-    console.log(
-      "Reset password called with token length:",
-      req.body.token?.length,
-    );
-    const { token, newPassword } = req.body;
+    const { token, newPassword } = req.body || {};
 
-    // Validate password format
-    if (!newPassword || newPassword.length < 6) {
-      return res.status(400).json({
-        error: "Password must be at least 6 characters long.",
-      });
+    // ── Validate token format before hitting DB ──────────────────────────────
+    if (!token || !isValidToken(token)) {
+      return res.status(400).json({ error: "Invalid or missing reset token." });
     }
 
-    // Find user with valid token using admin client (bypass RLS)
+    // ── Validate password strength ────────────────────────────────────────────
+    const passwordCheck = validatePassword(newPassword);
+    if (!passwordCheck.valid) {
+      return res.status(400).json({ error: passwordCheck.reason });
+    }
+
+    // ── Lookup token ──────────────────────────────────────────────────────────
     const { data: user, error } = await activeAdmin
       .from("profiles")
-      .select("id, email, resettoken, resetexpiry")
+      .select("id, resettoken, resetexpiry")
       .eq("resettoken", token)
       .gt("resetexpiry", Date.now())
       .single();
 
-    console.log("Token validation:", !!user, error?.message);
-
     if (error || !user) {
-      return res
-        .status(400)
-        .json({ error: "Token is invalid or has expired." });
+      return res.status(400).json({ error: "Token is invalid or has expired." });
     }
 
-    // Update password in Supabase auth using admin client
-    console.log("Updating password for user.id:", user.id);
+    // ── Update password in Supabase Auth ──────────────────────────────────────
     const { error: updateError } = await activeAdmin.auth.admin.updateUserById(
       user.id,
-      {
-        password: newPassword,
-      },
+      { password: newPassword }
     );
 
     if (updateError) {
-      console.error("PASSWORD UPDATE ERROR:", updateError);
+      console.error("Password update error:", updateError.message);
       return res.status(500).json({ error: "Failed to update password." });
     }
 
-    // Clear the reset token after successful password update
-    const { error: clearTokenError } = await activeAdmin
+    // ── Invalidate token immediately after use ────────────────────────────────
+    await activeAdmin
       .from("profiles")
-      .update({
-        resettoken: null,
-        resetexpiry: null,
-        updatedat: new Date().toISOString(),
-      })
+      .update({ resettoken: null, resetexpiry: null, updatedat: new Date().toISOString() })
       .eq("id", user.id);
 
-    if (clearTokenError) {
-      console.error("Clear token error:", clearTokenError);
-      // Don't fail here - password was updated successfully
-    }
-
-    console.log("Password reset successful for:", user.email);
-    res.json({
+    console.log("Password reset successful for user:", user.id.slice(0, 8) + "...");
+    return res.json({
       success: true,
-      message:
-        "Password reset successful. You can now log in with your new password.",
+      message: "Password reset successful. You can now log in with your new password.",
     });
   } catch (err) {
-    console.error("RESET-PASSWORD FULL ERROR:", err);
-    res.status(500).json({ error: "Server error. Please try again." });
+    console.error("RESET-PASSWORD ERROR:", IS_PROD ? err.code || "INTERNAL" : err);
+    return res.status(500).json({ error: "An internal error occurred. Please try again." });
   }
 });
 
-// POST /api/auth/verify-reset-token
-// Optional endpoint to validate reset token before showing form
+// ─── POST /api/auth/verify-reset-token ───────────────────────────────────────
 router.post("/verify-reset-token", async (req, res) => {
   try {
     const activeAdmin = getSupabaseAdmin() || supabaseAdmin;
     if (!activeAdmin) {
-      console.error("VERIFY-TOKEN: Supabase admin client missing");
-      return res
-        .status(500)
-        .json({ error: "Database connection not initialized." });
-    }
-    const { token } = req.body;
-
-    if (!token) {
-      return res.status(400).json({ error: "Token is required." });
+      return res.status(500).json({ error: "Database service unavailable." });
     }
 
-    // Check if token is valid and not expired
+    const { token } = req.body || {};
+
+    // Validate token format before DB round-trip
+    if (!token || !isValidToken(token)) {
+      return res.status(400).json({ success: false, error: "Invalid or missing token." });
+    }
+
     const { data: user, error } = await activeAdmin
       .from("profiles")
-      .select("id, email")
+      .select("id")           // ← ONLY select id — never return email to client
       .eq("resettoken", token)
       .gt("resetexpiry", Date.now())
       .single();
 
     if (error || !user) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Token is invalid or has expired." });
+      return res.status(400).json({ success: false, error: "Token is invalid or has expired." });
     }
 
-    res.json({ success: true, valid: true, email: user.email });
+    return res.json({ success: true, valid: true });
   } catch (err) {
-    console.error("Token verification error:", err);
-    res.status(500).json({ error: "Server error. Please try again." });
+    console.error("VERIFY-TOKEN ERROR:", IS_PROD ? err.code || "INTERNAL" : err);
+    return res.status(500).json({ error: "An internal error occurred. Please try again." });
   }
 });
 
