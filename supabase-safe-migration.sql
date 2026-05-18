@@ -268,12 +268,13 @@ create policy "admin_delete_houses"
   on public.houses for delete to authenticated
   using (public.is_admin(auth.uid()));
 
--- REVIEWS (public — any visitor can read and post)
+-- REVIEWS (anyone can read; only logged-in users can post)
 create policy "public_read_reviews"
   on public.reviews for select to public using (true);
 
-create policy "public_insert_reviews"
-  on public.reviews for insert to public with check (true);
+create policy "authenticated_insert_reviews"
+  on public.reviews for insert to authenticated
+  with check (auth.uid() is not null);
 
 -- PROFILES
 create policy "read_own_profile"

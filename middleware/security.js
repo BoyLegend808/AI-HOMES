@@ -45,7 +45,7 @@ const securityHeaders = (req, res, next) => {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com",
     "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com",
     `img-src 'self' data: blob: https://${supabaseHost} https://ai-homes.vercel.app https://images.unsplash.com https://via.placeholder.com`,
-    `connect-src 'self' https://${supabaseHost} https://api.openai.com`,
+    `connect-src 'self' https://${supabaseHost} wss://${supabaseHost} https://api.openai.com`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",

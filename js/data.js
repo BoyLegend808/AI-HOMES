@@ -177,6 +177,16 @@ function syncUniversitiesCache() {
   window.NIGERIA_UNIVERSITIES = getUniversities();
 }
 
+/** Safe text for PostgREST ilike filters (strips wildcards and filter syntax). */
+function sanitizeSearchQuery(raw) {
+  return String(raw || "")
+    .trim()
+    .slice(0, 80)
+    .replace(/[%_\\,().]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 // Local user helpers removed — auth is Supabase-only.
 
 const SYSTEM_ADMINS = [];
@@ -369,9 +379,12 @@ window.fetchHousesPaginated = async (page = 1, limit = 20, filters = {}) => {
     if (filters.minPrice) query = query.gte("price", filters.minPrice);
     if (filters.maxPrice) query = query.lte("price", filters.maxPrice);
     if (filters.query) {
-      query = query.or(
-        `title.ilike.%${filters.query}%,location.ilike.%${filters.query}%,area.ilike.%${filters.query}%,school.ilike.%${filters.query}%`,
-      );
+      const q = sanitizeSearchQuery(filters.query);
+      if (q.length >= 2) {
+        query = query.or(
+          `title.ilike.%${q}%,location.ilike.%${q}%,area.ilike.%${q}%,school.ilike.%${q}%`,
+        );
+      }
     }
 
     const { data, error } = await query;
@@ -408,7 +421,8 @@ window.debouncedSearch = async (query, callback, delay = 300) => {
   if (searchDebounce.timer) clearTimeout(searchDebounce.timer);
 
   searchDebounce.timer = setTimeout(async () => {
-    if (!query || query.trim().length < 2) {
+    const q = sanitizeSearchQuery(query);
+    if (q.length < 2) {
       callback([]);
       return;
     }
@@ -418,7 +432,7 @@ window.debouncedSearch = async (query, callback, delay = 300) => {
         .from("houses")
         .select("id, title, school, area, location, type, price, photo, status")
         .or(
-          `title.ilike.%${query}%,area.ilike.%${query}%,school.ilike.%${query}%`,
+          `title.ilike.%${q}%,area.ilike.%${q}%,school.ilike.%${q}%`,
         )
         .limit(20);
 
